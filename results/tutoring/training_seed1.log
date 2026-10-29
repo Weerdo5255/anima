@@ -1,0 +1,327 @@
+   ·· [09:36] lesson 1 of 4 'forage': exam not taken yet (need 0.60; chance 0.33), food 4.0/min (need 1.0); practised 2.0/5 awake min | energy 0.46  (seed 1, 2.0 min, wall 51s)
+   ·· [11:59] lesson 1 of 4 'forage': exam not taken yet (need 0.60; chance 0.33), food 4.0/min (need 1.0); practised 4.0/5 awake min | energy 0.46  (seed 1, 4.0 min, wall 103s)
+   ✎ [13:16] exam 'forage': score 0.75 (chance 0.33; correct moves left 13/20, ahead 14/20, right 18/20)
+   ·· [14:23] lesson 1 of 4 'forage': exam 0.75 (need 0.60; chance 0.33), food 3.8/min (need 1.0); must pass the next exam too | energy 0.44  (seed 1, 6.0 min, wall 164s)
+   ✎ [15:50] exam 'forage': score 0.77 (chance 0.33; correct moves left 12/20, ahead 14/20, right 20/20)
+   ·· [16:47] lesson 1 of 4 'forage': exam 0.77 (need 0.60; chance 0.33), food 2.2/min (need 1.0) | energy 0.44  (seed 1, 8.0 min, wall 226s)
+★ [17:07] graduated 'Find food': exam 0.77 (need 0.60; chance 0.33), food 2.4/min (need 1.0)
+   ── lesson 2: Copy me — start its reply with the consonant it just heard
+   ·· [19:11] lesson 2 of 4 'echo': echo rate 0.15 (need 0.17, chance 0.09, n=13/30); practised 1.7/5 awake min | energy 0.44  (seed 1, 10.0 min, wall 283s)
+   ·· [21:35] lesson 2 of 4 'echo': echo rate 0.21 (need 0.16, chance 0.09, n=28/30); practised 3.7/5 awake min | energy 0.44  (seed 1, 12.0 min, wall 338s)
+   ·· [23:59] lesson 2 of 4 'echo': echo rate 0.22 (need 0.16, chance 0.09, n=37/30); practised 4.9/5 awake min | energy 0.44  (seed 1, 14.0 min, wall 387s)
+   ·· [02:23] lesson 2 of 4 'echo': echo rate 0.22 (need 0.16, chance 0.09, n=37/30); practised 4.9/5 awake min | energy 0.44  (seed 1, 16.0 min, wall 428s)
+   ·· [04:47] lesson 2 of 4 'echo': echo rate 0.22 (need 0.16, chance 0.09, n=37/30); practised 4.9/5 awake min | energy 0.44  (seed 1, 18.0 min, wall 469s)
+   ✎ [07:02] exam 'forage': score 0.88 (chance 0.33; correct moves left 14/20, ahead 20/20, right 19/20)
+   ·· [07:11] lesson 2 of 4 'echo': echo rate 0.22 (need 0.16, chance 0.09, n=37/30) | energy 0.44  (seed 1, 20.0 min, wall 517s)
+★ [08:28] graduated 'Copy me': echo rate 0.20 (need 0.15, chance 0.09, n=44/30)
+   ── lesson 3: Make the sound — say syllables starting with the target sound often
+   ·· [09:35] lesson 3 of 4 'babble': target share 0.00 (need 0.30, n=36/80); practised 0.9/4 awake min | energy 0.46  (seed 1, 22.0 min, wall 569s)
+   ·· [11:59] lesson 3 of 4 'babble': target share 0.02 (need 0.30, n=100/80); practised 2.9/4 awake min | energy 0.49  (seed 1, 24.0 min, wall 622s)
+   ·· [14:23] lesson 3 of 4 'babble': target share 0.06 (need 0.30, n=100/80) | energy 0.50  (seed 1, 26.0 min, wall 672s)
+   ·· [16:47] lesson 3 of 4 'babble': target share 0.07 (need 0.30, n=100/80) | energy 0.53  (seed 1, 28.0 min, wall 725s)
+   ·· [19:11] lesson 3 of 4 'babble': target share 0.03 (need 0.30, n=100/80) | energy 0.55  (seed 1, 30.0 min, wall 782s)
+   ✎ [21:26] exam 'forage': score 0.97 (chance 0.33; correct moves left 19/20, ahead 19/20, right 20/20)
+   ·· [21:35] lesson 3 of 4 'babble': target share 0.05 (need 0.30, n=100/80) | energy 0.55  (seed 1, 32.0 min, wall 841s)
+   ·· [23:59] lesson 3 of 4 'babble': target share 0.09 (need 0.30, n=100/80) | energy 0.55  (seed 1, 34.0 min, wall 888s)
+   ·· [02:24] lesson 3 of 4 'babble': target share 0.09 (need 0.30, n=100/80) | energy 0.55  (seed 1, 36.0 min, wall 928s)
+   ·· [04:48] lesson 3 of 4 'babble': target share 0.09 (need 0.30, n=100/80) | energy 0.55  (seed 1, 38.0 min, wall 967s)
+   ·· [07:12] lesson 3 of 4 'babble': target share 0.11 (need 0.30, n=100/80) | energy 0.54  (seed 1, 40.0 min, wall 1007s)
+   ·· [09:36] lesson 3 of 4 'babble': target share 0.18 (need 0.30, n=100/80) | energy 0.53  (seed 1, 42.0 min, wall 1060s)
+   ✎ [11:50] exam 'forage': score 0.72 (chance 0.33; correct moves left 17/20, ahead 13/20, right 13/20)
+   ·· [12:00] lesson 3 of 4 'babble': target share 0.32 (need 0.30, n=100/80) | energy 0.53  (seed 1, 44.0 min, wall 1124s)
+★ [12:38] graduated 'Make the sound': target share 0.36 (need 0.30, n=100/80)
+   ── lesson 4: Live on its own — keep itself fed with no help at all
+   ·· [14:24] lesson 4 of 4 'independence': energy mean 0.89 (need 0.35), min 0.45 (need 0.08) over 1.5/8 min; practised 1.5/10 awake min | energy 0.89  (seed 1, 46.0 min, wall 1179s)
+   ·· [16:48] lesson 4 of 4 'independence': energy mean 0.92 (need 0.35), min 0.45 (need 0.08) over 3.5/8 min; practised 3.5/10 awake min | energy 0.92  (seed 1, 48.0 min, wall 1235s)
+   ·· [19:12] lesson 4 of 4 'independence': energy mean 0.92 (need 0.35), min 0.45 (need 0.08) over 5.5/8 min; practised 5.5/10 awake min | energy 0.92  (seed 1, 50.0 min, wall 1289s)
+   ·· [21:36] lesson 4 of 4 'independence': energy mean 0.93 (need 0.35), min 0.45 (need 0.08) over 7.5/8 min; practised 7.5/10 awake min | energy 0.93  (seed 1, 52.0 min, wall 1352s)
+   ·· [00:00] lesson 4 of 4 'independence': energy mean 0.90 (need 0.35), min 0.45 (need 0.08) over 8.7/8 min; practised 8.7/10 awake min | energy 0.90  (seed 1, 54.0 min, wall 1404s)
+   ·· [02:24] lesson 4 of 4 'independence': energy mean 0.90 (need 0.35), min 0.45 (need 0.08) over 8.7/8 min; practised 8.7/10 awake min | energy 0.90  (seed 1, 56.0 min, wall 1445s)
+   ·· [04:48] lesson 4 of 4 'independence': energy mean 0.90 (need 0.35), min 0.45 (need 0.08) over 8.7/8 min; practised 8.7/10 awake min | energy 0.90  (seed 1, 58.0 min, wall 1486s)
+   ✎ [07:02] exam 'forage': score 0.93 (chance 0.33; correct moves left 19/20, ahead 18/20, right 19/20)
+   ·· [07:12] lesson 4 of 4 'independence': energy mean 0.89 (need 0.35), min 0.31 (need 0.08) over 8.9/8 min; practised 8.9/10 awake min | energy 0.89  (seed 1, 60.0 min, wall 1538s)
+   ·· [09:36] lesson 4 of 4 'independence': energy mean 0.88 (need 0.35), min 0.30 (need 0.08) over 10.0/8 min | energy 0.88  (seed 1, 62.0 min, wall 1590s)
+★ [09:55] graduated 'Live on its own': energy mean 0.88 (need 0.35), min 0.30 (need 0.08) over 10.0/8 min
+★ curriculum complete — it lives on its own now; the teacher steps away.
+Tutor report — creature age 62.3 min, teacher scripted
+  ✓ forage        passed at 8.3 min after 8.3 awake min of practice
+  ✓ echo          passed at 21.1 min after 6.2 awake min of practice
+  ✓ babble        passed at 44.5 min after 16.9 awake min of practice
+  ✓ independence  passed at 62.3 min after 11.1 awake min of practice
+  skills: food 1.4/min, 'm' share 0.66, echo 0.20 (chance 0.22), energy 0.88
+  last exam 'forage' at 59.9 min: score 0.93 (chance 0.33; correct moves left 19/20, ahead 18/20, right 19/20)
+{
+ "forage": 0.811111111111111,
+ "babble_share": 0.49056603773584906,
+ "n_free": 106,
+ "ask_hungry": 0.6153846153846154,
+ "ask_sated": 0.4675324675324675,
+ "n_hungry": 78,
+ "n_sated": 77,
+ "echo_rate": 0.17857142857142858,
+ "echo_chance": 0.10283018867924529,
+ "echo_answered": 28,
+ "echo_trials": 30,
+ "seed": 1,
+ "condition": "tutored",
+ "lived_s": 3736.0,
+ "exam_at_s": 5309.84,
+ "wall_s": 2145.576891183853,
+ "milestones": [
+  {
+   "t": 496.0,
+   "clock": "17:07",
+   "graduated": "forage",
+   "mastered": true,
+   "progress": "exam 0.77 (need 0.60; chance 0.33), food 2.4/min (need 1.0)"
+  },
+  {
+   "t": 1264.0,
+   "clock": "08:28",
+   "graduated": "echo",
+   "mastered": true,
+   "progress": "echo rate 0.20 (need 0.15, chance 0.09, n=44/30)"
+  },
+  {
+   "t": 2672.0,
+   "clock": "12:38",
+   "graduated": "babble",
+   "mastered": true,
+   "progress": "target share 0.36 (need 0.30, n=100/80)"
+  },
+  {
+   "t": 3736.0,
+   "clock": "09:55",
+   "graduated": "independence",
+   "mastered": true,
+   "progress": "energy mean 0.88 (need 0.35), min 0.30 (need 0.08) over 10.0/8 min"
+  }
+ ],
+ "graduated": [
+  {
+   "lesson": "forage",
+   "t": 496.0,
+   "awake_minutes": 8.27,
+   "mastered": true,
+   "skills": {
+    "food_per_min": 2.4,
+    "target_share": 0.1,
+    "target_n": 100,
+    "echo_rate": null,
+    "echo_chance": null,
+    "echo_n": 0,
+    "echo_unanswered": 0,
+    "ask_hungry": 0.1,
+    "ask_full": null,
+    "ask_n_hungry": 60,
+    "ask_n_full": 0,
+    "energy_mean": 0.441,
+    "energy_min": 0.239,
+    "energy_minutes": 8.267
+   },
+   "exams": {
+    "forage": {
+     "exam": "forage",
+     "score": 0.767,
+     "choices": {
+      "90": {
+       "forward": 8,
+       "left": 12,
+       "right": 0
+      },
+      "0": {
+       "forward": 14,
+       "left": 2,
+       "right": 4
+      },
+      "-90": {
+       "forward": 0,
+       "left": 0,
+       "right": 20
+      }
+     },
+     "t": 432.0,
+     "clock": "15:50",
+     "lesson_index": 0,
+     "lesson_awake_s": 432.0
+    }
+   }
+  },
+  {
+   "lesson": "echo",
+   "t": 1264.0,
+   "awake_minutes": 6.17,
+   "mastered": true,
+   "skills": {
+    "food_per_min": 1.0,
+    "target_share": 0.07,
+    "target_n": 100,
+    "echo_rate": 0.205,
+    "echo_chance": 0.085,
+    "echo_n": 44,
+    "echo_unanswered": 0,
+    "ask_hungry": 0.1,
+    "ask_full": null,
+    "ask_n_hungry": 60,
+    "ask_n_full": 0,
+    "energy_mean": 0.446,
+    "energy_min": 0.047,
+    "energy_minutes": 10.0
+   },
+   "exams": {
+    "forage": {
+     "exam": "forage",
+     "score": 0.883,
+     "choices": {
+      "90": {
+       "forward": 6,
+       "left": 14,
+       "right": 0
+      },
+      "0": {
+       "forward": 20,
+       "left": 0,
+       "right": 0
+      },
+      "-90": {
+       "forward": 0,
+       "left": 1,
+       "right": 19
+      }
+     },
+     "t": 1192.0,
+     "clock": "07:02",
+     "lesson_index": 1,
+     "lesson_awake_s": 298.1
+    }
+   }
+  },
+  {
+   "lesson": "babble",
+   "t": 2672.0,
+   "awake_minutes": 16.85,
+   "mastered": true,
+   "skills": {
+    "food_per_min": 3.2,
+    "target_share": 0.36,
+    "target_n": 100,
+    "echo_rate": 0.2,
+    "echo_chance": 0.106,
+    "echo_n": 60,
+    "echo_unanswered": 1,
+    "ask_hungry": 0.383,
+    "ask_full": null,
+    "ask_n_hungry": 60,
+    "ask_n_full": 0,
+    "energy_mean": 0.527,
+    "energy_min": 0.15,
+    "energy_minutes": 10.0
+   },
+   "exams": {
+    "forage": {
+     "exam": "forage",
+     "score": 0.717,
+     "choices": {
+      "90": {
+       "forward": 3,
+       "left": 17,
+       "right": 0
+      },
+      "0": {
+       "forward": 13,
+       "left": 5,
+       "right": 2
+      },
+      "-90": {
+       "forward": 4,
+       "left": 3,
+       "right": 13
+      }
+     },
+     "t": 2632.0,
+     "clock": "11:50",
+     "lesson_index": 2,
+     "lesson_awake_s": 971.1
+    }
+   }
+  },
+  {
+   "lesson": "independence",
+   "t": 3736.0,
+   "awake_minutes": 11.13,
+   "mastered": true,
+   "skills": {
+    "food_per_min": 1.4,
+    "target_share": 0.66,
+    "target_n": 100,
+    "echo_rate": 0.2,
+    "echo_chance": 0.219,
+    "echo_n": 60,
+    "echo_unanswered": 1,
+    "ask_hungry": 0.5,
+    "ask_full": 0.683,
+    "ask_n_hungry": 60,
+    "ask_n_full": 60,
+    "energy_mean": 0.884,
+    "energy_min": 0.302,
+    "energy_minutes": 10.0
+   },
+   "exams": {
+    "forage": {
+     "exam": "forage",
+     "score": 0.933,
+     "choices": {
+      "90": {
+       "forward": 1,
+       "left": 19,
+       "right": 0
+      },
+      "0": {
+       "forward": 18,
+       "left": 0,
+       "right": 2
+      },
+      "-90": {
+       "forward": 0,
+       "left": 1,
+       "right": 19
+      }
+     },
+     "t": 3592.0,
+     "clock": "07:02",
+     "lesson_index": 3,
+     "lesson_awake_s": 523.7
+    }
+   }
+  }
+ ],
+ "finished": true,
+ "alone_energy": 0.9281198349999871,
+ "food_given": 10,
+ "exams_during": {
+  "forage": {
+   "score": 0.933,
+   "choices": {
+    "90": {
+     "forward": 1,
+     "left": 19,
+     "right": 0
+    },
+    "0": {
+     "forward": 18,
+     "left": 0,
+     "right": 2
+    },
+    "-90": {
+     "forward": 0,
+     "left": 1,
+     "right": 19
+    }
+   },
+   "t": 3592.0,
+   "clock": "07:02",
+   "lesson_index": 3,
+   "lesson_awake_s": 523.7
+  }
+ }
+}

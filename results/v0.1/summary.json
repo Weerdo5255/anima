@@ -1,0 +1,416 @@
+{
+ "foraging": {
+  "plastic": [
+   {
+    "seed": 1,
+    "correct": [
+     0.383,
+     0.725,
+     0.708,
+     0.625,
+     0.75
+    ],
+    "t": [
+     0.0,
+     150.0,
+     300.0,
+     450.0,
+     600.0
+    ],
+    "food": [
+     0,
+     2,
+     7,
+     13,
+     16
+    ],
+    "last_probes": {
+     "90": {
+      "forward": 4,
+      "left": 35,
+      "right": 1
+     },
+     "0": {
+      "forward": 26,
+      "left": 6,
+      "right": 8
+     },
+     "-90": {
+      "forward": 10,
+      "left": 1,
+      "right": 29
+     }
+    }
+   },
+   {
+    "seed": 2,
+    "correct": [
+     0.325,
+     0.575,
+     0.742,
+     0.767,
+     0.767
+    ],
+    "t": [
+     0.0,
+     150.0,
+     300.0,
+     450.0,
+     600.0
+    ],
+    "food": [
+     0,
+     3,
+     13,
+     20,
+     24
+    ],
+    "last_probes": {
+     "90": {
+      "forward": 3,
+      "left": 36,
+      "right": 1
+     },
+     "0": {
+      "forward": 30,
+      "left": 3,
+      "right": 7
+     },
+     "-90": {
+      "forward": 9,
+      "left": 5,
+      "right": 26
+     }
+    }
+   }
+  ],
+  "frozen": [
+   {
+    "seed": 1,
+    "correct": [
+     0.383,
+     0.333,
+     0.275,
+     0.375,
+     0.333
+    ],
+    "t": [
+     0.0,
+     150.0,
+     300.0,
+     450.0,
+     600.0
+    ],
+    "food": [
+     0,
+     1,
+     3,
+     3,
+     3
+    ],
+    "last_probes": {
+     "90": {
+      "forward": 12,
+      "left": 16,
+      "right": 12
+     },
+     "0": {
+      "forward": 13,
+      "left": 11,
+      "right": 16
+     },
+     "-90": {
+      "forward": 12,
+      "left": 17,
+      "right": 11
+     }
+    }
+   },
+   {
+    "seed": 2,
+    "correct": [
+     0.325,
+     0.275,
+     0.308,
+     0.275,
+     0.308
+    ],
+    "t": [
+     0.0,
+     150.0,
+     300.0,
+     450.0,
+     600.0
+    ],
+    "food": [
+     0,
+     1,
+     4,
+     6,
+     7
+    ],
+    "last_probes": {
+     "90": {
+      "forward": 12,
+      "left": 12,
+      "right": 16
+     },
+     "0": {
+      "forward": 12,
+      "left": 19,
+      "right": 9
+     },
+     "-90": {
+      "forward": 16,
+      "left": 11,
+      "right": 13
+     }
+    }
+   }
+  ]
+ },
+ "babble": {
+  "contingent": [
+   {
+    "share": [
+     0.067,
+     0.203,
+     0.222,
+     0.242,
+     0.6
+    ],
+    "syl_per_min": [
+     44.5,
+     39.5,
+     31.5,
+     31.0,
+     25.0
+    ],
+    "smiles": 61
+   },
+   {
+    "share": [
+     0.078,
+     0.08,
+     0.139,
+     0.367,
+     0.469
+    ],
+    "syl_per_min": [
+     45.0,
+     44.0,
+     39.5,
+     30.0,
+     24.5
+    ],
+    "smiles": 56
+   }
+  ],
+  "yoked": [
+   {
+    "share": [
+     0.067,
+     0.212,
+     0.067,
+     0.172,
+     0.075
+    ],
+    "syl_per_min": [
+     44.5,
+     33.0,
+     30.0,
+     29.0,
+     33.5
+    ],
+    "smiles": 67
+   },
+   {
+    "share": [
+     0.078,
+     0.043,
+     0.046,
+     0.115,
+     0.036
+    ],
+    "syl_per_min": [
+     45.0,
+     35.0,
+     32.5,
+     30.5,
+     28.0
+    ],
+    "smiles": 65
+   }
+  ],
+  "frozen": [
+   {
+    "share": [
+     0.022,
+     0.08,
+     0.085,
+     0.158,
+     0.132
+    ],
+    "syl_per_min": [
+     44.5,
+     44.0,
+     41.0,
+     38.0,
+     34.0
+    ],
+    "smiles": 30
+   },
+   {
+    "share": [
+     0.102,
+     0.107,
+     0.06,
+     0.1,
+     0.122
+    ],
+    "syl_per_min": [
+     44.0,
+     42.0,
+     42.0,
+     40.0,
+     37.0
+    ],
+    "smiles": 28
+   }
+  ]
+ },
+ "imitation": {
+  "learned": [
+   {
+    "diag_before": 0.977,
+    "diag_after": 2.969,
+    "vowel_diag_before": 0.983,
+    "vowel_diag_after": 3.486,
+    "probes": 48,
+    "answered": 48,
+    "echo_rate": 0.167,
+    "chance": 0.081,
+    "vowel_echo_rate": 0.292,
+    "vowel_chance": 0.195
+   },
+   {
+    "diag_before": 0.997,
+    "diag_after": 3.056,
+    "vowel_diag_before": 0.977,
+    "vowel_diag_after": 3.733,
+    "probes": 48,
+    "answered": 48,
+    "echo_rate": 0.25,
+    "chance": 0.084,
+    "vowel_echo_rate": 0.271,
+    "vowel_chance": 0.197
+   }
+  ],
+  "frozen": [
+   {
+    "diag_before": 0.977,
+    "diag_after": 0.977,
+    "vowel_diag_before": 0.983,
+    "vowel_diag_after": 0.983,
+    "probes": 48,
+    "answered": 48,
+    "echo_rate": 0.062,
+    "chance": 0.081,
+    "vowel_echo_rate": 0.25,
+    "vowel_chance": 0.199
+   },
+   {
+    "diag_before": 0.997,
+    "diag_after": 0.997,
+    "vowel_diag_before": 0.977,
+    "vowel_diag_after": 0.977,
+    "probes": 48,
+    "answered": 48,
+    "echo_rate": 0.083,
+    "chance": 0.087,
+    "vowel_echo_rate": 0.292,
+    "vowel_chance": 0.203
+   }
+  ]
+ },
+ "day": {
+  "awake": {
+   "minutes": 13.443333333333333,
+   "cortex_rate_hz": 4.1078895983139105,
+   "rate_std": 6.009162081040471,
+   "spectral_peak_hz": 20.794693776345152,
+   "slow_power_fraction": 0.006645791391579978,
+   "isi_cv": 18.89643627918969
+  },
+  "nrem": {
+   "minutes": 4.996666666666667,
+   "cortex_rate_hz": 0.2848273849232822,
+   "rate_std": 0.5447522091466412,
+   "spectral_peak_hz": 0.2134756504336224,
+   "slow_power_fraction": 0.17326607507517675,
+   "isi_cv": 1.3509204422250125
+  },
+  "rem": {
+   "minutes": 1.56,
+   "cortex_rate_hz": 1.7410122863247863,
+   "rate_std": 1.837646355401383,
+   "spectral_peak_hz": 14.017094017094015,
+   "slow_power_fraction": 0.026388737566352686,
+   "isi_cv": 4.655600767090241
+  },
+  "utterances": 173,
+  "syllables": 662,
+  "actions": 1728,
+  "fraction_asleep": 0.3278333333333333,
+  "transitions": [
+   [
+    794.9,
+    "nrem"
+   ],
+   [
+    851.2,
+    "rem"
+   ],
+   [
+    869.9,
+    "nrem"
+   ],
+   [
+    926.2,
+    "rem"
+   ],
+   [
+    944.9,
+    "nrem"
+   ],
+   [
+    1001.2,
+    "rem"
+   ],
+   [
+    1020.0,
+    "nrem"
+   ],
+   [
+    1076.2,
+    "rem"
+   ],
+   [
+    1095.0,
+    "nrem"
+   ],
+   [
+    1151.2,
+    "rem"
+   ],
+   [
+    1170.0,
+    "nrem"
+   ],
+   [
+    1188.4,
+    "awake"
+   ]
+  ]
+ }
+}

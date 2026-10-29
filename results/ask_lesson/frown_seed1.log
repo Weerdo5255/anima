@@ -1,0 +1,13 @@
+rules: ['feed_on_call(prefix=m, min_hunger=0.45, frown_when_full=True)'] conditions: {'energy_cap': None, 'wild_food': False}
+frown start: hungry 0.75 sated 0.50 (n=12/4)
+frown t= 3.1m frowns 0 hungry 0.80 sated 0.57 (n=40/35) fed 6 energy 0.42 awake False wall 100s
+frown t= 6.1m frowns 1 hungry 0.68 sated 0.65 (n=38/37) fed 8 energy 0.76 awake True wall 178s
+frown t= 9.2m frowns 9 hungry 0.61 sated 0.62 (n=39/32) fed 10 energy 0.76 awake True wall 277s
+   ✎ [11:50] exam 'forage': score 0.62 (chance 0.33; correct moves left 12/20, ahead 14/20, right 11/20)
+   ✎ [12:57] exam 'ask': says the target sound in 77% of syllables when hungry vs 77% when sated (n=35/35)
+frown t=12.3m frowns 17 hungry 0.64 sated 0.65 (n=36/34) fed 12 energy 0.75 awake True wall 411s
+   ✎ [16:38] exam 'ask': says the target sound in 66% of syllables when hungry vs 55% when sated (n=32/33)
+frown t=15.3m frowns 27 hungry 0.68 sated 0.65 (n=34/31) fed 14 energy 0.74 awake True wall 550s
+   ✎ [20:19] exam 'ask': says the target sound in 64% of syllables when hungry vs 66% when sated (n=33/29)
+frown t=18.4m frowns 37 hungry 0.50 sated 0.73 (n=22/11) fed 16 energy 0.78 awake True wall 678s
+frown t=21.5m frowns 41 hungry 0.68 sated 0.58 (n=28/24) fed 16 energy 0.57 awake False wall 767s

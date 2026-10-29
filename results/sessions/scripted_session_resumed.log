@@ -1,0 +1,53 @@
+resumed demo4.npz (age 510s of simulated life)
+  schooling: in lesson 1 of 4 (forage)  [demo4.tutor.json]
+resumed teaching from demo4.tutor.json
+teacher: scripted teacher (no LLM)
+lesson 1 of 4: Find food — turn toward the smell of food and walk to it, without help
+training for up to 2 creature-minutes as fast as the CPU allows; Ctrl-C stops (progress is saved)
+
+   [17:24 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › paka na na lo lo
+   [17:33 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › lu lu dusa
+      anima › kepo so
+   [17:43 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › guta po
+      anima › ki lu
+      anima › pako
+      anima › di ga
+   [17:53 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › nu mo so ko su bi
+   [18:02 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › lu ku
+   [18:12 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › pa pu su te pipo
+      anima › go ki ku ha ninu
+   [18:22 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › sa ta he kiha la sa
+   [18:31 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › du si bo su su mi
+      anima › pa sa po pi
+      anima › susi pu wu
+      anima › pu su
+   ✎ [18:59] exam 'forage': score 0.77 (chance 0.33; correct moves left 19/20, ahead 11/20, right 16/20)
+★ [18:59] graduated 'Find food': exam 0.77 (need 0.60; chance 0.33), food 1.8/min (need 1.0)
+   ── lesson 2: Copy me — start its reply with the consonant it just heard
+   [18:59 echo] scripted: Offer a new sound (w) to copy; the reflex praises a copy. → say 'wo wo'
+   [18:59 echo] scripted: Offer a new sound (p) to copy; the reflex praises a copy. → say 'pu pu'
+      anima › ti si li popa
+   [19:08 echo] scripted: Offer a new sound (n) to copy; the reflex praises a copy. → say 'no no'
+      anima › si to wuwo
+   [19:18 echo] scripted: Offer a new sound (t) to copy; the reflex praises a copy. → say 'te te'
+      anima › ke tutu
+   [19:28 echo] scripted: Offer a new sound (b) to copy; the reflex praises a copy. → say 'be be'
+      anima › pepepe
+   [19:37 echo] scripted: Offer a new sound (k) to copy; the reflex praises a copy. → say 'ku ku'
+      anima › wowopu
+   [19:47 echo] scripted: Offer a new sound (w) to copy; the reflex praises a copy. → say 'wa wa'
+
+Tutor report — creature age 10.5 min, teacher scripted
+  ✓ forage        passed at 9.8 min after 9.8 awake min of practice
+  … echo          in progress: echo rate 0.33 (need 0.15, chance 0.08, n=6/30); practised 0.7/5 awake min
+  skills: food 2.4/min, 'm' share 0.03, echo 0.33 (chance 0.08), energy 0.43
+  last exam 'forage' at 9.8 min: score 0.77 (chance 0.33; correct moves left 19/20, ahead 11/20, right 16/20)
+saved demo4.npz and demo4.tutor.json — run the same command again to continue the lessons, or meet it:  anima chat --brain demo4.npz

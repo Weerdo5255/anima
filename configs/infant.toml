@@ -1,0 +1,513 @@
+# The default 'infant' brain (anima.brain.presets.infant_spec), exported with
+#   anima spec --out configs/infant.toml
+# Edit freely and run it with:  anima live --spec configs/infant.toml --new
+# Fields: see docs/ARCHITECTURE.md and anima/brain/builder.py.
+
+name = "infant"
+seed = 7
+
+[[population]]
+name = "intero"
+size = 60
+channels = 4
+kind = "RS"
+noise = 2.0
+role = "intero"
+
+[population.input]
+max_current = 9.0
+labels = ["hunger", "fatigue", "boredom", "loneliness"]
+gated = false
+
+[[population]]
+name = "sense.bearing"
+size = 120
+channels = 8
+kind = "RS"
+noise = 2.0
+role = "sensory"
+
+[population.input]
+max_current = 12.0
+labels = ["-180", "-135", "-90", "-45", "0", "45", "90", "135"]
+
+[[population]]
+name = "sense.wall"
+size = 30
+channels = 3
+kind = "RS"
+noise = 2.0
+role = "sensory"
+
+[population.input]
+max_current = 12.0
+labels = ["left", "front", "right"]
+
+[[population]]
+name = "sense.taste"
+size = 10
+channels = 1
+kind = "RS"
+noise = 2.0
+role = "sensory"
+
+[population.input]
+max_current = 12.0
+labels = ["food"]
+
+[[population]]
+name = "audio"
+size = 136
+channels = 17
+kind = "RS"
+noise = 2.0
+role = "audio"
+
+[population.input]
+max_current = 14.0
+labels = ["b", "d", "g", "k", "l", "m", "n", "p", "s", "t", "w", "h", "a", "e", "i", "o", "u"]
+
+[[population]]
+name = "cortex.E"
+size = 800
+kind = "RS"
+noise = 4.0
+jitter = 1.0
+nmda_ratio = 0.35
+target_rate = 4.0
+role = "cortex"
+
+[[population]]
+name = "cortex.I"
+size = 200
+kind = "FS"
+noise = 3.5
+jitter = 1.0
+target_rate = 12.0
+role = "cortex"
+
+[[population]]
+name = "motor"
+size = 60
+channels = 3
+kind = "RS"
+noise = 3.5
+role = "motor"
+
+[population.output]
+labels = ["forward", "left", "right"]
+
+[[population]]
+name = "motor.inh"
+size = 30
+kind = "FS"
+noise = 2.0
+role = "motor"
+
+[[population]]
+name = "vocal.gate"
+size = 20
+channels = 1
+kind = "RS"
+noise = 3.0
+bias = -1.0
+nmda_ratio = 0.5
+role = "vocal"
+
+[population.output]
+labels = ["speak"]
+
+[[population]]
+name = "vocal.C"
+size = 96
+channels = 12
+kind = "RS"
+noise = 3.5
+role = "vocal"
+
+[population.output]
+labels = ["b", "d", "g", "k", "l", "m", "n", "p", "s", "t", "w", "h"]
+
+[[population]]
+name = "vocal.V"
+size = 50
+channels = 5
+kind = "RS"
+noise = 3.5
+role = "vocal"
+
+[population.output]
+labels = ["a", "e", "i", "o", "u"]
+
+[[population]]
+name = "vocal.Cinh"
+size = 20
+kind = "FS"
+noise = 2.0
+role = "vocal"
+
+[[population]]
+name = "vocal.Vinh"
+size = 15
+kind = "FS"
+noise = 2.0
+role = "vocal"
+
+[[population]]
+name = "listen.inh"
+size = 20
+kind = "FS"
+noise = 1.0
+role = "listen"
+
+[[projection]]
+pre = "cortex.E"
+post = "cortex.E"
+p = 0.1
+weight = 0.015
+w_max = 0.04
+scaling = true
+
+[projection.rule]
+type = "stdp"
+a_plus = 0.004
+a_minus = 0.005
+gate = "acetylcholine"
+
+[[projection]]
+pre = "cortex.E"
+post = "cortex.I"
+p = 0.2
+weight = 0.015
+
+[[projection]]
+pre = "cortex.I"
+post = "cortex.E"
+p = 0.3
+weight = 0.08
+
+[[projection]]
+pre = "cortex.I"
+post = "cortex.I"
+p = 0.2
+weight = 0.04
+
+[[projection]]
+pre = "intero"
+post = "cortex.E"
+p = 0.1
+weight = 0.02
+
+[[projection]]
+pre = "sense.bearing"
+post = "cortex.E"
+p = 0.1
+weight = 0.025
+
+[[projection]]
+pre = "sense.wall"
+post = "cortex.E"
+p = 0.1
+weight = 0.025
+
+[[projection]]
+pre = "sense.taste"
+post = "cortex.E"
+p = 0.1
+weight = 0.025
+
+[[projection]]
+pre = "audio"
+post = "cortex.E"
+p = 0.1
+weight = 0.025
+
+[[projection]]
+pre = "sense.bearing"
+post = "motor"
+p = 0.5
+weight = 0.008
+w_max = 0.05
+fixed_indegree = true
+
+[projection.rule]
+type = "reward_stdp"
+a_plus = 1.0
+a_minus = 0.0
+tau_e = 300.0
+lr = 0.05
+normalize = "both"
+
+[[projection]]
+pre = "sense.wall"
+post = "motor"
+p = 0.5
+weight = 0.004
+w_max = 0.04
+fixed_indegree = true
+
+[projection.rule]
+type = "reward_stdp"
+a_plus = 1.0
+a_minus = 0.0
+tau_e = 300.0
+lr = 0.05
+normalize = "both"
+
+[[projection]]
+pre = "cortex.E"
+post = "motor"
+p = 0.15
+weight = 0.002
+w_max = 0.02
+fixed_indegree = true
+
+[projection.rule]
+type = "reward_stdp"
+a_plus = 1.0
+a_minus = 0.0
+tau_e = 300.0
+lr = 0.05
+normalize = "both"
+
+[[projection]]
+pre = "intero"
+post = "motor"
+p = 0.5
+weight = 0.012
+fixed_indegree = true
+pre_channel_gain = [1.0, 0.0, 0.8, 0.0]
+
+[[projection]]
+pre = "motor"
+post = "motor"
+topology = "channels"
+p = 0.3
+weight = 0.01
+fixed_indegree = true
+
+[[projection]]
+pre = "motor"
+post = "motor.inh"
+p = 0.5
+weight = 0.02
+fixed_indegree = true
+
+[[projection]]
+pre = "motor.inh"
+post = "motor"
+p = 0.5
+weight = 0.06
+fixed_indegree = true
+
+[[projection]]
+pre = "intero"
+post = "vocal.gate"
+p = 0.6
+weight = 0.024
+fixed_indegree = true
+pre_channel_gain = [0.0, 0.0, 0.5, 1.0]
+
+[[projection]]
+pre = "audio"
+post = "vocal.gate"
+p = 0.3
+weight = 0.006
+
+[[projection]]
+pre = "audio"
+post = "listen.inh"
+p = 0.4
+weight = 0.02
+
+[[projection]]
+pre = "listen.inh"
+post = "vocal.gate"
+p = 0.6
+weight = 0.1
+
+[[projection]]
+pre = "cortex.E"
+post = "vocal.gate"
+p = 0.1
+weight = 0.002
+w_max = 0.02
+
+[projection.rule]
+type = "reward_stdp"
+a_plus = 1.0
+a_minus = 0.0
+tau_e = 2000.0
+lr = 0.06
+normalize = "pre"
+
+[[projection]]
+pre = "vocal.gate"
+post = "vocal.C"
+p = 0.3
+weight = 0.008
+fixed_indegree = true
+
+[[projection]]
+pre = "vocal.gate"
+post = "vocal.V"
+p = 0.3
+weight = 0.008
+fixed_indegree = true
+
+[[projection]]
+pre = "vocal.C"
+post = "vocal.C"
+topology = "channels"
+p = 0.4
+weight = 0.012
+fixed_indegree = true
+
+[[projection]]
+pre = "vocal.V"
+post = "vocal.V"
+topology = "channels"
+p = 0.4
+weight = 0.012
+fixed_indegree = true
+
+[[projection]]
+pre = "vocal.C"
+post = "vocal.Cinh"
+p = 0.5
+weight = 0.02
+fixed_indegree = true
+
+[[projection]]
+pre = "vocal.Cinh"
+post = "vocal.C"
+p = 0.5
+weight = 0.06
+fixed_indegree = true
+
+[[projection]]
+pre = "vocal.V"
+post = "vocal.Vinh"
+p = 0.5
+weight = 0.02
+fixed_indegree = true
+
+[[projection]]
+pre = "vocal.Vinh"
+post = "vocal.V"
+p = 0.5
+weight = 0.06
+fixed_indegree = true
+
+[[projection]]
+pre = "audio"
+post = "vocal.C"
+p = 0.6
+weight = 0.008
+w_max = 0.06
+fixed_indegree = true
+pre_channel_gain = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+[projection.rule]
+type = "hebbian"
+rate = 0.005
+
+[[projection]]
+pre = "audio"
+post = "vocal.V"
+p = 0.6
+weight = 0.008
+w_max = 0.06
+fixed_indegree = true
+pre_channel_gain = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+
+[projection.rule]
+type = "hebbian"
+rate = 0.005
+
+[[projection]]
+pre = "intero"
+post = "vocal.C"
+p = 0.5
+weight = 0.003
+w_max = 0.03
+fixed_indegree = true
+
+[projection.rule]
+type = "reward_stdp"
+a_plus = 1.0
+a_minus = 0.0
+tau_e = 2000.0
+lr = 0.06
+normalize = "pre"
+
+[[projection]]
+pre = "intero"
+post = "vocal.V"
+p = 0.5
+weight = 0.003
+w_max = 0.03
+fixed_indegree = true
+
+[projection.rule]
+type = "reward_stdp"
+a_plus = 1.0
+a_minus = 0.0
+tau_e = 2000.0
+lr = 0.06
+normalize = "pre"
+
+[[projection]]
+pre = "cortex.E"
+post = "vocal.C"
+p = 0.1
+weight = 0.002
+w_max = 0.02
+fixed_indegree = true
+
+[projection.rule]
+type = "reward_stdp"
+a_plus = 1.0
+a_minus = 0.0
+tau_e = 2000.0
+lr = 0.06
+normalize = "pre"
+
+[[projection]]
+pre = "cortex.E"
+post = "vocal.V"
+p = 0.1
+weight = 0.002
+w_max = 0.02
+fixed_indegree = true
+
+[projection.rule]
+type = "reward_stdp"
+a_plus = 1.0
+a_minus = 0.0
+tau_e = 2000.0
+lr = 0.06
+normalize = "pre"
+
+[[projection]]
+pre = "motor"
+post = "cortex.E"
+p = 0.05
+weight = 0.02
+
+[[projection]]
+pre = "vocal.C"
+post = "cortex.E"
+p = 0.05
+weight = 0.015
+
+[[projection]]
+pre = "vocal.V"
+post = "cortex.E"
+p = 0.05
+weight = 0.015
+
+[brain]
+
+[brain.drives]
+day_length_s = 1200.0

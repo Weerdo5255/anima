@@ -1,0 +1,4 @@
+experiment s1 t= 0.0min probe 0.34 passive nan (n=0) food/min 0.0 energy 0.75 food items 3 (wall 10s)
+experiment s1 t= 2.5min probe 0.70 passive 0.33 (n=80) food/min 0.3 energy 0.26 food items 3 (wall 107s)
+experiment s1 t= 5.0min probe 0.73 passive 0.35 (n=80) food/min 1.8 energy 0.37 food items 3 (wall 203s)
+experiment s1 t= 7.5min probe 0.77 passive 0.33 (n=80) food/min 1.8 energy 0.16 food items 3 (wall 299s)
