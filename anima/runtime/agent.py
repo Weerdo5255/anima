@@ -119,7 +119,7 @@ class Agent:
         data = dict(data)
         data.setdefault("t", self.t_ms / 1000.0)
         data["kind"] = kind
-        if kind not in ("syllable", "snapshot", "action"):
+        if kind not in ("syllable", "snapshot", "action", "thought"):
             self.log.append((self.t_ms / 1000.0, kind, data))
         for fn in self._listeners.get(kind, ()):
             fn(data)
@@ -287,6 +287,8 @@ class Agent:
             cfg = dict(cfg)
             cfg["motor"] = MotorConfig(**cfg.get("motor", {}))
             cfg["voice"] = VoiceConfig(**cfg.get("voice", {}))
+            if "hands" in cfg:
+                cfg["hands"] = MotorConfig(**cfg["hands"])
             body_cfg = BodyConfig(**cfg)
         agent = cls(brain, world, body_cfg, name=s.get("name", "anima"), world_spec=ws)
         agent.body.load_state_dict(s["body"])

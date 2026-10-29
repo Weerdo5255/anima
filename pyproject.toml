@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "anima-brain"
-version = "0.2.0"
+version = "0.3.0"
 description = "A local framework for brain-like spiking agents that live on their own clock instead of waiting for prompts."
 readme = "README.md"
 requires-python = ">=3.10"

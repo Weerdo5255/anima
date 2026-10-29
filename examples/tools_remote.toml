@@ -1,0 +1,17 @@
+# A program that runs somewhere else and answers through `anima serve`:
+#
+#   anima serve --tools examples/tools_remote.toml          (any creature: the bell is rung by voice)
+#   python examples/05_external_program.py          (in another terminal)
+#
+# Nothing is launched when the creature rings the bell (any syllable starting
+# with "b"): the call is published as a tool_call event, and whichever program
+# answers it with POST /tool_result first decides what happens.  Unanswered
+# calls fail after timeout_s.
+
+[[tool]]
+name = "bell"
+say = "b"
+description = "a bell someone else answers"
+remote = true
+timeout_s = 5
+cooldown_s = 4

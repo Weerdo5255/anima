@@ -29,11 +29,15 @@ MOTOR_LABELS = ["forward", "left", "right"]
 
 
 def infant_spec(cortex_size: int = 1000, seed: int = 7, day_length_s: float = 1200.0,
-                **brain_overrides: Any) -> dict[str, Any]:
+                hands: int = 0, **brain_overrides: Any) -> dict[str, Any]:
     """The default brain.
 
     cortex_size: total cortical neurons (80% excitatory, 20% inhibitory).
     day_length_s: length of one simulated day-night cycle in seconds.
+    hands: number of "hands" — action channels for using programs (see
+        :mod:`anima.tools`).  0 (the default) builds exactly the brain of
+        earlier versions; with hands > 0 a small extra motor area is added
+        after everything else.
     brain_overrides: e.g. ``effects={"social_reward": 2.0}``.
     """
     nE = int(round(cortex_size * 0.8))
@@ -148,10 +152,49 @@ def infant_spec(cortex_size: int = 1000, seed: int = 7, day_length_s: float = 12
         {"pre": "vocal.C", "post": "cortex.E", "p": 0.05, "weight": 0.015},
         {"pre": "vocal.V", "post": "cortex.E", "p": 0.05, "weight": 0.015},
     ]
+    if hands:
+        add_hands(pops, projs, hands)
     brain: dict[str, Any] = {"drives": {"day_length_s": day_length_s}}
     for k, v in brain_overrides.items():
         brain.setdefault(k, {}).update(v)
     return {"name": "infant", "seed": seed, "population": pops, "projection": projs, "brain": brain}
+
+
+def add_hands(pops: list[dict[str, Any]], projs: list[dict[str, Any]], n: int) -> None:
+    """A small motor area for using programs: ``n`` competing "hands".
+
+    Like the movement channels, the hands compete through shared inhibition
+    and are released one at a time; a reaching hand is committed for a moment
+    and then rests for a few seconds.  What a hand does is decided outside the
+    brain (a program bound to it).  Which hand to use, and when, is learned:
+    cortex and body state reach the hands through dopamine-gated synapses
+    whose eligibility lasts ~2 s, so a program's consequence can still be
+    credited when it arrives a little later.  Boredom (and hunger) make it
+    reach more — exploration.  ``sense.hands`` reports back which hand's
+    program just answered.
+    """
+    labels = [f"hand{k}" for k in range(n)]
+    rstdp_hands = {"type": "reward_stdp", "a_plus": 1.0, "a_minus": 0.0, "tau_e": 2000.0,
+                   "lr": 0.06, "normalize": "pre"}
+    pops += [
+        {"name": "sense.hands", "size": 10 * n, "channels": n, "kind": "RS", "noise": 2.0,
+         "role": "sensory", "input": {"max_current": 12.0, "labels": labels}},
+        {"name": "hands", "size": 15 * n, "channels": n, "kind": "RS", "noise": 3.5, "role": "motor",
+         "output": {"labels": labels}},
+        {"name": "hands.inh", "size": 15, "kind": "FS", "noise": 2.0, "role": "motor"},
+    ]
+    projs += [
+        {"pre": "cortex.E", "post": "hands", "p": 0.15, "weight": 0.002, "w_max": 0.02,
+         "fixed_indegree": True, "rule": dict(rstdp_hands)},
+        {"pre": "intero", "post": "hands", "p": 0.5, "weight": 0.006, "w_max": 0.03,
+         "fixed_indegree": True, "pre_channel_gain": [0.7, 0.0, 1.0, 0.3], "rule": dict(rstdp_hands)},
+        {"pre": "hands", "post": "hands", "topology": "channels", "p": 0.3, "weight": 0.01,
+         "fixed_indegree": True},
+        {"pre": "hands", "post": "hands.inh", "p": 0.5, "weight": 0.02, "fixed_indegree": True},
+        {"pre": "hands.inh", "post": "hands", "p": 0.5, "weight": 0.06, "fixed_indegree": True},
+        {"pre": "sense.hands", "post": "cortex.E", "p": 0.1, "weight": 0.025},
+        {"pre": "hands", "post": "cortex.E", "p": 0.05, "weight": 0.02},
+    ]
 
 
 def minimal_spec(seed: int = 1) -> dict[str, Any]:

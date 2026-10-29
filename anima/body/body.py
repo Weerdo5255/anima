@@ -40,11 +40,15 @@ class BodyConfig:
     bump_reward: float = -0.25
     smell_gain_sated: float = 0.35  # smell sensitivity when sated (1.0 when starving)
     speech_contact: float = 1.0  # social contact strength of being spoken to
+    hand_cost: float = 0.0005  # energy per use of a hand (creatures with hands)
     #: sensor name in the world -> input port in the brain
     sensor_ports: dict[str, str] = field(default_factory=lambda: {
         "bearing": "sense.bearing", "wall": "sense.wall", "taste": "sense.taste"})
     motor: MotorConfig = field(default_factory=MotorConfig)
     voice: VoiceConfig = field(default_factory=VoiceConfig)
+    # hands reach rarely and deliberately: higher threshold, a few seconds' rest
+    hands: MotorConfig = field(default_factory=lambda: MotorConfig(
+        threshold=0.42, margin=1.3, duration_ms=250.0, refractory_ms=5000.0))
 
 
 class Body:
@@ -54,6 +58,7 @@ class Body:
         self.cfg = config or BodyConfig()
         self.energy = self.cfg.energy
         self.motor = MotorDecoder(brain, "motor", self.cfg.motor) if "motor" in brain.outputs else None
+        self.hands = MotorDecoder(brain, "hands", self.cfg.hands) if "hands" in brain.outputs else None
         self.ear = None
         if "audio" in brain.inputs:
             from ..brain.presets import CONSONANTS, VOWELS
@@ -65,6 +70,8 @@ class Body:
         self._was_hearing = False
         self.stats = {"ate": 0, "bumps": 0, "moves": 0, "syllables": 0, "utterances": 0,
                       "heard": 0}
+        if self.hands is not None:
+            self.stats["reaches"] = 0
 
     # ------------------------------------------------------------ senses
     def hear(self, text: str, valence: float = 0.0) -> None:
@@ -75,6 +82,12 @@ class Body:
             if not self.brain.awake:
                 self.brain.sleep.stimulate(0.08 * n)
             self.stats["heard"] += 1
+
+    def hear_sound(self, text: str) -> int:
+        """A sound that is not someone talking to it (e.g. a program's
+        output): heard phoneme by phoneme like speech, but with no social
+        contact.  Returns the number of phonemes queued."""
+        return self.ear.hear(text) if self.ear is not None else 0
 
     def sense(self, dt_ms: float) -> None:
         b = self.brain
@@ -129,6 +142,13 @@ class Body:
                     before = self._smell_at_start
                     rel = (after - before) / (0.5 * (after + before) + 0.02)
                     b.deliver_reward(cfg.approach_reward * b.drives.hunger * rel, "smell")
+        if self.hands is not None:
+            res = self.hands.update(t_ms)
+            if res is not None and res[0] == "start":
+                k = res[1]
+                self.energy -= cfg.hand_cost
+                self.stats["reaches"] = self.stats.get("reaches", 0) + 1
+                events.append(("hand", {"hand": k, "label": self.hands.labels[k], "t": t_ms / 1000.0}))
         if self.voice is not None:
             for ev in self.voice.update(t_ms):
                 events.append(ev)
@@ -151,6 +171,7 @@ class Body:
                 "voice": self.voice.state_dict() if self.voice else None,
                 "ear": self.ear.state_dict() if self.ear else None,
                 "motor": self.motor.state_dict() if self.motor else None,
+                "hands": self.hands.state_dict() if self.hands else None,
                 "smell_at_start": self._smell_at_start,
                 "cfg": asdict(self.cfg)}
 
@@ -163,4 +184,6 @@ class Body:
             self.ear.load_state_dict(s["ear"])
         if self.motor is not None and s.get("motor"):
             self.motor.load_state_dict(s["motor"])
+        if self.hands is not None and s.get("hands"):
+            self.hands.load_state_dict(s["hands"])
         self._smell_at_start = float(s.get("smell_at_start", 0.0))

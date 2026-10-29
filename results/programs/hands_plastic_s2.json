@@ -1,0 +1,200 @@
+{
+ "seed": 2,
+ "paying": 0,
+ "baseline_counts": [
+  2,
+  3,
+  3,
+  3
+ ],
+ "curve": [
+  {
+   "t0": 0.0,
+   "t1": 120.0,
+   "reaches_per_min": 5.5,
+   "share": 0.18181818181818182,
+   "counts": [
+    2,
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "t0": 120.0,
+   "t1": 240.0,
+   "reaches_per_min": 5.5,
+   "share": 0.45454545454545453,
+   "counts": [
+    5,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "t0": 240.0,
+   "t1": 360.0,
+   "reaches_per_min": 10.0,
+   "share": 0.95,
+   "counts": [
+    19,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "t0": 360.0,
+   "t1": 480.0,
+   "reaches_per_min": 10.0,
+   "share": 0.95,
+   "counts": [
+    19,
+    1,
+    0,
+    0
+   ]
+  },
+  {
+   "t0": 480.0,
+   "t1": 600.0,
+   "reaches_per_min": 10.5,
+   "share": 0.9523809523809523,
+   "counts": [
+    20,
+    0,
+    1,
+    0
+   ]
+  },
+  {
+   "t0": 600.0,
+   "t1": 720.0,
+   "reaches_per_min": 11.0,
+   "share": 1.0,
+   "counts": [
+    22,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "t0": 720.0,
+   "t1": 840.0,
+   "reaches_per_min": 11.0,
+   "share": 1.0,
+   "counts": [
+    22,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "t0": 840.0,
+   "t1": 960.0,
+   "reaches_per_min": 10.5,
+   "share": 1.0,
+   "counts": [
+    21,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "t0": 960.0,
+   "t1": 1080.0,
+   "reaches_per_min": 11.0,
+   "share": 1.0,
+   "counts": [
+    22,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "t0": 1080.0,
+   "t1": 1200.0,
+   "reaches_per_min": 11.0,
+   "share": 1.0,
+   "counts": [
+    22,
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "stats": {
+  "program0": {
+   "calls": 174,
+   "ok": 174,
+   "failed": 0,
+   "skipped": 0,
+   "reward": 103.19999999999973
+  },
+  "program1": {
+   "calls": 6,
+   "ok": 6,
+   "failed": 0,
+   "skipped": 0,
+   "reward": 0.0
+  },
+  "program2": {
+   "calls": 6,
+   "ok": 6,
+   "failed": 0,
+   "skipped": 0,
+   "reward": 0.0
+  },
+  "program3": {
+   "calls": 6,
+   "ok": 6,
+   "failed": 0,
+   "skipped": 0,
+   "reward": 0.0
+  }
+ },
+ "share_baseline": 0.18181818181818182,
+ "share_last_10min": 1.0,
+ "food_eaten": 54,
+ "intentions": {
+  "n": 41,
+  "came_true": 0.5365853658536586,
+  "chance": 0.3730464372312897,
+  "persistence": 0.34146341463414637,
+  "already_doing": 0.43902439024390244,
+  "window_s": 3.0
+ },
+ "urges": {
+  "n": 2,
+  "came_true": 0.5,
+  "previous_reach": 0.5,
+  "recent_majority": 1.0,
+  "horizon_s": 30.0,
+  "readout_at_reach": {
+   "reaches": 181,
+   "agrees": 0.9613259668508287,
+   "previous_reach": 0.9277777777777778,
+   "agrees_when_clear": 0.9826589595375722,
+   "clear_share": 0.9558011049723757
+  },
+  "first_urge_s": 183.32,
+  "first_habit_s": 223.24
+ },
+ "thought_rates": {
+  "per_min": 34.55,
+  "action": 63,
+  "evaluation": 113,
+  "feeling": 3,
+  "intention": 43,
+  "memory": 77,
+  "perception": 109,
+  "program": 192,
+  "speech": 91
+ }
+}

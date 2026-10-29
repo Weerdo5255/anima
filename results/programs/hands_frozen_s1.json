@@ -1,0 +1,196 @@
+{
+ "seed": 1,
+ "paying": 0,
+ "baseline_counts": [
+  0,
+  5,
+  3,
+  2
+ ],
+ "curve": [
+  {
+   "t0": 0.0,
+   "t1": 120.0,
+   "reaches_per_min": 5.0,
+   "share": 0.0,
+   "counts": [
+    0,
+    5,
+    3,
+    2
+   ]
+  },
+  {
+   "t0": 120.0,
+   "t1": 240.0,
+   "reaches_per_min": 6.5,
+   "share": 0.23076923076923078,
+   "counts": [
+    3,
+    3,
+    4,
+    3
+   ]
+  },
+  {
+   "t0": 240.0,
+   "t1": 360.0,
+   "reaches_per_min": 5.0,
+   "share": 0.5,
+   "counts": [
+    5,
+    0,
+    3,
+    2
+   ]
+  },
+  {
+   "t0": 360.0,
+   "t1": 480.0,
+   "reaches_per_min": 5.0,
+   "share": 0.5,
+   "counts": [
+    5,
+    1,
+    3,
+    1
+   ]
+  },
+  {
+   "t0": 480.0,
+   "t1": 600.0,
+   "reaches_per_min": 4.5,
+   "share": 0.4444444444444444,
+   "counts": [
+    4,
+    2,
+    2,
+    1
+   ]
+  },
+  {
+   "t0": 600.0,
+   "t1": 720.0,
+   "reaches_per_min": 6.0,
+   "share": 0.16666666666666666,
+   "counts": [
+    2,
+    2,
+    6,
+    2
+   ]
+  },
+  {
+   "t0": 720.0,
+   "t1": 840.0,
+   "reaches_per_min": 4.0,
+   "share": 0.25,
+   "counts": [
+    2,
+    1,
+    3,
+    2
+   ]
+  },
+  {
+   "t0": 840.0,
+   "t1": 960.0,
+   "reaches_per_min": 4.0,
+   "share": 0.25,
+   "counts": [
+    2,
+    1,
+    3,
+    2
+   ]
+  },
+  {
+   "t0": 960.0,
+   "t1": 1080.0,
+   "reaches_per_min": 5.5,
+   "share": 0.36363636363636365,
+   "counts": [
+    4,
+    1,
+    4,
+    2
+   ]
+  },
+  {
+   "t0": 1080.0,
+   "t1": 1200.0,
+   "reaches_per_min": 5.5,
+   "share": 0.36363636363636365,
+   "counts": [
+    4,
+    0,
+    5,
+    2
+   ]
+  }
+ ],
+ "stats": {
+  "program0": {
+   "calls": 31,
+   "ok": 31,
+   "failed": 0,
+   "skipped": 0,
+   "reward": 18.6
+  },
+  "program1": {
+   "calls": 16,
+   "ok": 16,
+   "failed": 0,
+   "skipped": 0,
+   "reward": 0.0
+  },
+  "program2": {
+   "calls": 36,
+   "ok": 36,
+   "failed": 0,
+   "skipped": 0,
+   "reward": 0.0
+  },
+  "program3": {
+   "calls": 19,
+   "ok": 19,
+   "failed": 0,
+   "skipped": 0,
+   "reward": 0.0
+  }
+ },
+ "share_baseline": 0.0,
+ "share_last_10min": 0.28,
+ "food_eaten": 39,
+ "intentions": {
+  "n": 53,
+  "came_true": 0.41509433962264153,
+  "chance": 0.3399773017449285,
+  "persistence": 0.33962264150943394,
+  "already_doing": 0.5849056603773585,
+  "window_s": 3.0
+ },
+ "urges": {
+  "n": 0,
+  "readout_at_reach": {
+   "reaches": 92,
+   "agrees": 0.34782608695652173,
+   "previous_reach": 0.21978021978021978,
+   "agrees_when_clear": null,
+   "clear_share": 0.0
+  },
+  "first_urge_s": null,
+  "first_habit_s": 320.17
+ },
+ "thought_rates": {
+  "per_min": 27.0,
+  "action": 43,
+  "evaluation": 43,
+  "feeling": 10,
+  "intention": 53,
+  "memory": 33,
+  "perception": 128,
+  "program": 102,
+  "speech": 128
+ }
+}

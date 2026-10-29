@@ -43,9 +43,12 @@ def _spark(values: list[float], width: int) -> str:
 
 
 class Dashboard:
-    def __init__(self, agent: Agent, brain_path: Path | None) -> None:
+    def __init__(self, agent: Agent, brain_path: Path | None, belt: Any = None, mind: Any = None) -> None:
         self.agent = agent
         self.brain_path = brain_path
+        self.belt = belt
+        self.mind = mind
+        self.show_thoughts = mind is not None
         self.events: queue.Queue = queue.Queue()
         self.chat: deque[tuple[str, str]] = deque(maxlen=200)
         self.rates: dict[str, deque[float]] = {k: deque(maxlen=120) for _, k in REGIONS}
@@ -59,7 +62,7 @@ class Dashboard:
                                              replace=False))
         self.raster = np.zeros((len(self.raster_ids), self.raster_cols), dtype=bool)
         self._last_counts = net.spike_count[self.raster_ids].copy()
-        for kind in ("utterance", "heard", "stage", "ate"):
+        for kind in ("utterance", "heard", "stage", "ate", "thought"):
             agent.on(kind, lambda e: self.events.put(e))
 
     # ------------------------------------------------------------ helpers
@@ -82,6 +85,8 @@ class Dashboard:
                 self.chat.append(("event", f"{t}  {msg}"))
             elif k == "ate":
                 self.chat.append(("event", f"{t}  (eats)"))
+            elif k == "thought" and self.show_thoughts and e.get("type") not in ("speech", "social", "state"):
+                self.chat.append(("thought", f"{t}  ~ {e.get('type', ''):<10} {e.get('text', '')}"))
 
     def _sample(self) -> None:
         snap = self.agent.latest
@@ -164,10 +169,12 @@ class Dashboard:
             self._put(scr, ry + 1 + i, 1, line, curses.color_pair(1))
         # ---- conversation
         cy = max(ry + 1 + self.raster.shape[0], y + 2 + len(REGIONS)) + 1
-        self._put(scr, cy, 1, "conversation", bold)
+        self._put(scr, cy, 1, "conversation" + (" and thoughts (/mind hides them)" if self.show_thoughts
+                                                 else ""), bold)
         n = max(1, H - cy - 3)
         for i, (who, line) in enumerate(list(self.chat)[-n:]):
-            attr = curses.color_pair(1) | bold if who == "anima" else (dim if who == "event" else 0)
+            attr = (curses.color_pair(1) | bold if who == "anima" else dim if who == "event"
+                    else curses.color_pair(4) if who == "thought" else 0)
             self._put(scr, cy + 1 + i, 1, line, attr)
         partial = s.get("speaking", "")
         if partial:
@@ -175,7 +182,8 @@ class Dashboard:
         if self.status:
             self._put(scr, H - 2, W - len(self.status) - 2, self.status, dim)
         self._put(scr, H - 1, 0, "you › " + self.buffer, bold)
-        self._put(scr, H - 1, W - 41, "Enter: say  /feed  /save  /sleep  /wake  Esc: quit", dim)
+        keys = "Enter: say  /feed  /mind  /save  /sleep  /wake  Esc: quit"
+        self._put(scr, H - 1, W - len(keys) - 2, keys, dim)
         scr.move(H - 1, min(W - 2, 6 + len(self.buffer)))
         scr.refresh()
 
@@ -199,6 +207,9 @@ class Dashboard:
                 from .chat import feed
                 parts = line.split()
                 self.status = feed(a, parts[1] if len(parts) > 1 else "ahead")
+            elif cmd == "/mind" and self.mind is not None:
+                self.show_thoughts = not self.show_thoughts
+                self.status = f"thoughts {'shown' if self.show_thoughts else 'hidden'}"
             else:
                 self.status = f"unknown {cmd}"
             return True
@@ -250,8 +261,9 @@ class Dashboard:
             self.agent.stop()
 
 
-def run_dashboard(agent: Agent, brain_path: Path | None, speed: float = 1.0, **_: Any) -> None:
-    dash = Dashboard(agent, brain_path)
+def run_dashboard(agent: Agent, brain_path: Path | None, speed: float = 1.0, belt: Any = None,
+                  mind: Any = None, **_: Any) -> None:
+    dash = Dashboard(agent, brain_path, belt=belt, mind=mind)
     try:
         curses.wrapper(lambda scr: dash.loop(scr, speed))
     except KeyboardInterrupt:

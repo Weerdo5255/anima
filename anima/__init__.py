@@ -12,6 +12,10 @@ Quick start::
     agent.on("utterance", lambda e: print("anima:", e["text"]))
     agent.start()                          # lives in real time, in the background
     agent.hear("hello")                    # say something whenever you like
+
+Programs it may use (``anima.tools``), the log of its thoughts
+(``anima.mind``) and the local HTTP connection for other programs
+(``anima.bridge``) are separate modules you attach to a living agent.
 """
 
 from .body import Body, BodyConfig
@@ -20,7 +24,7 @@ from .core import Network, Population, Projection
 from .runtime import Agent
 from .world import EmptyWorld, ForagingWorld, World
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "Agent", "Brain", "BrainBuilder", "build_brain", "infant_spec", "minimal_spec",

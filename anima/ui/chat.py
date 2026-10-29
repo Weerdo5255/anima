@@ -27,6 +27,9 @@ HELP = """commands:
   /world         show the foraging arena
   /stats         lifetime counters
   /feed [where]  give it food: ahead (default), left, right or near
+  /thoughts [n]  its latest thoughts (read out of its brain activity)
+  /mind          toggle printing its thoughts as they happen
+  /tools         the programs it may use, and how they have gone
   /save [file]   save the creature
   /sleep /wake   force a sleep stage
   /quiet         toggle printing of non-speech events
@@ -49,16 +52,22 @@ def feed(agent: Agent, where: str = "ahead") -> str:
 
 class ChatUI:
     def __init__(self, agent: Agent, brain_path: Path | None, show_events: bool = True,
-                 out: Callable[[str], None] | None = None) -> None:
+                 out: Callable[[str], None] | None = None, belt: Any = None, mind: Any = None,
+                 show_thoughts: bool = False) -> None:
         self.agent = agent
         self.brain_path = brain_path
         self.show_events = show_events
+        self.belt = belt
+        self.mind = mind
+        self.show_thoughts = show_thoughts and mind is not None
         self._q: queue.Queue = queue.Queue()
         self._print_lock = threading.Lock()
         self._out = out or self._default_out
         agent.on("utterance", lambda e: self._q.put(("utterance", e)))
         agent.on("stage", lambda e: self._q.put(("stage", e)))
         agent.on("ate", lambda e: self._q.put(("ate", e)))
+        agent.on("tool_result", lambda e: self._q.put(("tool_result", e)))
+        agent.on("thought", lambda e: self._q.put(("thought", e)))
         self._stop = threading.Event()
 
     # ------------------------------------------------------------ output
@@ -90,6 +99,11 @@ class ChatUI:
                 self._out(f"\033[2m      (anima {msg} at {stamp})\033[0m")
             elif kind == "ate" and self.show_events:
                 self._out("\033[2m      (anima found food)\033[0m")
+            elif kind == "tool_result" and self.show_events and not self.show_thoughts:
+                self._out(f"\033[2m      (anima used {e['tool']}: {e['summary']})\033[0m")
+            elif kind == "thought" and self.show_thoughts and e.get("type") not in ("speech", "social"):
+                from ..mind import format_thought
+                self._out("      " + format_thought({**e, "kind": e.get("type", "")}, color=True))
 
     # ------------------------------------------------------------ commands
     def command(self, line: str) -> bool:
@@ -119,6 +133,26 @@ class ChatUI:
                 self._out(f"saved to {p}")
         elif cmd == "/feed":
             self._out(feed(a, parts[1] if len(parts) > 1 else "ahead"))
+        elif cmd == "/thoughts":
+            if self.mind is None:
+                self._out("its thoughts are not being read (started with --no-thoughts)")
+            else:
+                from ..mind import format_thought
+                n = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 15
+                items = self.mind.recent(n)
+                for t in items:
+                    self._out("  " + format_thought(t, color=True))
+                if not items:
+                    self._out("  (nothing yet)")
+        elif cmd == "/mind":
+            if self.mind is None:
+                self._out("its thoughts are not being read (started with --no-thoughts)")
+            else:
+                self.show_thoughts = not self.show_thoughts
+                self._out(f"thoughts {'shown as they happen' if self.show_thoughts else 'hidden'}")
+        elif cmd == "/tools":
+            self._out(self.belt.report() if self.belt is not None else
+                      "no programs (start with --tools FILE, see examples/tools.toml)")
         elif cmd == "/sleep":
             a.call_soon(lambda ag: ag.brain.sleep.force("nrem", ag.brain.time_s))
         elif cmd == "/wake":
@@ -171,5 +205,6 @@ class ChatUI:
 
 
 def run_chat(agent: Agent, brain_path: Path | None, speed: float = 1.0,
-             show_events: bool = True, **_: Any) -> None:
-    ChatUI(agent, brain_path, show_events).run(speed=speed)
+             show_events: bool = True, belt: Any = None, mind: Any = None, show_thoughts: bool = False,
+             **_: Any) -> None:
+    ChatUI(agent, brain_path, show_events, belt=belt, mind=mind, show_thoughts=show_thoughts).run(speed=speed)

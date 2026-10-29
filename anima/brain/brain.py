@@ -312,6 +312,8 @@ class Brain:
         if self.hippocampus.encode(self.time_s, snap, actions, reward,
                                    surprise if surprise > eff.memory_surprise_threshold else 0.0):
             self._last_memory_t = self.time_s
+            self.events.append(("memory", {"t": self.time_s, "reward": float(reward),
+                                           "surprise": float(surprise), "actions": dict(actions)}))
 
     def _replay(self, dt_s: float) -> float:
         """Run hippocampal replay during NREM; returns extra dopamine."""
@@ -336,7 +338,7 @@ class Brain:
                         fb[ch] = eff.replay_feedback
                         self.set_feedback(g, fb)
                 self.events.append(("replay", {"t": self.time_s, "reward": ep.reward,
-                                               "actions": dict(ep.actions)}))
+                                               "actions": dict(ep.actions), "episode_t": ep.t_s}))
         if self._replay_episode is not None:
             return float(np.clip(eff.replay_da_gain * self._replay_episode.reward, -0.5, 0.5))
         return 0.0

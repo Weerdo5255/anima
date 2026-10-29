@@ -1,0 +1,48 @@
+# Programs the creature may use:  anima chat --brain pet.npz --new --tools examples/tools.toml
+#
+# Each program is bound to something the creature can do: reach with a hand
+# (hand = 0..3; a new creature gets 4 hands when this file binds any) or say a
+# syllable (say = "la": exactly that syllable; say = "l": any syllable
+# starting with l).  It cannot type commands or choose arguments.
+#
+# A command never runs through a shell.  {python} is the Python running anima;
+# {hunger} {fatigue} {boredom} {loneliness} {energy} {clock} {stage} {t}
+# {tool} {call_id} {what} are filled from the creature's state, and the whole
+# call arrives as JSON on the program's stdin.  The program answers on stdout
+# with plain text (which the creature hears) or a JSON object:
+#   {"say": "...", "reward": -1..1, "food": "ahead"|"left"|"right"|"near", "ok": true}
+#
+# Check this file and try a program:   anima tools examples/tools.toml --try vending
+
+[[tool]]
+name = "vending"
+hand = 0
+description = "a snack machine: food, at most once every 30 creature-seconds"
+command = ["{python}", "tools/vending.py"]
+cooldown_s = 3
+
+[[tool]]
+name = "clock"
+hand = 1
+description = "says the time of day (just a sound to it)"
+command = ["{python}", "tools/clock.py", "{clock}"]
+
+[[tool]]
+name = "music"
+say = "la"
+description = "plays a little tune; pleasant when it is bored"
+command = ["{python}", "tools/music.py", "{boredom}"]
+cooldown_s = 10
+
+# A web service on your machine (POSTs the call as JSON, the response is the answer):
+# [[tool]]
+# name = "lamp"
+# hand = 2
+# url = "http://127.0.0.1:8080/lamp"
+# timeout_s = 3
+
+# A Python function:
+# [[tool]]
+# name = "dice"
+# hand = 3
+# function = "mypackage.toys:dice"      # dice(call) -> answer

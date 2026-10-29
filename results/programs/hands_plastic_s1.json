@@ -1,0 +1,200 @@
+{
+ "seed": 1,
+ "paying": 0,
+ "baseline_counts": [
+  0,
+  5,
+  3,
+  2
+ ],
+ "curve": [
+  {
+   "t0": 0.0,
+   "t1": 120.0,
+   "reaches_per_min": 5.0,
+   "share": 0.0,
+   "counts": [
+    0,
+    5,
+    3,
+    2
+   ]
+  },
+  {
+   "t0": 120.0,
+   "t1": 240.0,
+   "reaches_per_min": 6.5,
+   "share": 0.38461538461538464,
+   "counts": [
+    5,
+    2,
+    4,
+    2
+   ]
+  },
+  {
+   "t0": 240.0,
+   "t1": 360.0,
+   "reaches_per_min": 8.0,
+   "share": 0.875,
+   "counts": [
+    14,
+    1,
+    0,
+    1
+   ]
+  },
+  {
+   "t0": 360.0,
+   "t1": 480.0,
+   "reaches_per_min": 10.5,
+   "share": 1.0,
+   "counts": [
+    21,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "t0": 480.0,
+   "t1": 600.0,
+   "reaches_per_min": 10.5,
+   "share": 1.0,
+   "counts": [
+    21,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "t0": 600.0,
+   "t1": 720.0,
+   "reaches_per_min": 10.5,
+   "share": 1.0,
+   "counts": [
+    21,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "t0": 720.0,
+   "t1": 840.0,
+   "reaches_per_min": 11.0,
+   "share": 1.0,
+   "counts": [
+    22,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "t0": 840.0,
+   "t1": 960.0,
+   "reaches_per_min": 10.5,
+   "share": 1.0,
+   "counts": [
+    21,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "t0": 960.0,
+   "t1": 1080.0,
+   "reaches_per_min": 11.0,
+   "share": 1.0,
+   "counts": [
+    22,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "t0": 1080.0,
+   "t1": 1200.0,
+   "reaches_per_min": 11.0,
+   "share": 1.0,
+   "counts": [
+    22,
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "stats": {
+  "program0": {
+   "calls": 169,
+   "ok": 169,
+   "failed": 0,
+   "skipped": 0,
+   "reward": 101.39999999999975
+  },
+  "program1": {
+   "calls": 8,
+   "ok": 8,
+   "failed": 0,
+   "skipped": 0,
+   "reward": 0.0
+  },
+  "program2": {
+   "calls": 7,
+   "ok": 7,
+   "failed": 0,
+   "skipped": 0,
+   "reward": 0.0
+  },
+  "program3": {
+   "calls": 5,
+   "ok": 5,
+   "failed": 0,
+   "skipped": 0,
+   "reward": 0.0
+  }
+ },
+ "share_baseline": 0.0,
+ "share_last_10min": 1.0,
+ "food_eaten": 35,
+ "intentions": {
+  "n": 30,
+  "came_true": 0.43333333333333335,
+  "chance": 0.31070732386521865,
+  "persistence": 0.43333333333333335,
+  "already_doing": 0.5333333333333333,
+  "window_s": 3.0
+ },
+ "urges": {
+  "n": 1,
+  "came_true": 1.0,
+  "previous_reach": 1.0,
+  "recent_majority": 1.0,
+  "horizon_s": 30.0,
+  "readout_at_reach": {
+   "reaches": 179,
+   "agrees": 0.9385474860335196,
+   "previous_reach": 0.9101123595505618,
+   "agrees_when_clear": 0.9542857142857143,
+   "clear_share": 0.9776536312849162
+  },
+  "first_urge_s": 157.92,
+  "first_habit_s": 161.96
+ },
+ "thought_rates": {
+  "per_min": 32.9,
+  "action": 46,
+  "evaluation": 118,
+  "feeling": 6,
+  "intention": 31,
+  "memory": 80,
+  "perception": 104,
+  "program": 189,
+  "speech": 84
+ }
+}

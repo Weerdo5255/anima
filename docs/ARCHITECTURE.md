@@ -302,7 +302,85 @@ Tutor state (lesson, measurements, exams, rules, journal, milestones) is
 saved as `<brain>.tutor.json` next to the brain, so skills build up over
 sessions.
 
-## 6. Building your own
+## 6. Programs, thoughts and other programs
+
+### Using programs (`anima/tools`)
+
+The creature can run external programs, but it cannot type: it has no words
+and no way to compose arguments.  So each program you allow is bound to an
+act it can actually produce — the way a lever in an operant chamber is bound
+to a press (Thorndike 1898; Skinner 1938):
+
+* **a syllable** (`say = "la"`, or `say = "b"` for any syllable starting with
+  b) — works with every creature; its voice is how it acts on the world of
+  programs;
+* **a hand** (`hand = 0..3`) — an optional extra motor area (`hands=4`):
+  a competition of four channels driven by cortex and by interoception
+  (hunger, boredom, loneliness), with dopamine-gated plasticity (tau_e 2 s)
+  and its own decoder (threshold 0.42, a reach commits for 250 ms and then a
+  5 s refractory, so a few reaches a minute when nothing is learned yet).
+  `sense.hands` tells it, for half a second, which hand's program answered.
+  Hands are opt-in: the default brain is unchanged, so the published results
+  still reproduce.
+
+A call carries who and when (its drives, energy, clock, stage) — as JSON on
+a command's stdin, a web service's POST body, or a function's argument — and
+the answer comes back as consequences the creature can feel: a sound it
+hears (without the social reward of being talked to), food placed near it,
+a reward or punishment in [−1, 1].  What it learns about programs it learns
+from these, with the same eligibility traces and dopamine as everything else.
+Program kinds: `command` (argv list, never a shell, placeholders such as
+`{python}` and `{hunger}`), `url` (a local web service), `function` (Python)
+and `remote` (nobody is launched; the call is published and another program
+answers it through the bridge).  The `ToolBelt` never blocks the creature:
+programs run in worker threads and their answers are applied on the
+creature's own thread at its next tick; deterministic in-line functions
+exist for experiments.  Limits: only listed programs, a timeout and an output
+cap per call, a cooldown per program, a global limit on calls per minute,
+and every call and answer is an event.
+
+### The thought log (`anima/mind`)
+
+What is written down is not composed by the creature.  It is decoded from the
+activity and state that drive its behaviour — a readout in the sense of a
+brain–computer interface (Georgopoulos et al. 1986; Hochberg et al. 2006):
+
+| kind | readout |
+|---|---|
+| feeling | a drive crossing into a new band (0.30 / 0.55 / 0.75) |
+| perception | the population vector of the 8 smell channels: side and strength; whiskers |
+| intention | the synaptic drive into each movement (and hand) channel from the rest of the brain — presynaptic rates (1 s average) times the current weights, the channel's own pools left out — when one leads by ≥ 6%: what biases the fast, noisy race between them |
+| inner | which consonant and vowel channels lead *while it listens* — the mirror map moving its articulators without the voice gate |
+| evaluation | phasic dopamine (the critic's prediction error) above 0.2, attributed to the reward that came with it, or to the forecast itself ("things are looking up") |
+| surprise | the cerebellar prediction error |
+| memory / dream | an episode stored by the hippocampus / replayed in slow-wave sleep, with the actions it held |
+| reflection | every 3 awake minutes: what the episodes stored since then add up to, per action |
+| speech, action, state, social, program | its utterances, eating, bumps, reaches, sleep stages, what it heard, the programs it used |
+
+Which of these get written follows global-workspace accounts of
+consciousness (Baars 1988; Dehaene & Changeux 2011): every 100 ms the
+readouts offer candidates with a salience, the most salient enters a single
+workspace, which then stays closed for 2.5 s awake (6 s asleep), an
+"attentional blink" (Raymond et al. 1992).  Losers fade within two seconds
+(counted as "unconscious").  A family of thoughts that just got in
+habituates (Thompson & Spencer 1966) and recovers over 5–20 s, so a smell
+flipping sides or a repeated babble does not crowd out everything else.
+Waking, falling asleep, being spoken to, eating, programs and reflections
+always get through.  The result is 25–35 lines a minute awake and ~10 asleep.
+Every line keeps its numbers and its salience, and `anima experiment
+programs` checks two readouts against what happened (README, results 7).
+
+### The bridge (`anima/bridge`)
+
+`anima serve` runs the creature in real time and opens a small JSON web
+service on 127.0.0.1 (a token is required to listen anywhere else):
+state, thoughts, an event log with sequence numbers (long polling, or
+server-sent events), and POSTs to talk to it, reward it (clipped to ±1),
+feed it, and answer remote programs' calls.  `BridgeClient` is the other end
+in the standard library.  Requests are served on their own threads and act
+on the creature at its next tick: the creature never waits for a client.
+
+## 7. Building your own
 
 Everything above is data.  `anima spec --out brain.toml` writes the default
 brain; edit populations, projections, rules and system settings, then
@@ -337,4 +415,12 @@ see `examples/03_custom_brain.py`.
 * Pryor K (1984) *Don't Shoot the Dog: The New Art of Teaching and Training.* Simon & Schuster.
 * Wood D, Bruner JS, Ross G (1976) The role of tutoring in problem solving. *J Child Psychol Psychiatry* 17:89.
 * Bengio Y, Louradour J, Collobert R, Weston J (2009) Curriculum learning. *Proc 26th ICML*, 41–48.
+* Thorndike EL (1898) Animal intelligence: an experimental study of the associative processes in animals. *Psychol Rev Monogr Suppl* 2(4).
+* Skinner BF (1938) *The Behavior of Organisms.* Appleton-Century.
+* Georgopoulos AP, Schwartz AB, Kettner RE (1986) Neuronal population coding of movement direction. *Science* 233:1416.
+* Hochberg LR et al. (2006) Neuronal ensemble control of prosthetic devices by a human with tetraplegia. *Nature* 442:164.
+* Baars BJ (1988) *A Cognitive Theory of Consciousness.* Cambridge University Press.
+* Dehaene S, Changeux JP (2011) Experimental and theoretical approaches to conscious processing. *Neuron* 70:200.
+* Raymond JE, Shapiro KL, Arnell KM (1992) Temporary suppression of visual processing in an RSVP task: an attentional blink? *J Exp Psychol Hum Percept Perform* 18:849.
+* Thompson RF, Spencer WA (1966) Habituation: a model phenomenon for the study of neuronal substrates of behavior. *Psychol Rev* 73:16.
 * Toth LA, Gardiner TW (2000) Food and water restriction protocols: physiological and behavioral considerations. *Contemp Top Lab Anim Sci* 39(6):9.

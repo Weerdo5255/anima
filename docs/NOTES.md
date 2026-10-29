@@ -1,7 +1,8 @@
 # anima — brain-like agent framework: design notes and results
 
-*Built 28 Oct 2026 (Python ≥3.10, NumPy only). v0.2
-adds a local-LLM (Ollama) tutor — see the last section.*
+*Built 28 Oct 2026 (Python ≥3.10, NumPy only). v0.2 adds a local-LLM
+(Ollama) tutor, v0.3 programs it can use, a thought log and a bridge to
+other programs — see the last two sections.*
 
 ## Goal
 A local framework that builds **not an LLM but a brain-like neural network**,
@@ -208,3 +209,114 @@ an LLM) vs living alone for the same time (62 / 53 min); both examined at
   the results use the scripted teacher (same tools and validation).
 * The teacher's lasting contribution is the voice; foraging is learned from
   food alone. "Asking" is not hunger-specific with this brain.
+
+## v0.3 — programs it can use, a log of its thoughts, a bridge to other programs
+
+*Added 29 Oct 2026. Raw numbers: [`results/programs/`](../results/README.md).*
+
+**Request:** let the creature interact with external programs and keep a log
+of its own thoughts, towards a human-like thinking agent on par with LLM
+agents.  Chosen approach (asked first): **spiking brain only** — no LLM
+inside the creature; it learns by reward which programs to use, and the
+thought log is read from its own activity.  Being on par with LLM agents is
+not claimed (README: "How far is this from an LLM agent?").
+
+### Design
+* **Programs are bound to acts it can produce** (`anima/tools`): a syllable
+  (`say = "la"` exact, `say = "b"` prefix) or a hand (`hand = k`).  It cannot
+  type or compose arguments.  Calls carry its state (drives, energy, clock,
+  stage) as JSON; answers are text (heard) or JSON
+  `{"say", "reward" (clipped to ±1), "food", "ok"}`.  Kinds: `command`
+  (argv list, never a shell, `{python}`/`{hunger}`… placeholders, stdin =
+  the call), `url` (POST to a local service), `function`, `remote` (answered
+  through the bridge).  `ToolBelt` runs them in worker threads and applies
+  answers on the creature thread at the next tick; cooldowns, timeouts,
+  output caps, a global calls-per-minute limit; inline deterministic
+  `FunctionTool`s for experiments.  `anima tools FILE --try NAME`.
+* **Hands** (`infant_spec(hands=4)`, opt-in): `hands` (15/channel) +
+  `hands.inh` + `sense.hands`; cortex.E→hands and intero→hands reward-STDP
+  (tau_e 2 s, lr 0.06, pre-normalised), channel-recurrent excitation, shared
+  inhibition; decoder threshold 0.42, margin 1.3, 250 ms reach, 5 s
+  refractory (≈5–6 reaches/min untrained).  `hands=0` leaves the default
+  brain bit-identical (weights checked), so published results reproduce.
+* **Thought log** (`anima/mind`): readouts every 100 ms (drive bands; smell
+  population vector; synaptic drive into the motor and hand channels; vocal
+  channels while listening; phasic DA with its cause; cerebellar surprise;
+  hippocampal storage/replay; reflections over recent episodes; events).
+  Readouts compete for a global workspace: the most salient candidate gets
+  in, then a 2.5 s blink (6 s asleep); habituation per family (τ 2–20 s);
+  losers fade after 2 s ("unconscious").  Always written: state changes,
+  speech heard, eating, programs, reflections.  JSONL with rotation,
+  `anima thoughts [--follow --kinds --json]`, `/thoughts` and `/mind` in the
+  chat, thoughts in the dashboard, `its_thoughts` in the LLM teacher's
+  report.
+* **Bridge** (`anima/bridge`): `anima serve` = real-time creature + JSON
+  HTTP on 127.0.0.1 (token required elsewhere): `GET / /state /thoughts
+  /events (long poll) /stream (SSE) /tools /pending`, `POST /hear /reward
+  /feed /tool_result`; `BridgeClient` (stdlib) with `follow()` and
+  `serve({"bell": fn})`; `examples/05_external_program.py`.
+
+### Lessons learned (each was a real failure first)
+1. **The first evaluation readout said "worse than I expected (−0.33)"
+   every few seconds**: it subtracted tonic dopamine from the phasic signal,
+   which is already a separate, signed variable.  Now it reads phasic DA and
+   names its cause (the reward of the last 0.5 s) or says "things are
+   looking up/worse" when only the critic's forecast moved (a TD error).
+2. **Logging everything is unreadable** — 127 lines a minute — and a token
+   bucket drops whatever comes when it is empty, not the least important.
+   A workspace competition with a blink and habituation gives ~30 lines a
+   minute, keeps the salient ones, and records each line's salience.
+3. **Intentions read from the motor activity trend only restated what it
+   was doing**: in a pilot every logged intention named the movement it had
+   just made, and the next movement matched 0.35 of the time (chance 0.33).
+   Decisions are made by fast (30 ms) fluctuations and the decoder's
+   commitment current dominates the activity trace.  The *synaptic drive*
+   into each channel (presynaptic rates × weights, own pools excluded) is
+   what biases the race; after foraging practice it predicted the majority
+   movement of the next 3 s 0.51–0.60 of the time against 0.44 for the most
+   common class and 0.41–0.42 for "same as the last 3 s".  For the hands the
+   same readout follows learning closely (results 7).
+4. **Rewarding the hand it already preferred made learning look trivial**
+   (0.55 → 1.00 in five minutes).  The experiment pays the hand it used
+   least in the first two minutes, and the frozen control is identical
+   until that moment.
+5. **Heard answers are a confound**: the creature echoes what it hears, so
+   a program saying "nyam" would bias its babbling.  Program answers in the
+   experiments are silent (`speak = False`).
+6. **A free-running creature rings "b" programs by itself** (it babbles),
+   which broke bridge tests → test programs are bound to "qx", a syllable it
+   cannot produce.
+7. **A call and its answer as two lines doubled the program noise** → one
+   line when the answer comes within a second.
+
+### Results (`anima experiment programs --workers 2`)
+* **Hands** (paying program = the hand used least in the first 2 min, +0.6
+  from minute 2, no sound; 2-hour day so it stays awake): share of reaches
+  running it 0.00/0.18 → **1.00/1.00** (minutes 10–20) and reach rate
+  5→11/min (the 5 s refractory allows ~11.4); frozen at minute 2:
+  0.28/0.30 (chance 0.25).  The log's first "I feel like using program0"
+  came 38/63 s after paying began, before the habit (3 of the last 6
+  reaches) at 42/103 s; frozen creatures never logged an urge (drive margin
+  never ≥ 0.06).  A first run with the default 20-minute day slept through
+  minutes 13–19 (same outcome: 0.09/0.17 → 1.00, frozen 0.29/0.29); it was
+  rerun with the long day for clean bins.  Motor inclinations in the four
+  hands runs came true 0.30–0.54 (chance 0.31–0.42).
+* **Voice-bound programs** ("b" pays +0.5 from minute 2, "d" nothing; well
+  fed, void world): "b" share 0.14/0.07 → **0.41/0.40** (last 4 min) while
+  "d" stayed 0.05–0.06; frozen at minute 2: "b" 0.06/0.07.
+* **Thought log checks** (after 10 min of foraging practice, then spoken to
+  every ~12 s for 8 min): inclinations came true 0.55/0.46 (n 29/26; chance
+  0.35/0.34, persistence 0.41/0.42); the first syllable it silently mouthed
+  matched the heard consonant 14/26 and 11/21 (chance 0.05; any syllable
+  0.69/0.71 vs 0.08/0.09) — far above its overt echo rate (0.17–0.25);
+  30 lines a minute, ~320 candidates per 8 minutes faded unwritten.
+* 101 tests; fresh-venv install of the zip checked (tests, `anima tools`,
+  `run --tools --thoughts`, `thoughts`, `serve` with curl, example 05).
+
+### Honest limits (v0.3)
+* Programs are buttons: it learns which of a few bound acts pays, from
+  consequences; it cannot read answers, pass arguments or generalise to new
+  programs.  Nothing here approaches an LLM agent's tool use.
+* The thought log is a readout in our words; the predictive readouts are
+  modest (inclinations ~0.5 vs ~0.35 chance) and the mouthing readout is
+  right about half the time.

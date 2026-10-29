@@ -1,0 +1,1299 @@
+{
+ "hands": {
+  "plastic": [
+   {
+    "seed": 1,
+    "paying": 0,
+    "baseline_counts": [
+     0,
+     5,
+     3,
+     2
+    ],
+    "curve": [
+     {
+      "t0": 0.0,
+      "t1": 120.0,
+      "reaches_per_min": 5.0,
+      "share": 0.0,
+      "counts": [
+       0,
+       5,
+       3,
+       2
+      ]
+     },
+     {
+      "t0": 120.0,
+      "t1": 240.0,
+      "reaches_per_min": 6.5,
+      "share": 0.38461538461538464,
+      "counts": [
+       5,
+       2,
+       4,
+       2
+      ]
+     },
+     {
+      "t0": 240.0,
+      "t1": 360.0,
+      "reaches_per_min": 8.0,
+      "share": 0.875,
+      "counts": [
+       14,
+       1,
+       0,
+       1
+      ]
+     },
+     {
+      "t0": 360.0,
+      "t1": 480.0,
+      "reaches_per_min": 10.5,
+      "share": 1.0,
+      "counts": [
+       21,
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "t0": 480.0,
+      "t1": 600.0,
+      "reaches_per_min": 10.5,
+      "share": 1.0,
+      "counts": [
+       21,
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "t0": 600.0,
+      "t1": 720.0,
+      "reaches_per_min": 10.5,
+      "share": 1.0,
+      "counts": [
+       21,
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "t0": 720.0,
+      "t1": 840.0,
+      "reaches_per_min": 11.0,
+      "share": 1.0,
+      "counts": [
+       22,
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "t0": 840.0,
+      "t1": 960.0,
+      "reaches_per_min": 10.5,
+      "share": 1.0,
+      "counts": [
+       21,
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "t0": 960.0,
+      "t1": 1080.0,
+      "reaches_per_min": 11.0,
+      "share": 1.0,
+      "counts": [
+       22,
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "t0": 1080.0,
+      "t1": 1200.0,
+      "reaches_per_min": 11.0,
+      "share": 1.0,
+      "counts": [
+       22,
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "stats": {
+     "program0": {
+      "calls": 169,
+      "ok": 169,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 101.39999999999975
+     },
+     "program1": {
+      "calls": 8,
+      "ok": 8,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 0.0
+     },
+     "program2": {
+      "calls": 7,
+      "ok": 7,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 0.0
+     },
+     "program3": {
+      "calls": 5,
+      "ok": 5,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 0.0
+     }
+    },
+    "share_baseline": 0.0,
+    "share_last_10min": 1.0,
+    "food_eaten": 35,
+    "intentions": {
+     "n": 30,
+     "came_true": 0.43333333333333335,
+     "chance": 0.31070732386521865,
+     "persistence": 0.43333333333333335,
+     "already_doing": 0.5333333333333333,
+     "window_s": 3.0
+    },
+    "urges": {
+     "n": 1,
+     "came_true": 1.0,
+     "previous_reach": 1.0,
+     "recent_majority": 1.0,
+     "horizon_s": 30.0,
+     "readout_at_reach": {
+      "reaches": 179,
+      "agrees": 0.9385474860335196,
+      "previous_reach": 0.9101123595505618,
+      "agrees_when_clear": 0.9542857142857143,
+      "clear_share": 0.9776536312849162
+     },
+     "first_urge_s": 157.92,
+     "first_habit_s": 161.96
+    },
+    "thought_rates": {
+     "per_min": 32.9,
+     "action": 46,
+     "evaluation": 118,
+     "feeling": 6,
+     "intention": 31,
+     "memory": 80,
+     "perception": 104,
+     "program": 189,
+     "speech": 84
+    }
+   },
+   {
+    "seed": 2,
+    "paying": 0,
+    "baseline_counts": [
+     2,
+     3,
+     3,
+     3
+    ],
+    "curve": [
+     {
+      "t0": 0.0,
+      "t1": 120.0,
+      "reaches_per_min": 5.5,
+      "share": 0.18181818181818182,
+      "counts": [
+       2,
+       3,
+       3,
+       3
+      ]
+     },
+     {
+      "t0": 120.0,
+      "t1": 240.0,
+      "reaches_per_min": 5.5,
+      "share": 0.45454545454545453,
+      "counts": [
+       5,
+       2,
+       2,
+       2
+      ]
+     },
+     {
+      "t0": 240.0,
+      "t1": 360.0,
+      "reaches_per_min": 10.0,
+      "share": 0.95,
+      "counts": [
+       19,
+       0,
+       0,
+       1
+      ]
+     },
+     {
+      "t0": 360.0,
+      "t1": 480.0,
+      "reaches_per_min": 10.0,
+      "share": 0.95,
+      "counts": [
+       19,
+       1,
+       0,
+       0
+      ]
+     },
+     {
+      "t0": 480.0,
+      "t1": 600.0,
+      "reaches_per_min": 10.5,
+      "share": 0.9523809523809523,
+      "counts": [
+       20,
+       0,
+       1,
+       0
+      ]
+     },
+     {
+      "t0": 600.0,
+      "t1": 720.0,
+      "reaches_per_min": 11.0,
+      "share": 1.0,
+      "counts": [
+       22,
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "t0": 720.0,
+      "t1": 840.0,
+      "reaches_per_min": 11.0,
+      "share": 1.0,
+      "counts": [
+       22,
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "t0": 840.0,
+      "t1": 960.0,
+      "reaches_per_min": 10.5,
+      "share": 1.0,
+      "counts": [
+       21,
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "t0": 960.0,
+      "t1": 1080.0,
+      "reaches_per_min": 11.0,
+      "share": 1.0,
+      "counts": [
+       22,
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "t0": 1080.0,
+      "t1": 1200.0,
+      "reaches_per_min": 11.0,
+      "share": 1.0,
+      "counts": [
+       22,
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "stats": {
+     "program0": {
+      "calls": 174,
+      "ok": 174,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 103.19999999999973
+     },
+     "program1": {
+      "calls": 6,
+      "ok": 6,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 0.0
+     },
+     "program2": {
+      "calls": 6,
+      "ok": 6,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 0.0
+     },
+     "program3": {
+      "calls": 6,
+      "ok": 6,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 0.0
+     }
+    },
+    "share_baseline": 0.18181818181818182,
+    "share_last_10min": 1.0,
+    "food_eaten": 54,
+    "intentions": {
+     "n": 41,
+     "came_true": 0.5365853658536586,
+     "chance": 0.3730464372312897,
+     "persistence": 0.34146341463414637,
+     "already_doing": 0.43902439024390244,
+     "window_s": 3.0
+    },
+    "urges": {
+     "n": 2,
+     "came_true": 0.5,
+     "previous_reach": 0.5,
+     "recent_majority": 1.0,
+     "horizon_s": 30.0,
+     "readout_at_reach": {
+      "reaches": 181,
+      "agrees": 0.9613259668508287,
+      "previous_reach": 0.9277777777777778,
+      "agrees_when_clear": 0.9826589595375722,
+      "clear_share": 0.9558011049723757
+     },
+     "first_urge_s": 183.32,
+     "first_habit_s": 223.24
+    },
+    "thought_rates": {
+     "per_min": 34.55,
+     "action": 63,
+     "evaluation": 113,
+     "feeling": 3,
+     "intention": 43,
+     "memory": 77,
+     "perception": 109,
+     "program": 192,
+     "speech": 91
+    }
+   }
+  ],
+  "frozen": [
+   {
+    "seed": 1,
+    "paying": 0,
+    "baseline_counts": [
+     0,
+     5,
+     3,
+     2
+    ],
+    "curve": [
+     {
+      "t0": 0.0,
+      "t1": 120.0,
+      "reaches_per_min": 5.0,
+      "share": 0.0,
+      "counts": [
+       0,
+       5,
+       3,
+       2
+      ]
+     },
+     {
+      "t0": 120.0,
+      "t1": 240.0,
+      "reaches_per_min": 6.5,
+      "share": 0.23076923076923078,
+      "counts": [
+       3,
+       3,
+       4,
+       3
+      ]
+     },
+     {
+      "t0": 240.0,
+      "t1": 360.0,
+      "reaches_per_min": 5.0,
+      "share": 0.5,
+      "counts": [
+       5,
+       0,
+       3,
+       2
+      ]
+     },
+     {
+      "t0": 360.0,
+      "t1": 480.0,
+      "reaches_per_min": 5.0,
+      "share": 0.5,
+      "counts": [
+       5,
+       1,
+       3,
+       1
+      ]
+     },
+     {
+      "t0": 480.0,
+      "t1": 600.0,
+      "reaches_per_min": 4.5,
+      "share": 0.4444444444444444,
+      "counts": [
+       4,
+       2,
+       2,
+       1
+      ]
+     },
+     {
+      "t0": 600.0,
+      "t1": 720.0,
+      "reaches_per_min": 6.0,
+      "share": 0.16666666666666666,
+      "counts": [
+       2,
+       2,
+       6,
+       2
+      ]
+     },
+     {
+      "t0": 720.0,
+      "t1": 840.0,
+      "reaches_per_min": 4.0,
+      "share": 0.25,
+      "counts": [
+       2,
+       1,
+       3,
+       2
+      ]
+     },
+     {
+      "t0": 840.0,
+      "t1": 960.0,
+      "reaches_per_min": 4.0,
+      "share": 0.25,
+      "counts": [
+       2,
+       1,
+       3,
+       2
+      ]
+     },
+     {
+      "t0": 960.0,
+      "t1": 1080.0,
+      "reaches_per_min": 5.5,
+      "share": 0.36363636363636365,
+      "counts": [
+       4,
+       1,
+       4,
+       2
+      ]
+     },
+     {
+      "t0": 1080.0,
+      "t1": 1200.0,
+      "reaches_per_min": 5.5,
+      "share": 0.36363636363636365,
+      "counts": [
+       4,
+       0,
+       5,
+       2
+      ]
+     }
+    ],
+    "stats": {
+     "program0": {
+      "calls": 31,
+      "ok": 31,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 18.6
+     },
+     "program1": {
+      "calls": 16,
+      "ok": 16,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 0.0
+     },
+     "program2": {
+      "calls": 36,
+      "ok": 36,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 0.0
+     },
+     "program3": {
+      "calls": 19,
+      "ok": 19,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 0.0
+     }
+    },
+    "share_baseline": 0.0,
+    "share_last_10min": 0.28,
+    "food_eaten": 39,
+    "intentions": {
+     "n": 53,
+     "came_true": 0.41509433962264153,
+     "chance": 0.3399773017449285,
+     "persistence": 0.33962264150943394,
+     "already_doing": 0.5849056603773585,
+     "window_s": 3.0
+    },
+    "urges": {
+     "n": 0,
+     "readout_at_reach": {
+      "reaches": 92,
+      "agrees": 0.34782608695652173,
+      "previous_reach": 0.21978021978021978,
+      "agrees_when_clear": null,
+      "clear_share": 0.0
+     },
+     "first_urge_s": null,
+     "first_habit_s": 320.17
+    },
+    "thought_rates": {
+     "per_min": 27.0,
+     "action": 43,
+     "evaluation": 43,
+     "feeling": 10,
+     "intention": 53,
+     "memory": 33,
+     "perception": 128,
+     "program": 102,
+     "speech": 128
+    }
+   },
+   {
+    "seed": 2,
+    "paying": 0,
+    "baseline_counts": [
+     2,
+     3,
+     3,
+     3
+    ],
+    "curve": [
+     {
+      "t0": 0.0,
+      "t1": 120.0,
+      "reaches_per_min": 5.5,
+      "share": 0.18181818181818182,
+      "counts": [
+       2,
+       3,
+       3,
+       3
+      ]
+     },
+     {
+      "t0": 120.0,
+      "t1": 240.0,
+      "reaches_per_min": 4.5,
+      "share": 0.0,
+      "counts": [
+       0,
+       3,
+       4,
+       2
+      ]
+     },
+     {
+      "t0": 240.0,
+      "t1": 360.0,
+      "reaches_per_min": 6.5,
+      "share": 0.3076923076923077,
+      "counts": [
+       4,
+       2,
+       3,
+       4
+      ]
+     },
+     {
+      "t0": 360.0,
+      "t1": 480.0,
+      "reaches_per_min": 3.5,
+      "share": 0.0,
+      "counts": [
+       0,
+       2,
+       3,
+       2
+      ]
+     },
+     {
+      "t0": 480.0,
+      "t1": 600.0,
+      "reaches_per_min": 4.0,
+      "share": 0.0,
+      "counts": [
+       0,
+       2,
+       5,
+       1
+      ]
+     },
+     {
+      "t0": 600.0,
+      "t1": 720.0,
+      "reaches_per_min": 3.5,
+      "share": 0.14285714285714285,
+      "counts": [
+       1,
+       2,
+       3,
+       1
+      ]
+     },
+     {
+      "t0": 720.0,
+      "t1": 840.0,
+      "reaches_per_min": 3.5,
+      "share": 0.5714285714285714,
+      "counts": [
+       4,
+       2,
+       0,
+       1
+      ]
+     },
+     {
+      "t0": 840.0,
+      "t1": 960.0,
+      "reaches_per_min": 5.0,
+      "share": 0.3,
+      "counts": [
+       3,
+       3,
+       2,
+       2
+      ]
+     },
+     {
+      "t0": 960.0,
+      "t1": 1080.0,
+      "reaches_per_min": 2.0,
+      "share": 0.25,
+      "counts": [
+       1,
+       1,
+       1,
+       1
+      ]
+     },
+     {
+      "t0": 1080.0,
+      "t1": 1200.0,
+      "reaches_per_min": 1.0,
+      "share": 0.0,
+      "counts": [
+       0,
+       1,
+       1,
+       0
+      ]
+     }
+    ],
+    "stats": {
+     "program0": {
+      "calls": 15,
+      "ok": 15,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 7.799999999999998
+     },
+     "program1": {
+      "calls": 21,
+      "ok": 21,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 0.0
+     },
+     "program2": {
+      "calls": 25,
+      "ok": 25,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 0.0
+     },
+     "program3": {
+      "calls": 17,
+      "ok": 17,
+      "failed": 0,
+      "skipped": 0,
+      "reward": 0.0
+     }
+    },
+    "share_baseline": 0.18181818181818182,
+    "share_last_10min": 0.3,
+    "food_eaten": 28,
+    "intentions": {
+     "n": 10,
+     "came_true": 0.3,
+     "chance": 0.4197994987468672,
+     "persistence": 0.1,
+     "already_doing": 0.5,
+     "window_s": 3.0
+    },
+    "urges": {
+     "n": 0,
+     "readout_at_reach": {
+      "reaches": 67,
+      "agrees": 0.22388059701492538,
+      "previous_reach": 0.24242424242424243,
+      "agrees_when_clear": null,
+      "clear_share": 0.0
+     },
+     "first_urge_s": null,
+     "first_habit_s": 308.2
+    },
+    "thought_rates": {
+     "per_min": 26.15,
+     "action": 52,
+     "evaluation": 96,
+     "feeling": 9,
+     "intention": 10,
+     "memory": 52,
+     "perception": 122,
+     "program": 78,
+     "speech": 104
+    }
+   }
+  ]
+ },
+ "voice": {
+  "plastic": [
+   {
+    "seed": 1,
+    "curve": [
+     {
+      "t0": 0.0,
+      "t1": 120.0,
+      "good": 0.1348314606741573,
+      "dud": 0.06741573033707865,
+      "syllables": 89
+     },
+     {
+      "t0": 120.0,
+      "t1": 240.0,
+      "good": 0.0784313725490196,
+      "dud": 0.06862745098039216,
+      "syllables": 102
+     },
+     {
+      "t0": 240.0,
+      "t1": 360.0,
+      "good": 0.37383177570093457,
+      "dud": 0.08411214953271028,
+      "syllables": 107
+     },
+     {
+      "t0": 360.0,
+      "t1": 480.0,
+      "good": 0.45871559633027525,
+      "dud": 0.06422018348623854,
+      "syllables": 109
+     },
+     {
+      "t0": 480.0,
+      "t1": 600.0,
+      "good": 0.36792452830188677,
+      "dud": 0.04716981132075472,
+      "syllables": 106
+     }
+    ],
+    "stats": {
+     "treat": {
+      "calls": 106,
+      "ok": 106,
+      "failed": 0,
+      "skipped": 43,
+      "reward": 47.0
+     },
+     "dud": {
+      "calls": 31,
+      "ok": 31,
+      "failed": 0,
+      "skipped": 3,
+      "reward": 0.0
+     }
+    },
+    "good_baseline": 0.1348314606741573,
+    "dud_baseline": 0.06741573033707865,
+    "good_last_4min": 0.413953488372093,
+    "dud_last_4min": 0.05581395348837209
+   },
+   {
+    "seed": 2,
+    "curve": [
+     {
+      "t0": 0.0,
+      "t1": 120.0,
+      "good": 0.06666666666666667,
+      "dud": 0.05555555555555555,
+      "syllables": 90
+     },
+     {
+      "t0": 120.0,
+      "t1": 240.0,
+      "good": 0.23529411764705882,
+      "dud": 0.06862745098039216,
+      "syllables": 102
+     },
+     {
+      "t0": 240.0,
+      "t1": 360.0,
+      "good": 0.3055555555555556,
+      "dud": 0.09259259259259259,
+      "syllables": 108
+     },
+     {
+      "t0": 360.0,
+      "t1": 480.0,
+      "good": 0.37383177570093457,
+      "dud": 0.028037383177570093,
+      "syllables": 107
+     },
+     {
+      "t0": 480.0,
+      "t1": 600.0,
+      "good": 0.42857142857142855,
+      "dud": 0.06666666666666667,
+      "syllables": 105
+     }
+    ],
+    "stats": {
+     "treat": {
+      "calls": 104,
+      "ok": 104,
+      "failed": 0,
+      "skipped": 44,
+      "reward": 49.0
+     },
+     "dud": {
+      "calls": 30,
+      "ok": 30,
+      "failed": 0,
+      "skipped": 2,
+      "reward": 0.0
+     }
+    },
+    "good_baseline": 0.06666666666666667,
+    "dud_baseline": 0.05555555555555555,
+    "good_last_4min": 0.4009433962264151,
+    "dud_last_4min": 0.04716981132075472
+   }
+  ],
+  "frozen": [
+   {
+    "seed": 1,
+    "curve": [
+     {
+      "t0": 0.0,
+      "t1": 120.0,
+      "good": 0.1348314606741573,
+      "dud": 0.06741573033707865,
+      "syllables": 89
+     },
+     {
+      "t0": 120.0,
+      "t1": 240.0,
+      "good": 0.1650485436893204,
+      "dud": 0.05825242718446602,
+      "syllables": 103
+     },
+     {
+      "t0": 240.0,
+      "t1": 360.0,
+      "good": 0.1262135922330097,
+      "dud": 0.08737864077669903,
+      "syllables": 103
+     },
+     {
+      "t0": 360.0,
+      "t1": 480.0,
+      "good": 0.0761904761904762,
+      "dud": 0.08571428571428572,
+      "syllables": 105
+     },
+     {
+      "t0": 480.0,
+      "t1": 600.0,
+      "good": 0.05,
+      "dud": 0.11,
+      "syllables": 100
+     }
+    ],
+    "stats": {
+     "treat": {
+      "calls": 48,
+      "ok": 48,
+      "failed": 0,
+      "skipped": 7,
+      "reward": 18.0
+     },
+     "dud": {
+      "calls": 34,
+      "ok": 34,
+      "failed": 0,
+      "skipped": 7,
+      "reward": 0.0
+     }
+    },
+    "good_baseline": 0.1348314606741573,
+    "dud_baseline": 0.06741573033707865,
+    "good_last_4min": 0.06341463414634146,
+    "dud_last_4min": 0.0975609756097561
+   },
+   {
+    "seed": 2,
+    "curve": [
+     {
+      "t0": 0.0,
+      "t1": 120.0,
+      "good": 0.06666666666666667,
+      "dud": 0.05555555555555555,
+      "syllables": 90
+     },
+     {
+      "t0": 120.0,
+      "t1": 240.0,
+      "good": 0.10891089108910891,
+      "dud": 0.13861386138613863,
+      "syllables": 101
+     },
+     {
+      "t0": 240.0,
+      "t1": 360.0,
+      "good": 0.10576923076923077,
+      "dud": 0.08653846153846154,
+      "syllables": 104
+     },
+     {
+      "t0": 360.0,
+      "t1": 480.0,
+      "good": 0.04854368932038835,
+      "dud": 0.04854368932038835,
+      "syllables": 103
+     },
+     {
+      "t0": 480.0,
+      "t1": 600.0,
+      "good": 0.09090909090909091,
+      "dud": 0.08080808080808081,
+      "syllables": 99
+     }
+    ],
+    "stats": {
+     "treat": {
+      "calls": 40,
+      "ok": 40,
+      "failed": 0,
+      "skipped": 2,
+      "reward": 17.0
+     },
+     "dud": {
+      "calls": 40,
+      "ok": 40,
+      "failed": 0,
+      "skipped": 1,
+      "reward": 0.0
+     }
+    },
+    "good_baseline": 0.06666666666666667,
+    "dud_baseline": 0.05555555555555555,
+    "good_last_4min": 0.06930693069306931,
+    "dud_last_4min": 0.06435643564356436
+   }
+  ]
+ },
+ "mind": [
+  {
+   "seed": 1,
+   "train_s": 600.0,
+   "food_eaten": 56,
+   "intentions_first_5min": {
+    "n": 8,
+    "came_true": 0.625,
+    "chance": 0.4444444444444444,
+    "persistence": 0.75,
+    "already_doing": 0.875,
+    "window_s": 3.0
+   },
+   "intentions": {
+    "n": 29,
+    "came_true": 0.5517241379310345,
+    "chance": 0.34960986659954685,
+    "persistence": 0.41379310344827586,
+    "already_doing": 0.5862068965517241,
+    "window_s": 3.0
+   },
+   "echo": {
+    "n": 26,
+    "first_matches": 0.5384615384615384,
+    "first_chance": 0.04551636769028074,
+    "any_matches": 0.6923076923076923,
+    "any_chance": 0.0788103573327915,
+    "syllables_per_trial": 2.0
+   },
+   "thought_rates": {
+    "per_min": 29.5,
+    "action": 26,
+    "evaluation": 27,
+    "feeling": 14,
+    "inner": 26,
+    "intention": 29,
+    "memory": 9,
+    "perception": 28,
+    "reflection": 2,
+    "social": 40,
+    "speech": 35
+   },
+   "unconscious": 321,
+   "sample": [
+    "09:12  perception a strong smell of food, to my left",
+    "09:12  feeling    I'm hungry (0.56)",
+    "09:12  social     someone says \"se se\"",
+    "09:13  inner      I mouth \"ni li do si\" silently (I heard \"se se\")",
+    "09:13  action     I ate",
+    "09:13  memory     I'll remember this: going ahead (+0.54)",
+    "09:14  speech     I say \"li wo\"",
+    "09:14  perception a strong smell of food, all around",
+    "09:15  social     someone says \"he he\"",
+    "09:15  evaluation the company: better than I expected (+0.26)",
+    "09:16  intention  I'm inclined to turn right",
+    "09:16  feeling    less lonely now (0.49)",
+    "09:17  evaluation getting closer to food: worse than I expected (-0.24)",
+    "09:17  social     someone says \"ku ku\"",
+    "09:17  memory     I'll remember this: turning left (+0.27)",
+    "09:18  evaluation getting closer to food: better than I expected (+0.21)",
+    "09:18  evaluation getting closer to food: worse than I expected (-0.22)",
+    "09:19  speech     I say \"we\"",
+    "09:19  perception a strong smell of food, to my right",
+    "09:20  social     someone says \"mi mi\"",
+    "09:20  evaluation the company: better than I expected (+0.25)",
+    "09:20  feeling    less hungry now (0.43)",
+    "09:21  perception a strong smell of food, all around",
+    "09:21  speech     I say \"pi\"",
+    "09:22  social     someone says \"se se\"",
+    "09:22  evaluation the company: better than I expected (+0.34)",
+    "09:22  inner      I mouth \"le na\" silently (I heard \"se se\")",
+    "09:22  action     I ate",
+    "09:23  memory     I'll remember this: turning right (+0.14)",
+    "09:23  intention  I'm inclined to go ahead",
+    "09:24  perception a strong smell of food, ahead",
+    "09:24  action     I ate",
+    "09:24  evaluation the food: better than I expected (+0.55)",
+    "09:24  social     someone says \"wo wo\"",
+    "09:25  action     I ate",
+    "09:25  inner      I mouth \"ha\" silently (I heard \"wo wo\")",
+    "09:25  feeling    I'm not hungry (0.01)",
+    "09:26  perception a strong smell of food, to my left",
+    "09:27  social     someone says \"mi mi\"",
+    "09:27  evaluation the company: better than I expected (+0.25)",
+    "09:27  action     I ate",
+    "09:27  inner      I mouth \"mo gi mi\" silently (I heard \"mi mi\")",
+    "09:28  action     I ate",
+    "09:28  feeling    I don't feel alone (0.25)",
+    "09:29  intention  I'm inclined to turn right",
+    "09:29  speech     I say \"lu\"",
+    "09:29  action     I ate",
+    "09:30  intention  I'm inclined to turn left, toward the smell",
+    "09:30  social     someone says \"lo lo\"",
+    "09:30  evaluation the company: better than I expected (+0.24)",
+    "09:31  intention  I'm inclined to go ahead",
+    "09:31  perception a clear smell of food, ahead",
+    "09:32  feeling    I'm getting lonely (0.30)",
+    "09:32  speech     I say \"me\"",
+    "09:33  social     someone says \"ba ba\"",
+    "09:33  inner      I mouth \"be po\" silently (I heard \"ba ba\")",
+    "09:34  speech     I say \"bogu kopo\"",
+    "09:34  feeling    I don't feel alone (0.27)",
+    "09:34  action     I ate",
+    "09:35  evaluation the food: better than I expected (+0.21)",
+    "09:35  perception a strong smell of food, all around",
+    "09:35  social     someone says \"do do\"",
+    "09:35  action     I ate",
+    "09:36  memory     I'll remember this: turning right (+0.17)",
+    "09:36  intention  I'm inclined to turn right",
+    "09:37  speech     I say \"lohasu ha\"",
+    "09:38  social     someone says \"se se\"",
+    "09:38  inner      I mouth \"we he di\" silently (I heard \"se se\")",
+    "09:38  speech     I say \"pa luni\"",
+    "09:39  action     I ate",
+    "09:39  perception a clear smell of food, to my left",
+    "09:40  reflection looking back since 09:02: turning left went well (22x, +0.24); going ahead went well (14x, +0.14); saying \"ka\" went well (3x, +0.40)",
+    "09:40  social     someone says \"he he\"",
+    "09:40  memory     I'll remember this: turning right, saying \"ge\" (+0.15)",
+    "09:40  inner      I mouth \"ho\" silently (I heard \"he he\")",
+    "09:41  perception a strong smell of food, all around",
+    "09:41  action     I ate",
+    "09:41  speech     I say \"pa\"",
+    "09:42  social     someone says \"wo wo\"",
+    "09:42  evaluation the company: better than I expected (+0.26)"
+   ]
+  },
+  {
+   "seed": 2,
+   "train_s": 600.0,
+   "food_eaten": 57,
+   "intentions_first_5min": {
+    "n": 6,
+    "came_true": 0.8333333333333334,
+    "chance": 0.28058361391694725,
+    "persistence": 0.3333333333333333,
+    "already_doing": 0.5,
+    "window_s": 3.0
+   },
+   "intentions": {
+    "n": 26,
+    "came_true": 0.46153846153846156,
+    "chance": 0.3384936231651562,
+    "persistence": 0.4230769230769231,
+    "already_doing": 0.5769230769230769,
+    "window_s": 3.0
+   },
+   "echo": {
+    "n": 21,
+    "first_matches": 0.5238095238095238,
+    "first_chance": 0.045739348370927316,
+    "any_matches": 0.7142857142857143,
+    "any_chance": 0.09072082584305419,
+    "syllables_per_trial": 2.142857142857143
+   },
+   "thought_rates": {
+    "per_min": 30.0,
+    "action": 28,
+    "evaluation": 35,
+    "feeling": 9,
+    "inner": 21,
+    "intention": 26,
+    "memory": 10,
+    "perception": 28,
+    "reflection": 2,
+    "social": 40,
+    "speech": 41
+   },
+   "unconscious": 309,
+   "sample": [
+    "09:12  speech     I say \"pahu\"",
+    "09:12  speech     I say \"ni tu ta\"",
+    "09:12  social     someone says \"he he\"",
+    "09:13  evaluation the company: better than I expected (+0.26)",
+    "09:13  feeling    less lonely now (0.67)",
+    "09:14  evaluation getting closer to food: worse than I expected (-0.25)",
+    "09:15  speech     I say \"bi bi du to gu\"",
+    "09:15  social     someone says \"ne ne\"",
+    "09:15  memory     I'll remember this: turning right, saying \"te\" (+0.36)",
+    "09:16  inner      I mouth \"to na\" silently (I heard \"ne ne\")",
+    "09:16  evaluation getting closer to food: worse than I expected (-0.30)",
+    "09:17  feeling    I'm very hungry (0.76)",
+    "09:17  speech     I say \"keku\"",
+    "09:17  social     someone says \"wo wo\"",
+    "09:18  evaluation the company: better than I expected (+0.31)",
+    "09:18  intention  I'm inclined to turn right",
+    "09:19  memory     I'll remember this: turning right, saying \"tu\" (+0.15)",
+    "09:19  feeling    less lonely now (0.40)",
+    "09:20  perception a strong smell of food, to my right",
+    "09:20  social     someone says \"ba ba\"",
+    "09:20  action     I ate",
+    "09:20  inner      I mouth \"ni\" silently (I heard \"ba ba\")",
+    "09:21  intention  I'm inclined to go ahead",
+    "09:21  evaluation getting closer to food: worse than I expected (-0.29)",
+    "09:22  action     I ate",
+    "09:22  evaluation getting closer to food: better than I expected (+0.22)",
+    "09:22  memory     I'll remember this: turning left, saying \"ge\" (+0.12)",
+    "09:23  action     I ate",
+    "09:23  social     someone says \"gu gu\"",
+    "09:23  evaluation the food: better than I expected (+0.58)",
+    "09:24  inner      I mouth \"to ha ge\" silently (I heard \"gu gu\")",
+    "09:24  feeling    I'm not hungry (0.13)",
+    "09:25  perception a strong smell of food, all around",
+    "09:25  social     someone says \"se se\"",
+    "09:25  evaluation the company: better than I expected (+0.24)",
+    "09:25  action     I ate",
+    "09:26  memory     I'll remember this: going ahead, saying \"hi\" (+0.34)",
+    "09:26  intention  I'm inclined to turn right",
+    "09:27  perception a strong smell of food, to my right",
+    "09:27  social     someone says \"gu gu\"",
+    "09:27  evaluation the company: better than I expected (+0.23)",
+    "09:28  inner      I mouth \"go\" silently (I heard \"gu gu\")",
+    "09:28  action     I ate",
+    "09:28  intention  I'm inclined to go ahead",
+    "09:29  feeling    I don't feel alone (0.27)",
+    "09:29  speech     I say \"na\"",
+    "09:30  perception a strong smell of food, all around",
+    "09:30  social     someone says \"he he\"",
+    "09:30  evaluation the company: better than I expected (+0.22)",
+    "09:32  action     I ate",
+    "09:32  perception a strong smell of food, to my left",
+    "09:32  social     someone says \"mi mi\"",
+    "09:32  evaluation the company: better than I expected (+0.27)",
+    "09:33  inner      I mouth \"mu su\" silently (I heard \"mi mi\")",
+    "09:33  perception a strong smell of food, all around",
+    "09:34  intention  I'm inclined to turn right",
+    "09:34  social     someone says \"do do\"",
+    "09:34  evaluation the company: better than I expected (+0.29)",
+    "09:35  speech     I say \"hehe\"",
+    "09:36  intention  I'm inclined to turn left",
+    "09:36  speech     I say \"wa\"",
+    "09:37  perception a strong smell of food, to my left",
+    "09:37  social     someone says \"pa pa\"",
+    "09:37  evaluation the company: better than I expected (+0.23)",
+    "09:38  action     I ate",
+    "09:38  memory     I'll remember this: going ahead (+0.15)",
+    "09:39  action     I ate",
+    "09:39  memory     I'll remember this: going ahead, saying \"le\" (it surprised me)",
+    "09:39  speech     I say \"ledo\"",
+    "09:40  reflection looking back since 09:02: turning right went well (19x, +0.15); turning left went well (9x, +0.19); going ahead went well (10x, +0.14)",
+    "09:40  social     someone says \"ba ba\"",
+    "09:40  evaluation the company: better than I expected (+0.22)",
+    "09:40  inner      I mouth \"mu bo na\" silently (I heard \"ba ba\")",
+    "09:41  perception a strong smell of food, all around",
+    "09:41  speech     I say \"le\"",
+    "09:41  action     I ate",
+    "09:42  intention  I'm inclined to turn left",
+    "09:42  social     someone says \"ti ti\"",
+    "09:42  evaluation the company: better than I expected (+0.30)",
+    "09:43  intention  I'm inclined to go ahead"
+   ]
+  }
+ ],
+ "note": "anima experiment programs --workers 2, run in two parts on the 2-core VM: voice and mind first; hands rerun with a 2-hour day so the creature stays awake for its 20 minutes (--parts hands). Same code otherwise."
+}

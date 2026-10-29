@@ -63,3 +63,18 @@ awake minutes (`tutoring/training_seed*.log`).
 A real session with the scripted teacher (`anima train --teacher scripted
 --minutes 8.5 --fast`) and its continuation two creature-minutes later,
 including the forage exams and the first graduation.
+
+## `programs/` — programs it learns to use, and whether its thoughts are true (README sections 6–7)
+
+`anima experiment programs --workers 2` (about 40 minutes on the 2-core VM),
+run in two parts: voice and mind first, then the hands part again with a
+2-hour day (`--parts hands`) — the first hands run used the default 20-minute
+day and slept through minutes 13–19 (same outcome; see `docs/NOTES.md`).
+
+| file | contents |
+|---|---|
+| `programs.json` | everything below, as the experiment returned it |
+| `hands_{plastic,frozen}_s{1,2}.json` | per run: which program paid, reaches per hand in 2-minute bins, program stats, the urge and inclination checks |
+| `voice_{plastic,frozen}_s{1,2}.json` | per run: share of "b" (pays) and "d" (does not) syllables in 2-minute bins |
+| `mind_s{1,2}.json` | the thought-log checks after 10 minutes of foraging practice: inclinations vs what it did in the next 3 s, silent echoes vs what it heard, thoughts per minute, and the first 80 lines of its log |
+| `thoughts_sample.txt` | a stretch of a creature's thought log, with the example programs of `examples/tools.toml` |

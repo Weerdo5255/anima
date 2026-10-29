@@ -1,7 +1,10 @@
 """Command line interface.
 
     anima chat                 talk to a creature in your terminal (any OS)
-    anima live                 live dashboard: world, drives, spikes, chat (curses)
+    anima live                 live dashboard: world, drives, spikes, thoughts, chat (curses)
+    anima serve                live in real time with a local HTTP connection for other programs
+    anima thoughts --follow    read the log of its thoughts
+    anima tools FILE           check the programs it may use (--try NAME runs one)
     anima train                a local LLM (Ollama) raises it through a curriculum
     anima tutor-check          check that Ollama and the model work as a teacher
     anima run --seconds 600    let it live headless, print what it does
@@ -10,8 +13,9 @@
     anima info anima_brain.npz describe a saved creature
 
 The creature is saved to ``anima_brain.npz`` (or ``--brain PATH``) when you
-leave and resumed next time, so it keeps its memories and learned habits.
-Use ``--new`` to start a fresh one.
+leave and resumed next time, so it keeps its memories and learned habits;
+its thoughts are logged next to it (``anima_brain.thoughts.jsonl``).  Use
+``--new`` to start a fresh one, ``--tools FILE`` to give it programs to use.
 """
 
 from __future__ import annotations
@@ -26,23 +30,74 @@ from typing import Any
 from . import __version__
 
 
+def _load_tools(args: argparse.Namespace) -> list:
+    """The programs named by --tools (read once, kept on ``args``)."""
+    if not getattr(args, "tools", None):
+        return []
+    if getattr(args, "_tools", None) is None:
+        from .tools import load_tools
+        try:
+            args._tools = load_tools(args.tools)
+        except (OSError, ValueError, RuntimeError, ImportError, AttributeError, TypeError) as exc:
+            sys.exit(f"--tools {args.tools}: {exc}")
+    return args._tools
+
+
 def _make_agent(args: argparse.Namespace):
     from .brain.builder import load_spec
     from .runtime.agent import Agent
 
+    tools = _load_tools(args)
+    need = max([t.hand + 1 for t in tools if t.hand is not None], default=0)
+    hands = getattr(args, "hands", None)
     path = Path(args.brain) if getattr(args, "brain", None) else None
     if path is not None and path.exists() and not args.new:
         agent = Agent.load(path)
         print(f"resumed {path} (age {agent.t_ms / 1000:.0f}s of simulated life)")
         _print_schooling(path)
+        have = len(agent.body.hands.labels) if agent.body.hands is not None else 0
+        if hands is not None and hands != have:
+            print(f"  (--hands only shapes a new creature; this one has {have})")
         return agent, path
     kwargs: dict[str, Any] = {}
     spec = load_spec(args.spec) if getattr(args, "spec", None) else None
     if spec is None:
         kwargs["cortex_size"] = args.cortex
         kwargs["day_length_s"] = args.day
+        if hands is None:
+            hands = max(4, need) if need else 0
+        if hands:
+            kwargs["hands"] = hands
     agent = Agent.create(seed=args.seed, world=args.world, spec=spec, **kwargs)
     return agent, path
+
+
+def _attach(agent, path: Path | None, args: argparse.Namespace, quiet: bool = False):
+    """Give the creature its programs (--tools) and start its thought log."""
+    belt = mind = None
+    tools = _load_tools(args)
+    if tools:
+        from .tools import ToolBelt
+        try:
+            belt = ToolBelt(agent, tools)
+        except ValueError as exc:
+            sys.exit(f"--tools {args.tools}: {exc}")
+        if not quiet:
+            print(f"  programs: {belt.describe()}")
+    if not getattr(args, "no_thoughts", False):
+        from .mind import ThoughtStream, thoughts_path
+        tp = thoughts_path(path) if path is not None else None
+        mind = ThoughtStream(agent, tp, tool_names=belt.hand_names() if belt else None)
+        if tp is not None and not quiet:
+            print(f"  thoughts: {tp}  (anima thoughts --brain {path} --follow)")
+    return belt, mind
+
+
+def _detach(belt, mind) -> None:
+    if belt is not None:
+        belt.close()
+    if mind is not None:
+        mind.close()
 
 
 def _print_schooling(path: Path) -> None:
@@ -79,12 +134,21 @@ def _common(p: argparse.ArgumentParser, brain_default: str | None = "anima_brain
     p.add_argument("--day", type=float, default=1200.0,
                    help="seconds per simulated day-night cycle (default 1200)")
     p.add_argument("--speed", type=float, default=1.0, help="simulated seconds per real second")
+    p.add_argument("--tools", help="programs it may use: a TOML or JSON file (see examples/tools.toml)")
+    p.add_argument("--hands", type=int, default=None,
+                   help="hands for a new creature (default: 4 if --tools binds programs to hands, else none)")
+    p.add_argument("--no-thoughts", action="store_true", help="do not keep a log of its thoughts")
 
 
 def cmd_chat(args: argparse.Namespace) -> None:
     from .ui.chat import run_chat
     agent, path = _make_agent(args)
-    run_chat(agent, path, speed=args.speed, show_events=not args.quiet)
+    belt, mind = _attach(agent, path, args)
+    try:
+        run_chat(agent, path, speed=args.speed, show_events=not args.quiet, belt=belt, mind=mind,
+                 show_thoughts=args.thoughts)
+    finally:
+        _detach(belt, mind)
 
 
 def cmd_live(args: argparse.Namespace) -> None:
@@ -94,35 +158,183 @@ def cmd_live(args: argparse.Namespace) -> None:
         sys.exit(f"the live dashboard needs curses ({exc}); on Windows: pip install windows-curses. "
                  "`anima chat` works everywhere.")
     agent, path = _make_agent(args)
-    run_dashboard(agent, path, speed=args.speed)
+    belt, mind = _attach(agent, path, args, quiet=True)
+    try:
+        run_dashboard(agent, path, speed=args.speed, belt=belt, mind=mind)
+    finally:
+        _detach(belt, mind)
 
 
 def cmd_run(args: argparse.Namespace) -> None:
+    from .mind import format_thought
     agent, path = _make_agent(args)
+    belt, mind = _attach(agent, path, args)
+    color = sys.stdout.isatty()
 
     def show(e: dict[str, Any]) -> None:
         k = e["kind"]
+        if args.thoughts:
+            if k == "thought":
+                print(f"{e['t']:8.1f}s  " + format_thought({**e, "kind": e["type"]}, color))
+            return
         if k == "utterance":
             print(f"{e['t']:8.1f}s  says: {e['text']}")
         elif k == "stage":
             print(f"{e['t']:8.1f}s  -> {e['stage']}")
         elif k == "ate":
             print(f"{e['t']:8.1f}s  eats")
+        elif k == "tool_result":
+            print(f"{e['t']:8.1f}s  uses {e['tool']}: {e['summary']}")
         elif k == "replay" and args.verbose:
             print(f"{e['t']:8.1f}s  replays a memory (reward {e['reward']:+.2f})")
 
+    if args.thoughts and mind is None:
+        sys.exit("--thoughts needs the thought log (drop --no-thoughts)")
     agent.on("*", show)
     t0 = time.time()
     end = agent.t_ms / 1000.0 + args.seconds
     report = max(10.0, args.seconds / 10)
-    while agent.t_ms / 1000.0 < end:
-        agent.run(min(report, end - agent.t_ms / 1000.0), realtime=args.realtime, speed=args.speed)
-        print("   " + agent.describe())
+    try:
+        while agent.t_ms / 1000.0 < end:
+            agent.run(min(report, end - agent.t_ms / 1000.0), realtime=args.realtime, speed=args.speed)
+            print("   " + agent.describe())
+    except KeyboardInterrupt:
+        print("stopping…")
     el = time.time() - t0
-    print(f"lived {args.seconds:.0f}s in {el:.1f}s wall ({args.seconds / el:.2f}x realtime); "
+    lived = args.seconds - max(0.0, end - agent.t_ms / 1000.0)
+    print(f"lived {lived:.0f}s in {el:.1f}s wall ({lived / max(el, 1e-9):.2f}x realtime); "
           f"stats {agent.body.stats}")
+    if belt is not None:
+        print("programs:\n" + belt.report())
+    if mind is not None:
+        st = mind.stats()
+        print(f"thoughts: {st['total']} ({', '.join(f'{k} {v}' for k, v in st['counts'].items())})")
+    _detach(belt, mind)
     if path is not None:
         print(f"saved {agent.save(path)}")
+
+
+def cmd_serve(args: argparse.Namespace) -> None:
+    from .bridge import Bridge
+    agent, path = _make_agent(args)
+    belt, mind = _attach(agent, path, args)
+    try:
+        bridge = Bridge(agent, host=args.host, port=args.port, token=args.token, thoughts=mind, belt=belt)
+    except (ValueError, OSError) as exc:
+        _detach(belt, mind)
+        sys.exit(f"cannot serve on {args.host}:{args.port}: {exc}")
+    bridge.start()
+    agent.start(speed=args.speed)
+    auth = f' -H "Authorization: Bearer {args.token}"' if args.token else ""
+    print(f"anima is alive and listening on {bridge.url}  ({agent.brain.net.N} neurons, "
+          f"{agent.latest['clock']} {agent.latest['stage']})")
+    print(f"  curl{auth} {bridge.url}/state")
+    print(f"  curl{auth} -N '{bridge.url}/stream?kinds=utterance,thought'")
+    print(f"  curl{auth} -d '{{\"text\": \"ba ba :)\"}}' {bridge.url}/hear")
+    print("Ctrl-C saves and stops." if path is not None else "Ctrl-C stops.")
+    import signal
+
+    def _stop(signum: int, frame: Any) -> None:  # e.g. a service manager's SIGTERM: save, then stop
+        raise KeyboardInterrupt
+    try:
+        signal.signal(signal.SIGTERM, _stop)
+    except ValueError:  # pragma: no cover - not the main thread
+        pass
+    last_save = time.time()
+    try:
+        while agent.alive:
+            time.sleep(0.5)
+            if path is not None and args.autosave and time.time() - last_save >= args.autosave * 60:
+                agent.save(path)
+                last_save = time.time()
+    except KeyboardInterrupt:
+        print("\nstopping…")
+    finally:
+        bridge.stop()
+        agent.stop()
+        _detach(belt, mind)
+        if path is not None:
+            print(f"saved {agent.save(path)} — run again to continue its life.")
+
+
+def cmd_thoughts(args: argparse.Namespace) -> None:
+    from .mind import KINDS, format_thought, read_thoughts, thoughts_path
+    src = Path(args.file) if args.file else thoughts_path(args.brain)
+    if src.suffix == ".npz":
+        src = thoughts_path(src)
+    kinds = tuple(k.strip() for k in args.kinds.split(",") if k.strip()) if args.kinds else None
+    bad = [k for k in kinds or () if k not in KINDS]
+    if bad:
+        sys.exit(f"unknown kind(s) {', '.join(bad)}; kinds: {', '.join(KINDS)}")
+    if not src.exists() and not args.follow:
+        sys.exit(f"no thought log at {src} (it is written while the creature lives: anima chat / live / serve)")
+    color = sys.stdout.isatty() and not args.json
+
+    def emit(rec: dict[str, Any]) -> None:
+        print(json.dumps(rec) if args.json else format_thought(rec, color), flush=True)
+
+    if src.exists():
+        for rec in read_thoughts(src, args.n, kinds):
+            emit(rec)
+    if not args.follow:
+        return
+    pos = src.stat().st_size if src.exists() else 0
+    try:
+        while True:
+            time.sleep(0.5)
+            if not src.exists():
+                continue
+            size = src.stat().st_size
+            if size < pos:  # rotated
+                pos = 0
+            if size == pos:
+                continue
+            with open(src, encoding="utf-8") as f:
+                f.seek(pos)
+                chunk = f.read()
+                pos = f.tell()
+            for line in chunk.splitlines():
+                try:
+                    rec = json.loads(line)
+                except ValueError:
+                    continue
+                if not kinds or rec.get("kind") in kinds:
+                    emit(rec)
+    except KeyboardInterrupt:
+        pass
+
+
+def cmd_tools(args: argparse.Namespace) -> None:
+    from .tools import parse_answer  # noqa: F401  (import check)
+    tools = _load_tools(args)
+    if not tools:
+        sys.exit(f"{args.tools}: no [[tool]] entries")
+    print(f"{args.tools}: {len(tools)} program(s)")
+    hands = 0
+    for t in tools:
+        print(f"  {t.describe()}")
+        print(f"      cooldown {t.cooldown_s:g}s, timeout {t.timeout_s:g}s"
+              + (", heard" if t.speak else ", not heard"))
+        if t.hand is not None:
+            hands = max(hands, t.hand + 1)
+    if hands:
+        print(f"hand-bound programs need a creature with at least {hands} hands "
+              f"(a new one gets {max(4, hands)}: anima chat --brain pet.npz --new --tools {args.tools})")
+    if args.try_:
+        match = [t for t in tools if t.name == args.try_]
+        if not match:
+            sys.exit(f"no program named {args.try_!r}")
+        t = match[0]
+        call = {"call_id": 0, "tool": t.name, "how": "say" if t.say else "hand", "what": t.say or t.hand,
+                "t": 0.0, "clock": "12:00", "stage": "awake", "energy": 0.5,
+                "drives": {"hunger": 0.5, "fatigue": 0.2, "boredom": 0.5, "loneliness": 0.5}}
+        if t.kind == "remote":
+            print(f"{t.name} is answered from outside (POST /tool_result while `anima serve` runs)")
+            return
+        res = t.run(call)
+        print(f"tried {t.name} with a sample call → {res.summary()}  ({res.seconds:.2f}s)")
+        if res.raw:
+            print("  raw answer: " + res.raw.strip()[:300])
 
 
 def cmd_experiment(args: argparse.Namespace) -> None:
@@ -143,6 +355,10 @@ def cmd_experiment(args: argparse.Namespace) -> None:
     elif args.name == "tutoring":
         from .experiments.tutoring import main
         res = main(seeds=seeds, max_minutes=(secs or 7200.0) / 60.0, plot=args.plot)
+    elif args.name == "programs":
+        from .experiments.programs import main
+        parts = tuple(x for x in (args.parts or "hands,voice,mind").split(",") if x)
+        res = main(seconds=secs, seeds=seeds, parts=parts, workers=args.workers, plot=args.plot)
     else:  # pragma: no cover
         sys.exit(f"unknown experiment {args.name}")
     if args.json:
@@ -192,6 +408,7 @@ def cmd_train(args: argparse.Namespace) -> None:
     agent, path = _make_agent(args)
     if not hasattr(agent.world, "place_food"):
         sys.exit("the lessons need the foraging world (--world foraging)")
+    belt, mind = _attach(agent, path, args)
     lock = threading.Lock()
 
     def out(line: str) -> None:
@@ -201,7 +418,7 @@ def cmd_train(args: argparse.Namespace) -> None:
     from .tutor import LESSONS, LESSONS_WITH_ASK, Curriculum
     curriculum = Curriculum(LESSONS_WITH_ASK if args.with_ask else LESSONS)
     tutor = Tutor(agent, teacher, target=args.target, think_every_s=args.think_every,
-                  printer=out, verbose=not args.quiet, curriculum=curriculum)
+                  printer=out, verbose=not args.quiet, curriculum=curriculum, mind=mind)
     tpath = tutor_path(path) if path is not None else None
     if tpath is not None and tpath.exists() and not args.new:
         tutor.load(tpath)
@@ -212,6 +429,7 @@ def cmd_train(args: argparse.Namespace) -> None:
         out("this creature has already passed the whole curriculum — it can live on its own:  "
             f"anima live --brain {path}")
         out(tutor.report())
+        _detach(belt, mind)
         return
     lesson = cur.current
     out(f"lesson {cur.index + 1} of {len(cur.lessons)}: {lesson.title} — {lesson.goal}")
@@ -237,6 +455,7 @@ def cmd_train(args: argparse.Namespace) -> None:
     finally:
         tutor.stop()
         agent.stop()
+        _detach(belt, mind)
         save()
     out("\n" + (report or tutor.report()))
     if path is not None:
@@ -325,11 +544,37 @@ def main(argv: list[str] | None = None) -> None:
     p = sub.add_parser("chat", help="talk to the creature in a plain terminal")
     _common(p)
     p.add_argument("--quiet", action="store_true", help="only show speech")
+    p.add_argument("--thoughts", action="store_true", help="print its thoughts as they happen (/mind toggles)")
     p.set_defaults(func=cmd_chat)
 
     p = sub.add_parser("live", help="live dashboard (curses)")
     _common(p)
     p.set_defaults(func=cmd_live)
+
+    p = sub.add_parser("serve", help="live in real time and let other programs connect (HTTP)",
+                       description="Runs the creature in real time with a small JSON web service next to it: "
+                       "read its state, thoughts and events, talk to it, reward or feed it, and answer its "
+                       "remote programs' calls. See `anima/bridge/server.py` for the endpoints.")
+    _common(p)
+    p.add_argument("--host", default="127.0.0.1", help="address to listen on (default: %(default)s)")
+    p.add_argument("--port", type=int, default=7777)
+    p.add_argument("--token", default=None, help="require 'Authorization: Bearer TOKEN' (needed off localhost)")
+    p.add_argument("--autosave", type=float, default=5.0, help="save every N minutes (0: only on exit)")
+    p.set_defaults(func=cmd_serve)
+
+    p = sub.add_parser("thoughts", help="read the log of its thoughts")
+    p.add_argument("file", nargs="?", help="a .thoughts.jsonl log, or a brain file (default: --brain)")
+    p.add_argument("--brain", default="anima_brain.npz")
+    p.add_argument("-n", type=int, default=40, help="how many of the latest to show (0: all)")
+    p.add_argument("--kinds", help="only these kinds, e.g. intention,feeling,program")
+    p.add_argument("--follow", "-f", action="store_true", help="keep printing new thoughts")
+    p.add_argument("--json", action="store_true", help="print JSON lines")
+    p.set_defaults(func=cmd_thoughts)
+
+    p = sub.add_parser("tools", help="check a tools file (the programs it may use)")
+    p.add_argument("tools", help="TOML or JSON file with [[tool]] entries")
+    p.add_argument("--try", dest="try_", metavar="NAME", help="run one program once with a sample call")
+    p.set_defaults(func=cmd_tools)
 
     p = sub.add_parser("train", help="raise it with a teacher: a local LLM via Ollama, or a script",
                        description="A teacher raises the creature through four lessons (find food, copy "
@@ -369,13 +614,16 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--seconds", type=float, default=120.0)
     p.add_argument("--realtime", action="store_true", help="pace to the wall clock")
     p.add_argument("--verbose", action="store_true")
+    p.add_argument("--thoughts", action="store_true", help="print its thoughts instead of its actions")
     p.set_defaults(func=cmd_run)
 
     p = sub.add_parser("experiment", help="reproduce the learning experiments")
-    p.add_argument("name", choices=["foraging", "babble", "imitation", "spontaneous", "tutoring"])
+    p.add_argument("name", choices=["foraging", "babble", "imitation", "spontaneous", "tutoring", "programs"])
     p.add_argument("--seconds", type=float, default=None,
                    help="simulated seconds (default: 600; imitation 300 per phase; spontaneous one day; "
-                        "tutoring: at most 7200 for the curriculum)")
+                        "tutoring: at most 7200 for the curriculum; programs: 1200 hands, 600 voice, 480 mind)")
+    p.add_argument("--parts", help="programs only: any of hands,voice,mind (default all)")
+    p.add_argument("--workers", type=int, default=1, help="programs only: runs in parallel processes")
     p.add_argument("--seeds", default="1,2")
     p.add_argument("--plot", help="save a figure (needs matplotlib)")
     p.add_argument("--json", help="save the numbers")

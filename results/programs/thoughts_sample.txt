@@ -1,0 +1,218 @@
+# A new creature (seed 5, 4 hands) with the programs of examples/tools.toml, spoken to four times
+# ("ma ma" at 1 min, "ba ba :)" at 2.5 min, "la la" at 4.3 min, "*smile*" at 5.5 min); 7 simulated minutes.
+# Produced by a ThoughtStream exactly as `anima chat --new --tools examples/tools.toml` would write it.
+# Programs run as real subprocesses, so their answers arrive at wall-clock speed and a rerun differs.
+
+07:12  perception a strong smell of food, to my right
+07:12  program    I use music (by saying "la") → 'lu li la la', reward +0.15
+07:15  inner      I mouth "ke ni ta ko" silently (I heard "lu li la la")
+07:18  feeling    I'm not bored (0.30)
+07:21  memory     I'll remember this: turning right, saying "gi" (-0.08)
+07:21  program    I use clock (with hand 1) → 'it is 07:21'
+07:24  inner      I mouth "hu" silently (I heard "it is 07:21")
+07:27  evaluation getting closer to food: better than I expected (+0.30)
+07:30  evaluation getting closer to food: worse than I expected (-0.29)
+07:30  program    I use clock (with hand 1) → 'it is 07:30'
+07:33  action     ouch — I bumped into a wall
+07:36  evaluation that bump: worse than I expected (-0.32)
+07:39  memory     I'll remember this: turning left (-0.09)
+07:42  evaluation getting closer to food: better than I expected (+0.25)
+07:44  program    I use vending (with hand 0) → 'clunk', food ahead
+07:45  feeling    I'm getting bored (0.31)
+07:48  inner      I mouth "bu la" silently (I heard "clunk")
+07:49  action     I ate
+07:51  memory     I'll remember this: going ahead (+0.81)
+07:54  perception a wall right in front of me
+07:56  program    I use vending (with hand 0) → 'bzz'
+07:57  feeling    I'm lonely (0.57)
+08:00  speech     I say "sigoma"
+08:04  action     ouch — I bumped into a wall
+08:04  program    I use music (by saying "la") → 'la li lo li', reward +0.16
+08:07  memory     I'll remember this: turning right, saying "se" (+0.08)
+08:10  perception a strong smell of food, ahead
+08:13  perception a wall right in front of me
+08:16  evaluation that bump: worse than I expected (-0.35)
+08:19  evaluation getting closer to food: better than I expected (+0.26)
+08:22  action     ouch — I bumped into a wall
+08:23  social     someone says "ma ma"
+08:25  memory     I'll remember this: turning right, saying "ta", reaching with hand 3 (+0.13)
+08:28  speech     I say "bu beta"
+08:31  perception a strong smell of food, all around
+08:34  feeling    less lonely now (0.49)
+08:37  evaluation getting closer to food: worse than I expected (-0.22)
+08:40  action     ouch — I bumped into a wall
+08:40  action     I ate
+08:43  speech     I say "bepe"
+08:46  perception a clear smell of food, to my left
+08:49  feeling    I'm lonely (0.55)
+08:52  speech     I say "pumu"
+08:56  perception a clear smell of food, to my right
+08:59  speech     I say "kena"
+09:02  action     I reach with hand 2 (nothing there)
+09:04  action     I ate
+09:05  evaluation the food: better than I expected (+0.27)
+09:07  action     I ate
+09:08  speech     I say "we da"
+09:13  speech     I say "lu di pa"
+09:16  intention  I'm inclined to turn right, toward the smell
+09:20  program    I use clock (with hand 1) → 'it is 09:20'
+09:21  speech     I say "pi ki di"
+09:24  inner      I mouth "si" silently (I heard "it is 09:20")
+09:27  speech     I say "bi"
+09:30  program    I use clock (with hand 1) → 'it is 09:30'
+09:31  perception a strong smell of food, ahead
+09:34  inner      I mouth "pa" silently (I heard "it is 09:30")
+09:37  perception a strong smell of food, to my right
+09:38  action     I ate
+09:40  speech     I say "lu mu"
+09:48  speech     I say "no na ke"
+09:49  program    I use vending (with hand 0) → 'clunk', food ahead
+09:51  perception a strong smell of food, behind me
+09:54  feeling    I'm very lonely (0.75)
+09:57  action     ouch — I bumped into a wall
+10:00  speech     I say "melu"
+10:03  perception a strong smell of food, to my right
+10:03  program    I use vending (with hand 0) → 'bzz'
+10:06  inner      I mouth "to" silently (I heard "bzz")
+10:09  perception a strong smell of food, all around
+10:12  social     someone says "ba ba"
+10:12  social     someone smiles at me
+10:12  memory     I'll remember this: turning left, saying "ke" (+0.90)
+10:12  program    I use vending (with hand 0) → 'bzz'
+10:15  inner      I mouth "be" silently (I heard "bzz")
+10:18  feeling    I'm getting tired (0.31)
+10:19  program    I use music (by saying "la") → 'lo li la lu', reward +0.18
+10:21  evaluation music: better than I expected (+0.31)
+10:24  speech     I say "la hodipe"
+10:27  action     I reach with hand 2 (nothing there)
+10:30  speech     I say "time"
+10:33  feeling    less lonely now (0.60)
+10:36  perception a wall right in front of me
+10:39  action     ouch — I bumped into a wall
+10:41  program    I use vending (with hand 0) → 'clunk', food ahead
+10:42  inner      I mouth "ko ti" silently (I heard "clunk")
+10:45  perception a strong smell of food, to my left
+10:46  program    I use music (by saying "la") → 'lu lu li li', reward +0.19
+10:48  evaluation music: better than I expected (+0.21)
+10:49  program    I use vending (with hand 0) → 'bzz'
+10:51  inner      I mouth "ge he da" silently (I heard "bzz")
+10:51  reflection looking back since 07:11: turning right went well (32x, +0.11); going ahead went badly (28x, -0.11); saying "ke" went well (1x, +0.90)
+10:54  perception a strong smell of food, all around
+10:58  action     I reach with hand 2 (nothing there)
+11:03  speech     I say "wito"
+11:06  perception a strong smell of food, to my right
+11:09  speech     I say "weha"
+11:12  perception a strong smell of food, all around
+11:16  speech     I say "beme pu ti"
+11:17  program    I use music (by saying "la") → 'li lu lo lo', reward +0.20
+11:18  program    I use clock (with hand 1) → 'it is 11:18'
+11:19  evaluation music: better than I expected (+0.36)
+11:22  inner      I mouth "de ta wu me" silently (I heard "it is 11:18")
+11:25  feeling    I'm very lonely (0.75)
+11:28  memory     I'll remember this: turning left, saying "he" (+0.09)
+11:29  action     I ate
+11:31  evaluation the food: better than I expected (+0.21)
+11:34  perception a strong smell of food, to my left
+11:39  speech     I say "na du nate"
+11:42  perception a strong smell of food, ahead
+11:45  action     I reach with hand 2 (nothing there)
+11:48  speech     I say "be ti"
+11:52  perception a strong smell of food, to my left
+11:55  speech     I say "ti pe na geha"
+11:58  perception a strong smell of food, all around
+11:59  action     I ate
+12:01  evaluation the food: better than I expected (+0.31)
+12:06  speech     I say "po ne hi"
+12:08  program    I use music (by saying "la") → 'li lo lu lo', reward +0.19
+12:09  memory     I'll remember this: turning right, saying "la" (+0.19)
+12:12  inner      I mouth "di lu ga ko" silently (I heard "li lo lu lo")
+12:20  perception a strong smell of food, behind me
+12:23  perception a wall right in front of me
+12:23  social     someone says "la la"
+12:26  action     ouch — I bumped into a wall
+12:29  feeling    less lonely now (0.58)
+12:32  perception a strong smell of food, to my left
+12:35  speech     I say "du pa ni"
+12:38  perception a strong smell of food, all around
+12:39  program    I use music (by saying "la") → 'li lo la li', reward +0.18
+12:40  action     I ate
+12:41  evaluation the food: better than I expected (+0.27)
+12:44  inner      I mouth "la" silently (I heard "li lo la li")
+12:47  speech     I say "du"
+12:50  program    I use vending (with hand 0) → 'clunk', food ahead
+12:51  action     I ate
+12:52  inner      I mouth "mi ko" silently (I heard "clunk")
+12:55  perception a strong smell of food, to my right
+12:58  action     I reach with hand 3 (nothing there)
+13:01  perception a strong smell of food, all around
+13:05  speech     I say "le mu ha sisi"
+13:07  program    I use music (by saying "la") → 'la la la lu', reward +0.19
+13:08  evaluation music: better than I expected (+0.30)
+13:11  inner      I mouth "ga ki di ha" silently (I heard "la la la lu")
+13:13  action     I ate
+13:14  memory     I'll remember this: going ahead, saying "pi" (+0.11)
+13:17  perception a strong smell of food, to my left
+13:21  intention  I'm inclined to turn right
+13:24  speech     I say "wi de bu gu be gu"
+13:27  feeling    I'm very lonely (0.75)
+13:28  program    I use clock (with hand 1) → 'it is 13:28'
+13:30  inner      I mouth "ta" silently (I heard "it is 13:28")
+13:33  perception a strong smell of food, to my right
+13:36  action     I reach with hand 3 (nothing there)
+13:38  program    I use music (by saying "la") → 'li lo li lu', reward +0.19
+13:39  evaluation music: better than I expected (+0.28)
+13:40  action     I ate
+13:42  inner      I mouth "hu po" silently (I heard "li lo li lu")
+13:45  perception a strong smell of food, ahead
+13:47  social     someone smiles at me
+13:48  memory     I'll remember this: turning left (+0.75)
+13:51  speech     I say "we sa"
+13:54  feeling    less lonely now (0.65)
+13:57  perception a strong smell of food, to my right
+13:59  action     I ate
+14:00  memory     I'll remember this: going ahead, saying "ge", reaching with hand 2 (+0.08)
+14:01  program    I use music (by saying "la") → 'lo li lu la', reward +0.19
+14:03  evaluation music: better than I expected (+0.23)
+14:06  perception a wall right in front of me
+14:09  action     ouch — I bumped into a wall
+14:12  perception a clear smell of food, ahead
+14:15  action     I ate
+14:15  memory     I'll remember this: going ahead, saying "de" (+0.09)
+14:16  program    I use clock (with hand 1) → 'it is 14:16'
+14:18  inner      I mouth "su de ti" silently (I heard "it is 14:16")
+14:20  action     I ate
+14:22  speech     I say "na"
+14:22  program    I use music (by saying "la") → 'la lo li li', reward +0.18
+14:25  evaluation music: better than I expected (+0.32)
+14:28  perception a clear smell of food, to my left
+14:28  program    I use vending (with hand 0) → 'clunk', food ahead
+14:28  action     I ate
+14:31  feeling    I'm very lonely (0.75)
+14:33  reflection looking back since 10:51: saying "la" went well (8x, +0.20); going ahead went well (12x, +0.12); turning left went well (4x, +0.28)
+14:33  action     I ate
+14:34  action     I ate
+14:34  perception a strong smell of food, behind me
+14:37  perception a wall right in front of me
+14:40  speech     I say "ka to lu pe"
+14:43  perception a strong smell of food, to my left
+14:49  perception a strong smell of food, behind me
+14:52  action     I reach with hand 3 (nothing there)
+14:55  speech     I say "mase"
+14:58  perception a strong smell of food, to my left
+15:00  program    I use clock (with hand 1) → 'it is 15:00'
+15:01  perception a wall right in front of me
+15:04  inner      I mouth "ti" silently (I heard "it is 15:00")
+15:07  speech     I say "lo"
+15:10  perception a strong smell of food, ahead
+15:14  action     I ate
+15:14  evaluation the food: better than I expected (+0.36)
+15:18  intention  I'm inclined to turn right
+15:19  program    I use vending (with hand 0) → 'clunk', food ahead
+15:20  action     I ate
+15:21  action     ouch — I bumped into a wall
+15:24  intention  I feel like reaching with hand 2
+15:28  action     I ate
+15:28  program    I use music (by saying "la") → 'la li li lo', reward +0.17
+15:28  evaluation music: better than I expected (+0.31)
+15:31  inner      I mouth "li ha pu le" silently (I heard "la li li lo")
+15:34  speech     I say "wo ha he la pepule"

@@ -41,11 +41,12 @@ class Tutor:
     def __init__(self, agent: Any, teacher: Teacher | None = None, target: str = "m",
                  think_every_s: float = 8.0, printer: Callable[[str], None] | None = print,
                  verbose: bool = True, review_minutes: float = 3.0, spot_check_min: float = 12.0,
-                 hold_s: float = 60.0, curriculum: Curriculum | None = None) -> None:
+                 hold_s: float = 60.0, curriculum: Curriculum | None = None, mind: Any = None) -> None:
         from ..brain.presets import CONSONANTS
         if target not in CONSONANTS:
             raise ValueError(f"target must be one of the consonants {CONSONANTS}, not {target!r}")
         self.agent = agent
+        self.mind = mind  # a ThoughtStream: its thoughts go into the teacher's reports
         self.teacher = teacher or ScriptedTeacher()
         self.target = target
         self.think_every_s = think_every_s
@@ -210,7 +211,15 @@ class Tutor:
             "target_sound": self.target,
             "active_rules": self.toolkit.active_rules(),
             "your_recent_actions": recent, "your_notes": notes,
+            **({"its_thoughts": self._thoughts(now - window)} if self.mind is not None else {}),
         }
+
+    def _thoughts(self, since: float) -> list[str]:
+        """What its thought log said since the last report (speech and sounds
+        are reported separately)."""
+        items = self.mind.recent(0, since=since)
+        keep = [f"{t['kind']}: {t['text']}" for t in items if t["kind"] not in ("speech", "social")]
+        return keep[-8:]
 
     # ------------------------------------------------------------ acting
     def execute(self, d: Decision) -> list[str]:

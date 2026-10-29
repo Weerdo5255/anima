@@ -209,7 +209,7 @@ SYSTEM_PROMPT = """You are the teacher of a newborn artificial creature. Its bra
 - babble syllables made of one consonant and one vowel ("ba", "mi", "to"),
 - hear sounds (your words reach it as a stream of phonemes),
 - feel hunger, fatigue, boredom and loneliness, and sleep at night.
-It lives on its own clock and never waits for you. You get a short report every few seconds.
+It lives on its own clock and never waits for you. You get a short report every few seconds. If the report has "its_thoughts", those are lines the framework reads out of its brain activity (feelings, what it notices, what it is inclined to do, rewards better or worse than it expected); they are not words it knows.
 
 How it learns: a reward (food, or your smile) strengthens whatever it did in the last second or so. Talking to it or smiling also relieves its loneliness, which is rewarding in itself, so attention given at random teaches random things. Precise, fast rewards are delivered by reflex rules that you switch on; you decide the strategy. Graduation from a lesson is measured automatically, partly by short exams given to a copy of the creature (results under "exams"; a skill that slips can be reviewed with switch_lesson).
 

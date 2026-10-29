@@ -53,7 +53,11 @@ save path.  The first three utterances happened before anyone said
 anything.  The bracketed times are its own clock — one simulated day lasts
 20 real minutes by default, so it gets sleepy about 13 minutes in.
 
-Everything runs locally on a CPU with **NumPy as the only dependency**.
+It can also use programs you allow, by learning which of its acts make
+them do something good for it; it keeps a log of its thoughts, read out of
+its own brain activity; and other programs can connect to it while it lives
+([below](#programs-thoughts-and-other-programs)).  Everything runs locally on
+a CPU with **NumPy as the only dependency**.
 
 ---
 
@@ -73,11 +77,12 @@ memories, same time of day.  `--new` starts a fresh one.
 
 In the chat, type anything at any time.  `:)` or `*smile*` is approval and
 `:(` disapproval (non-verbal, no sound).  `/status`, `/world`, `/stats`,
+`/feed`, `/thoughts`, `/mind` (print its thoughts as they happen), `/tools`,
 `/sleep`, `/wake`, `/save`, `/quit`.
 
 The live dashboard shows the world, its drives and neuromodulators, the
 activity of each region, a live raster of cortical spikes and the
-conversation:
+conversation (in v0.3 with its thoughts in between, `/mind` hides them):
 
 ```
  anima  07:42   AWAKE     age    25.3s  1.0x realtime  1667 neurons  memories 14  replays 0
@@ -235,6 +240,156 @@ client (standard library only), reflexes, measurements, exams, curriculum
 and teachers.  Lessons are data: pass `Tutor(..., curriculum=Curriculum([Lesson(...), ...]))`
 to teach your own, and add reflexes to `anima.tutor.RULES`.  Results are in [section 5](#5-what-a-teacher-adds).
 
+## Programs, thoughts, and other programs
+
+### It can use programs — the ones you allow
+
+It cannot type and has no words, so each program you allow is bound to
+something it can *do*: say a syllable, or reach with one of its hands (an
+optional extra motor area).  The program's answer comes back as
+consequences it can feel — a sound, food in front of it, a treat or a
+buzzer — and it learns which programs are worth using the way it learns
+everything else: from dopamine, within a second or two of acting.
+
+```toml
+# examples/tools.toml
+[[tool]]
+name = "vending"                             # a snack machine
+hand = 0                                     # runs when it reaches with hand 0
+command = ["{python}", "tools/vending.py"]   # never a shell; the call arrives as JSON on stdin
+
+[[tool]]
+name = "music"
+say = "la"                                   # runs when it says "la"
+command = ["{python}", "tools/music.py", "{boredom}"]
+```
+
+```bash
+anima tools examples/tools.toml --try music                    # check the file, run one program once
+anima chat --brain pet.npz --new --tools examples/tools.toml   # a new creature with 4 hands and these programs
+```
+
+A program answers with plain text (which the creature hears) or JSON:
+`{"say": "...", "reward": -1..1, "food": "ahead" | "left" | "right" | "near"}`.
+It can be a local command, a local web service (`url = ...`), a Python
+function (`function = "pkg.mod:fn"`), or `remote = true`: answered by some
+other program through `anima serve` (below).  Only listed programs run —
+without a shell, with a timeout, an output cap, a cooldown and a limit on
+calls per minute — and every call is an event and a line in its thought
+log.  They run with your permissions, so list only programs you would let a
+curious animal press the button of.  `/tools` in the chat shows how each
+program has gone.  (Tool files in TOML need Python 3.11+ or `pip install
+tomli`; JSON works everywhere.)
+
+### It keeps a log of its thoughts
+
+```
+$ anima thoughts --brain pet.npz -n 0      # lines 52-84 of 213: a new creature with examples/tools.toml
+09:16  intention  I'm inclined to turn right, toward the smell
+09:20  program    I use clock (with hand 1) → 'it is 09:20'
+09:21  speech     I say "pi ki di"
+09:24  inner      I mouth "si" silently (I heard "it is 09:20")
+09:27  speech     I say "bi"
+09:30  program    I use clock (with hand 1) → 'it is 09:30'
+09:31  perception a strong smell of food, ahead
+09:34  inner      I mouth "pa" silently (I heard "it is 09:30")
+09:37  perception a strong smell of food, to my right
+09:38  action     I ate
+09:40  speech     I say "lu mu"
+09:48  speech     I say "no na ke"
+09:49  program    I use vending (with hand 0) → 'clunk', food ahead
+09:51  perception a strong smell of food, behind me
+09:54  feeling    I'm very lonely (0.75)
+09:57  action     ouch — I bumped into a wall
+10:00  speech     I say "melu"
+10:03  perception a strong smell of food, to my right
+10:03  program    I use vending (with hand 0) → 'bzz'
+10:06  inner      I mouth "to" silently (I heard "bzz")
+10:09  perception a strong smell of food, all around
+10:12  social     someone says "ba ba"
+10:12  social     someone smiles at me
+10:12  memory     I'll remember this: turning left, saying "ke" (+0.90)
+10:12  program    I use vending (with hand 0) → 'bzz'
+10:15  inner      I mouth "be" silently (I heard "bzz")
+10:18  feeling    I'm getting tired (0.31)
+10:19  program    I use music (by saying "la") → 'lo li la lu', reward +0.18
+10:21  evaluation music: better than I expected (+0.31)
+10:24  speech     I say "la hodipe"
+10:27  action     I reach with hand 2 (nothing there)
+10:30  speech     I say "time"
+10:33  feeling    less lonely now (0.60)
+```
+
+A real log, unedited — a stretch from the first seven minutes of a new
+creature's life with the example programs, spoken to now and then
+([the whole log](results/programs/thoughts_sample.txt)).
+It hears the clock's words only as sounds; the vending machine gives food at
+most every 30 seconds and otherwise buzzes; the music rewards it more the more
+bored it is.
+
+These lines are not sentences it composes — it has no language.  They are
+read out of the activity and state that drive its behaviour, the way a
+brain–computer interface reads intended movements out of motor cortex:
+drives crossing a level, which side a smell is on, which movement its
+senses are pushing it toward, its mouth silently following a sound it
+hears, dopamine bursts that were better or worse than expected and what
+caused them, moments its hippocampus stores and replays in its dreams, the
+programs it used, and every few minutes what its recent memories add up to.
+As in global-workspace accounts of consciousness, the readouts compete:
+every 100 ms the most salient candidate gets in, the workspace then closes
+for a moment, and what was just thought habituates — so you get about 30
+lines a minute awake and about ten asleep, not a firehose.
+
+```bash
+anima thoughts --follow                      # the log of anima_brain.npz, as it is written
+anima thoughts --kinds intention,program     # some kinds only (--json for the numbers)
+```
+
+In `anima chat`, `/thoughts` shows the latest and `/mind` prints them as
+they happen (or start with `--thoughts`); the dashboard shows them between
+the lines of the conversation.  The log is JSON lines next to the brain
+(`anima_brain.thoughts.jsonl`), each with the numbers it was read from.
+When an LLM teaches it (`anima train`), the teacher's reports include its
+recent thoughts.  How well the readouts match what it then does is measured
+in [results 7](#7-is-the-thought-log-true).
+
+### Other programs can connect to it
+
+```bash
+anima serve --tools examples/tools_remote.toml        # lives in real time at http://127.0.0.1:7777
+curl 127.0.0.1:7777/state                             # drives, modulators, sleep, what it is doing
+curl -N '127.0.0.1:7777/stream?kinds=utterance,thought'   # everything it does, as it happens
+curl -d '{"text": "ba ba :)"}' 127.0.0.1:7777/hear     # talk to it (:) is a smile)
+curl -d '{"amount": 0.5}' 127.0.0.1:7777/reward        # a treat (or a buzzer: -0.5)
+```
+
+| endpoint | |
+|---|---|
+| `GET /state`, `GET /thoughts?n=50&kinds=...` | its state; its latest thoughts |
+| `GET /events?since=SEQ&kinds=...&wait=20` | events after sequence number SEQ (long polling); `GET /stream` is the same as server-sent events |
+| `POST /hear {"text"}`, `/reward {"amount", "source"}`, `/feed {"where"}` | talk to it, reward it (clipped to ±1), put food near it |
+| `GET /pending`, `POST /tool_result {"call_id", "answer"}` | be one of its `remote` programs: answer its calls |
+| `GET /tools` | its programs and how they have gone |
+
+It listens on 127.0.0.1 only; to listen anywhere else it needs `--token`
+(then every request carries `Authorization: Bearer <token>`).  From Python,
+with the standard library only:
+
+```python
+from anima.bridge import BridgeClient
+
+anima = BridgeClient("http://127.0.0.1:7777")
+anima.hear("ba ba")
+for e in anima.follow(kinds=["utterance", "thought"]):
+    print(e["kind"], e["text"])
+
+anima.serve({"bell": lambda call: {"say": "ding", "reward": 0.3}})   # be its "bell" program
+```
+
+[`examples/05_external_program.py`](examples/05_external_program.py) is a
+complete program that is the creature's bell (it starts its own creature if
+none is being served).
+
 ## What is in the default creature
 
 About 1,700 Izhikevich spiking neurons in 15 populations, 38 projections,
@@ -266,8 +421,10 @@ full design and the neuroscience behind each piece.
 Every number here was produced by the shipped code: two seeds for each
 learning experiment, one simulated day for the first.  The first four take
 roughly 1.5 hours on the 2-core development VM, the tutoring comparison
-about 2.5 hours.  `anima experiment <name>` reruns any of them, and the raw
-numbers are in [`results/`](results/README.md).  Nothing was tuned per seed.
+about 2.5 hours, the program and thought-log checks (6–7) about 40 minutes
+with `--workers 2`.  `anima experiment <name>` reruns any of them, and the
+raw numbers are in [`results/`](results/README.md).  Nothing was tuned per
+seed.
 
 ### 1. Left completely alone, it still lives a day
 
@@ -368,6 +525,83 @@ limits).
 
 ![tutoring](docs/figures/tutoring.png)
 
+### 6. It learns which program to use
+
+A creature with four hands, and a program on each (`anima experiment
+programs`).  For two minutes none of them does anything.  Then the program
+on the hand it had used *least* starts answering with a reward of +0.6 — no
+sound, no food, just the reward — and the other three keep doing nothing.
+The control is the same creature with plasticity frozen at that moment (the
+two runs are identical until then).  Share of its reaches that ran the
+paying program (chance 0.25):
+
+| | paying program (its reaches in the first 2 min) | 0–2 min | 2–4 min | 4–6 min | 6–8 min | 8–10 min | 10–20 min | reaches per minute, 10–20 min |
+|---|---|---|---|---|---|---|---|---|
+| plastic, seed 1 | hand 0 (0 of 10) | 0.00 | 0.38 | 0.88 | 1.00 | 1.00 | **1.00** | 10.8 |
+| plastic, seed 2 | hand 0 (2 of 11) | 0.18 | 0.45 | 0.95 | 0.95 | 0.95 | **1.00** | 10.9 |
+| frozen, seed 1 | hand 0 (0 of 10) | 0.00 | 0.23 | 0.50 | 0.50 | 0.44 | 0.28 | 5.0 |
+| frozen, seed 2 | hand 0 (2 of 11) | 0.18 | 0.00 | 0.31 | 0.00 | 0.00 | 0.30 | 3.0 |
+
+Within four minutes of the program starting to pay, nearly every reach
+runs it, and it reaches about twice as often — close to the most its
+5-second rest between reaches allows — while still foraging (35 and 54
+meals in the 20 minutes).  Frozen, it keeps using all four hands at about
+chance.  This is operant conditioning — a rat learning which lever gives
+food — not an understanding of what the program does.
+
+Programs can be bound to its voice too.  Here syllables starting with *b*
+run a program that rewards it (+0.5, from minute 2) and syllables starting
+with *d* one that does nothing (well fed, empty world).  Share of its
+syllables:
+
+| | 0–2 min | 2–4 min | 4–6 min | 6–8 min | 8–10 min |
+|---|---|---|---|---|---|
+| *b* (pays), seed 1 | 0.14 | 0.08 | 0.37 | 0.46 | 0.37 |
+| *b* (pays), seed 2 | 0.07 | 0.24 | 0.31 | 0.37 | 0.43 |
+| *d* (does not), seeds 1 / 2 | 0.07 / 0.06 | 0.07 / 0.07 | 0.08 / 0.09 | 0.06 / 0.03 | 0.05 / 0.07 |
+| *b*, frozen, seed 1 | 0.14 | 0.17 | 0.13 | 0.08 | 0.05 |
+| *b*, frozen, seed 2 | 0.07 | 0.11 | 0.11 | 0.05 | 0.09 |
+
+The paying syllable rises from 0.10 to about **0.40** of everything it says
+while the one that does nothing stays at ~0.05; frozen, nothing changes.
+With its 2-second cooldown the program ran for about 105 of the ~150 *b*
+syllables in each run and rewarded 94 and 98 of them (after minute 2).
+
+![programs](docs/figures/programs.png)
+
+### 7. Is the thought log true?
+
+Most lines transcribe state the code can see directly — a drive's level,
+the dopamine signal, a sleep stage, an episode the hippocampus stored — so
+they are true by construction.  Three readouts make claims that can be
+wrong, and `anima experiment programs` checks them:
+
+* **"I'm inclined to turn left"** is read from the synaptic drive into the
+  three movement channels, not from what it is doing.  After ten minutes of
+  foraging practice, the movement it made most in the next 3 seconds was the
+  one named in **0.55 and 0.46** of 29 and 26 inclinations (seeds 1 and 2),
+  against 0.35 and 0.34 by chance and 0.41–0.42 for guessing "the same as
+  the last 3 seconds".  Better than chance, far from certain: its movements
+  are decided by fast fluctuations that no readout can see coming.
+* **"I feel like using program0 (hand 0)"** is read from the synaptic drive
+  into the four hands.  In both plastic runs the log said so before the
+  habit showed — 38 and 63 s after the program started paying, versus 42
+  and 103 s until it made up 3 of its last 6 reaches.  Over all reaches
+  after minute 2 the readout favoured the hand that reached 94% and 96% of
+  the time — but once the habit is there, "the same hand as last time" is
+  right 91% and 93% of the time too.  The frozen creatures, which learned
+  nothing, never had a clear urge, and never logged one.
+* **"I mouth "ba" silently"** is read from its vocal channels while it
+  listens (its voice is held back while someone speaks).  Spoken to every
+  ~12 s, the first syllable it mouthed started with the consonant it heard
+  in **14 of 26** and **11 of 21** cases (0.54 and 0.52), against 0.05 by
+  chance (shuffling what was heard across trials).  That is far more than it
+  echoes out loud (0.17–0.25 in section 4): the mirror map it learned while
+  babbling is clearly at work, but mostly below the threshold of speech.
+
+With the workspace competition the log ran at 30 lines a minute awake; about
+320 further candidates per 8 minutes faded without getting in.
+
 ## Build your own brain
 
 A brain is data.  Dump the default and edit it:
@@ -431,20 +665,51 @@ you can use on its own.
 anima/
   core/        spiking simulator: neurons, network, plasticity rules, monitors
   brain/       drives, neuromodulators, sleep, hippocampus, cerebellum, critic,
-               Brain orchestrator, spec builder, presets
+               Brain orchestrator, spec builder, presets (incl. optional hands)
   body/        physiology, senses, motor decoding, voice and hearing
   world/       World interface, foraging arena, empty world
   runtime/     the never-blocking life loop, save/load
+  tools/       programs it may use: commands, web services, functions, remote
+  mind/        the thought log: readouts, the workspace, JSONL log
+  bridge/      `anima serve` (HTTP + server-sent events) and its client
   tutor/       teaching: Ollama client, reflex rules, skill meters, curriculum,
                scripted and LLM teachers, the tutor loop
   ui/          terminal chat, curses dashboard
   experiments/ the experiments below, runnable with `anima experiment ...`
-tests/         pytest suite (64 tests, about a minute), incl. a mock Ollama server
-examples/      01 alone · 02 talk from code · 03 build your own brain + world · 04 LLM tutor
+tests/         pytest suite (101 tests, about 3 minutes), incl. a mock Ollama server
+examples/      01 alone · 02 talk from code · 03 build your own brain + world · 04 LLM tutor ·
+               05 another program as its "bell" · tools.toml + tools/ (example programs)
 configs/       infant.toml — the default brain as an editable spec
 docs/          ARCHITECTURE.md (how it works), NOTES.md (design notes, lessons learned), figures
 results/       the raw numbers behind every table and figure, with a guide
 ```
+
+## How far is this from an LLM agent?
+
+Far — and not in a way that more neurons would close by themselves.  v0.3
+was asked for "a human-like thinking agent on par with LLM agents"; this is
+where it stands, measured rather than claimed:
+
+| | an LLM agent | anima |
+|---|---|---|
+| language | reads and writes text fluently | hears 17 phonemes, babbles syllables, can be shaped and can echo; understands no words |
+| using a program | picks among many tools by reading their descriptions, right away | learns by trial and reward which of a few bound acts pays off, over minutes ([results 6](#6-it-learns-which-program-to-use)) |
+| arguments | composes them: JSON, code, queries | none — a program receives its state (drives, clock), never instructions |
+| reasoning, planning | many steps, in text | none explicit; credit reaches back about two seconds, and sleep replays the day |
+| knowledge | much of the written world, from pre-training | nothing it has not lived |
+| learning while working | none: the weights are fixed, only the context changes | always: every reward changes synapses and sleep consolidates them |
+| time | wakes up for each request | lives continuously; gets hungry, bored, lonely and sleepy; acts unprompted |
+| explaining itself | fluent explanations, which need not reflect how it computed | none; its thought log is read out of its activity by code, and the readouts are checked against what it does next ([results 7](#7-is-the-thought-log-true)) |
+| hardware | GPUs, billions of parameters | one CPU core, ~1,800 neurons |
+
+What it has that LLM agents lack is a life: it runs continuously, learns
+from consequences while it lives, has motives of its own, and what we read
+out of it is tied to its actual dynamics.  What it lacks is most of what
+makes LLM agents useful — language, knowledge, abstraction, composing
+actions, planning.  Getting those from spiking dynamics is an open research
+problem, not an engineering step.  For useful work today use an LLM; here an
+LLM is put where it is strong, as the creature's teacher (`anima train`) or
+as another program talking to it through `anima serve`.
 
 ## Honest limits
 
@@ -463,7 +728,9 @@ results/       the raw numbers behind every table and figure, with a guide
   cortex runs at about real time and a 4,000-neuron one at half real time;
   the dense weight matrix grows as N².
 * **Reproducibility.** Runs are deterministic for a given seed and sequence
-  of inputs; anything typed live makes a run unique, as it should.
+  of inputs; anything typed live makes a run unique, as it should.  So do
+  real programs: a command or web service answers at wall-clock speed (the
+  program experiments use in-line functions, which are deterministic).
 * **The LLM teacher has not met a real model here.** The development VM
   could not download models, so the Ollama side (client, prompt, structured
   outputs, fallbacks, the never-waiting loop) is tested against an
@@ -473,6 +740,18 @@ results/       the raw numbers behind every table and figure, with a guide
   reflexes, the validation and the measured graduation are what keep a weak
   or erratic one from doing harm. `anima tutor-check` tells you in a few
   seconds whether yours produces usable decisions.
+* **Programs are buttons, not tools.** It can learn *which* of a few
+  programs pays off, from their consequences, in minutes; it cannot read
+  what a program says, pass it arguments, or know what a program will do
+  before it has tried it.  Whatever a program does, it does with your
+  user's permissions — the creature only decides when to press.
+* **Its thoughts are our words.** The thought log is a readout written by
+  this code, not introspection by the creature: the vocabulary, the
+  thresholds and which readouts exist are design choices.  Most lines
+  transcribe state the code can see directly (drives, dopamine, sleep,
+  stored episodes) and are true by construction; the readouts that make a
+  claim about what it will do or what it is echoing are measured in results
+  7, and they are far from perfect.
 * **A narrow curriculum, and asking is not solved.** Four lessons about food
   and sounds. The optional *ask* lesson (`--with-ask`: no food grows, calls
   made when hungry are answered with food, calls made when full with a
