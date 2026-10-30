@@ -3,7 +3,8 @@
 *Built 28 Oct 2026 (Python ≥3.10, NumPy only). v0.2 adds a local-LLM
 (Ollama) tutor, v0.3 programs it can use, a thought log and a bridge to
 other programs, v0.4 a colony — creatures that compete, cooperate and are
-selected by a genetic algorithm — see the last three sections.*
+selected by a genetic algorithm — and v0.5 a GPU engine; see the last four
+sections.*
 
 ## Goal
 A local framework that builds **not an LLM but a brain-like neural network**,
