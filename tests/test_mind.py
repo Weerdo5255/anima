@@ -163,3 +163,20 @@ def test_gestures_are_not_reported_as_words():
     texts = [t["text"] for t in ts.recent(0, kinds=("social",))]
     assert texts == ["someone smiles at me", 'someone says "ma ma"', "someone smiles at me"]
     ts.close()
+
+
+def test_thoughts_about_the_others():
+    a = Agent.create(seed=3, cortex_size=200, kin=True)
+    ts = ThoughtStream(a, None, blink_s=0.0)
+    a.hear("ba bo", source="Bo", loudness=0.9)
+    a.run(0.3)
+    evs = [("ate", {"energy": 0.4, "feast": True, "with": ["Bo", "Cyd"]}), ("ate", {"energy": 0.25, "beat": ["Cyd"]}),
+           ("missed", {"by": "Bo"}), ("feast_alone", {})]
+    for kind, data in evs:
+        a._emit(kind, data)
+        a.run(0.2)
+    texts = [t["text"] for t in ts.recent(0)]
+    assert 'Bo says "ba bo"' in texts
+    assert "a feast, shared with Bo and Cyd" in texts and "I ate — before Cyd could" in texts
+    assert "Bo got to the food first" in texts and "a feast — but it is too big to eat alone" in texts
+    ts.close()

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "anima-brain"
-version = "0.3.0"
+version = "0.4.0"
 description = "A local framework for brain-like spiking agents that live on their own clock instead of waiting for prompts."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -12,7 +12,8 @@ license = { text = "MIT" }
 authors = [{ name = "anima contributors" }]
 dependencies = ["numpy>=1.23"]
 keywords = ["spiking neural network", "computational neuroscience", "autonomous agent",
-            "STDP", "neuromodulation", "artificial life", "ollama", "LLM tutor", "curriculum learning"]
+            "STDP", "neuromodulation", "artificial life", "ollama", "LLM tutor", "curriculum learning",
+            "multi-agent", "genetic algorithm", "neuroevolution"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",

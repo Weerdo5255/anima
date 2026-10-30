@@ -5,6 +5,7 @@
     anima serve                live in real time with a local HTTP connection for other programs
     anima thoughts --follow    read the log of its thoughts
     anima tools FILE           check the programs it may use (--try NAME runs one)
+    anima arena --days 3       several creatures share an arena; the best of a day and its variations go on
     anima train                a local LLM (Ollama) raises it through a curriculum
     anima tutor-check          check that Ollama and the model work as a teacher
     anima run --seconds 600    let it live headless, print what it does
@@ -257,6 +258,111 @@ def cmd_serve(args: argparse.Namespace) -> None:
             print(f"saved {agent.save(path)} — run again to continue its life.")
 
 
+def cmd_arena(args: argparse.Namespace) -> None:
+    import shutil
+    import signal
+    import threading
+
+    from .evolve import Colony, ColonyConfig
+    from .mind import format_thought
+
+    d = Path(args.dir)
+    exists = (d / "colony.json").exists()
+    if args.status:
+        if not exists:
+            sys.exit(f"no colony at {d} (start one: anima arena --dir {d})")
+        col = Colony.load(d, printer=None)
+        print(f"colony {d}: day {col.day} ({col.clock()}), {len(col.members)} creatures alive, "
+              f"{len(col.records)} have lived here")
+        for slot, cid in enumerate(col.members):
+            info, r = col.info(slot), col.records[cid]
+            print(f"  {info['name']} ({cid}, generation {r['generation']}, born day {r['born_day']}, {r['origin']}): "
+                  f"energy {info['energy']:.2f}, {info['stage']}")
+        if col.history:
+            print("\n" + col.day_report(col.history[-1]))
+        print("\nfamily tree (fitness = food eaten each day, in energy):\n" + col.lineage())
+        col.close()
+        return
+    policy = {"margin": args.margin, "min_gain": args.min_gain, "compare": args.gain_over, "mutation": args.mutation,
+              "mutation_rate": args.mutation_rate, "inherit": args.inherit,
+              "crossover": True if args.crossover else None, "delete_old": True if args.delete_old else None,
+              "thoughts": False if args.no_thoughts else None}
+    if exists and args.new:
+        if args.delete_old:
+            shutil.rmtree(d)
+            print(f"deleted the old colony at {d}")
+        else:
+            k = 1
+            while d.with_name(f"{d.name}.old{k}").exists():
+                k += 1
+            d.rename(d.with_name(f"{d.name}.old{k}"))
+            print(f"moved the old colony to {d.with_name(f'{d.name}.old{k}')} (--delete-old deletes it instead)")
+        exists = False
+    lock = threading.Lock()
+
+    def out(line: str) -> None:
+        with lock:
+            print(line, flush=True)
+
+    import os
+    workers = args.workers if args.workers else min(args.population, os.cpu_count() or 1)
+    if exists:
+        if args.from_:
+            sys.exit(f"{d} already holds a colony; --from starts a new one (add --new)")
+        col = Colony.load(d, printer=out, workers=min(workers, 64), **policy)
+        print(f"resumed the colony at {d}: day {col.day} ({col.clock()}), "
+              + ", ".join(f"{n} (gen {col.records[c]['generation']})" for c, n in zip(col.members, col.names)))
+    else:
+        cfg = ColonyConfig(population=args.population, seed=args.seed, cortex=args.cortex,
+                           day_length_s=args.day, kin=not args.no_kin,
+                           **{k: v for k, v in policy.items() if v is not None})
+        try:
+            col = Colony.create(d, cfg, founder=args.from_, printer=out, workers=workers)
+        except (ValueError, OSError, KeyError) as exc:
+            sys.exit(f"cannot start a colony: {exc}")
+        src = f" from a copy of {args.from_} (the file itself is left alone)" if args.from_ else ""
+        print(f"a new colony at {d}{src}: " + ", ".join(col.names)
+              + f" ({col.info(0)['neurons']} neurons each, day = {col.cfg.day_length_s:g} s)")
+    c = col.cfg
+    against = "the others' median" if c.compare == "others" else "it did the day before"
+    print(f"selection: a creature that eats {c.margin:.0%} (and {c.min_gain:g}) more than {against} "
+          f"makes the next day's population with {c.population - 1} variations of itself "
+          f"({'copies of its brain' if c.inherit == 'brain' else 'fresh brains'} with mutated genes"
+          f"{', crossed with the runner-up' if c.crossover else ''}); those it replaces are "
+          f"{'DELETED' if c.delete_old else 'archived in ' + str(d / 'retired')}.")
+    if args.thoughts:
+        want = None if args.thoughts == "all" else {n.strip().lower() for n in args.thoughts.split(",")}
+
+        def show(name: str, e: dict[str, Any]) -> None:
+            if want is None or name.lower() in want:
+                if e.get("type") not in ("speech", "dream", "state"):
+                    out(f"  {name:>5}: " + format_thought({**e, "kind": e.get("type", "")}, color=sys.stdout.isatty()))
+        col.listen("thought", show)
+    if args.watch:
+        col.printer = lambda line: out(line + ("\n" + "\n".join(col.arena.render()) if line.startswith("[") else ""))
+    stop = threading.Event()
+
+    def halt(signum: int, frame: Any) -> None:
+        if stop.is_set():  # a second Ctrl-C: give up waiting
+            raise KeyboardInterrupt
+        stop.set()
+        out("\nstopping at the end of this tick (Ctrl-C again to quit at once)…")
+    old = [signal.signal(sg, halt) for sg in (signal.SIGINT, signal.SIGTERM)]
+    pace = f"at {args.speed:g}x real time" if args.realtime else "as fast as the CPU allows"
+    procs = f" in {col.workers} worker processes" if col.workers > 1 else ""
+    print(f"living {args.days} day(s) {pace}{procs}; Ctrl-C saves and stops\n")
+    try:
+        col.run(days=args.days, realtime=args.realtime, speed=args.speed, stop=stop.is_set,
+                report_every_h=args.report_every)
+    finally:
+        for sg, h in zip((signal.SIGINT, signal.SIGTERM), old):
+            signal.signal(sg, h)
+        col.save()
+        col.close()
+    print(f"\nsaved the colony (day {col.day}) at {d} — continue: anima arena --dir {d}   "
+          f"family tree: anima arena --dir {d} --status")
+
+
 def cmd_thoughts(args: argparse.Namespace) -> None:
     from .mind import KINDS, format_thought, read_thoughts, thoughts_path
     src = Path(args.file) if args.file else thoughts_path(args.brain)
@@ -359,6 +465,15 @@ def cmd_experiment(args: argparse.Namespace) -> None:
         from .experiments.programs import main
         parts = tuple(x for x in (args.parts or "hands,voice,mind").split(",") if x)
         res = main(seconds=secs, seeds=seeds, parts=parts, workers=args.workers, plot=args.plot)
+    elif args.name == "colony":
+        from .experiments.colony import main
+        if args.collect:
+            from .experiments.colony import collect
+            res = collect(args.collect, plot=args.plot)
+        else:
+            policies = tuple(x for x in (args.policies or "evolving,random,static").split(",") if x)
+            res = main(days=args.days, seeds=seeds, day_length_s=secs or 600.0, workers=args.workers,
+                       keep=args.keep, plot=args.plot, policies=policies)
     else:  # pragma: no cover
         sys.exit(f"unknown experiment {args.name}")
     if args.json:
@@ -562,6 +677,50 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--autosave", type=float, default=5.0, help="save every N minutes (0: only on exit)")
     p.set_defaults(func=cmd_serve)
 
+    p = sub.add_parser("arena", help="several creatures in one arena: compete, cooperate, evolve",
+                       description="Creatures share an arena: they compete for food, can share feasts that one "
+                       "alone cannot eat, hear and sense each other. At the end of each day, if one ate clearly "
+                       "more than the others, it and variations of it (a genetic algorithm) live the next day. "
+                       "The colony is saved in --dir and continues where it stopped.")
+    p.add_argument("--dir", default="colony", help="the colony's directory (default: %(default)s)")
+    p.add_argument("--days", type=int, default=1, help="days to live this session (default 1)")
+    p.add_argument("--new", action="store_true", help="start a new colony (the old one is moved aside, "
+                   "or deleted with --delete-old)")
+    p.add_argument("--from", dest="from_", metavar="BRAIN", help="start the colony from a copy of this "
+                   "creature and variations of it (the file is not changed)")
+    p.add_argument("--population", type=int, default=4)
+    p.add_argument("--seed", type=int, default=1)
+    p.add_argument("--cortex", type=int, default=600, help="cortical neurons per creature (default 600)")
+    p.add_argument("--day", type=float, default=1200.0, help="seconds per day (default 1200)")
+    p.add_argument("--no-kin", action="store_true", help="new creatures cannot sense where the others are")
+    p.add_argument("--margin", type=float, default=None,
+                   help="how much more (fraction) the best must eat than the others' median (default 0.25)")
+    p.add_argument("--min-gain", type=float, default=None,
+                   help="...and at least this much more food energy (default 0.5 = two meals)")
+    p.add_argument("--gain-over", choices=["others", "itself"], default=None,
+                   help="what a gain is measured against: the others that day (default), or the creature's "
+                        "own previous day (the most improved one is chosen)")
+    p.add_argument("--mutation", type=float, default=None, help="size of gene mutations (default 0.2)")
+    p.add_argument("--mutation-rate", type=float, default=None, help="chance each gene mutates (default 0.5)")
+    p.add_argument("--inherit", choices=["brain", "genes"], default=None,
+                   help="children start from a copy of the champion's brain (default) or a fresh brain")
+    p.add_argument("--crossover", action="store_true", help="mix the champion's genes with the runner-up's")
+    p.add_argument("--delete-old", action="store_true",
+                   help="delete creatures that lose their place (and an old colony with --new) instead of "
+                        "archiving them")
+    p.add_argument("--realtime", action="store_true", help="pace to the wall clock (x --speed)")
+    p.add_argument("--speed", type=float, default=1.0)
+    p.add_argument("--report-every", type=float, default=3.0, help="progress line every N hours of its day")
+    p.add_argument("--watch", action="store_true", help="draw the arena with every progress line")
+    p.add_argument("--thoughts", metavar="NAMES", help="print these creatures' thoughts as they happen "
+                   "(comma-separated names, or all)")
+    p.add_argument("--no-thoughts", action="store_true", help="do not keep thought logs")
+    p.add_argument("--status", action="store_true", help="show the colony and its family tree, then exit")
+    p.add_argument("--workers", type=int, default=0,
+                   help="worker processes for the creatures (default: one per creature, up to the CPU count; "
+                        "1 = all in this process)")
+    p.set_defaults(func=cmd_arena)
+
     p = sub.add_parser("thoughts", help="read the log of its thoughts")
     p.add_argument("file", nargs="?", help="a .thoughts.jsonl log, or a brain file (default: --brain)")
     p.add_argument("--brain", default="anima_brain.npz")
@@ -618,12 +777,19 @@ def main(argv: list[str] | None = None) -> None:
     p.set_defaults(func=cmd_run)
 
     p = sub.add_parser("experiment", help="reproduce the learning experiments")
-    p.add_argument("name", choices=["foraging", "babble", "imitation", "spontaneous", "tutoring", "programs"])
+    p.add_argument("name", choices=["foraging", "babble", "imitation", "spontaneous", "tutoring", "programs",
+                                     "colony"])
     p.add_argument("--seconds", type=float, default=None,
                    help="simulated seconds (default: 600; imitation 300 per phase; spontaneous one day; "
-                        "tutoring: at most 7200 for the curriculum; programs: 1200 hands, 600 voice, 480 mind)")
+                        "tutoring: at most 7200 for the curriculum; programs: 1200 hands, 600 voice, 480 mind; "
+                        "colony: the length of a day, 600)")
     p.add_argument("--parts", help="programs only: any of hands,voice,mind (default all)")
-    p.add_argument("--workers", type=int, default=1, help="programs only: runs in parallel processes")
+    p.add_argument("--workers", type=int, default=1, help="programs, colony: runs in parallel processes")
+    p.add_argument("--days", type=int, default=4, help="colony only: days per colony (default 4)")
+    p.add_argument("--keep", help="colony only: copy each colony's colony.json (lineage, reports) here")
+    p.add_argument("--policies", help="colony only: any of evolving,random,static (default all three)")
+    p.add_argument("--collect", metavar="DIR", help="colony only: report on colonies kept earlier in DIR (with "
+                   "--keep) instead of running new ones - to run a long experiment in parts")
     p.add_argument("--seeds", default="1,2")
     p.add_argument("--plot", help="save a figure (needs matplotlib)")
     p.add_argument("--json", help="save the numbers")

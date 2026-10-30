@@ -1,0 +1,28 @@
+{
+  "about": "Why the static colony of the first colony run (seed 1, before food withered and before children were born next to their parent) starved. Creatures' saved states at the start of day 4 (static) and archived states from the evolving colony (same creatures at the end of day 1, as the two colonies were identical until then).",
+  "steering_index": {
+    "about": "anima.experiments.colony.steering: mean weight from the bearing channels on a creature's left to 'left' minus to 'right', plus the same for its right, relative to w_max. food = sense.bearing->motor, kin = sense.kin->motor.",
+    "Ada": {"end of day 1": {"food": 0.042, "kin": 0.017}, "end of day 3, static": {"food": 0.248, "kin": 0.057}},
+    "Bo":  {"end of day 1": {"food": 0.168, "kin": 0.120}, "end of day 3, static": {"food": 0.316, "kin": 0.097}},
+    "Cyd": {"end of day 2, evolving colony": {"food": 0.184, "kin": 0.079}, "end of day 3, static": {"food": 0.359, "kin": 0.172}},
+    "Dee": {"end of day 1": {"food": 0.077, "kin": 0.100}, "end of day 3, static": {"food": 0.272, "kin": 0.152}},
+    "evolving colony, end of day 3": {"Gus": {"food": 0.135, "kin": 0.006}},
+    "evolving colony, end of day 2": {"Eli": {"food": 0.103, "kin": 0.050}, "Fay": {"food": 0.077, "kin": 0.056}}
+  },
+  "alone": {
+    "about": "Each creature alone in the same arena (seed 3) for 120 s, energy set to 0.5, food not withering. Meals found.",
+    "Ada": {"end of day 1": 5, "end of day 3, static": 2},
+    "Bo":  {"end of day 1": 4, "end of day 3, static": 2},
+    "Cyd": {"end of day 2, evolving colony": 4, "end of day 3, static": 4},
+    "Dee": {"end of day 1": 2, "end of day 3, static": 4},
+    "Gus, evolving colony, end of day 3": 4
+  },
+  "together": {
+    "about": "The four static creatures together for 60 s from their state at the start of day 4 (all four pieces of food near the edges, nothing growing back), under four interventions.",
+    "as they were":           {"meals": 0, "feasts": 0, "mean_pair_distance": 2.15, "range_x": [4.6, 10.9], "range_y": [7.5, 13.9]},
+    "kin sense silenced":     {"meals": 2, "feasts": 1, "mean_pair_distance": 5.2,  "range_x": [2.7, 15.5], "range_y": [4.7, 17.0]},
+    "food moved at random":   {"meals": 2, "feasts": 0, "mean_pair_distance": 3.51},
+    "scattered at random":    {"meals": 1, "feasts": 0, "mean_pair_distance": 2.86, "range_x": [3.6, 15.3], "range_y": [4.4, 14.2]}
+  },
+  "chance_of_being_near": "Four creatures placed uniformly at random in the 18 x 18 arena: a given one is within 3 units of another 22% of the time."
+}

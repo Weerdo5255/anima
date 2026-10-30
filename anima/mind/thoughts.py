@@ -26,15 +26,17 @@ Kinds, what each reads, and an example:
 
 * ``feeling`` — a drive (hunger, fatigue, boredom, loneliness) entering a
   new band: *I'm getting hungry (0.52)*
-* ``perception`` — the smell's direction and strength, walls ahead:
-  *a clear smell of food, to my left*
+* ``perception`` — the smell's direction and strength, walls ahead, where
+  the others are (with a kin sense), a feast too big to eat alone:
+  *a clear smell of food, to my left*, *someone nearby, ahead*
 * ``intention`` — the synaptic push its senses, body and cortex give each
   movement or hand, which biases the fast race between them:
   *I'm inclined to turn left*, *I feel like using snack (hand 2)*
 * ``inner`` — its articulators following a sound while it listens (the
   mirror map, with the voice gated off): *I mouth "ba" silently*
 * ``speech`` — its own utterances: *I say "ba bo"*
-* ``action`` — eating, bumping, reaching an empty hand: *I ate*
+* ``action`` — eating (alone, before a rival, or a feast shared with others),
+  bumping, reaching an empty hand: *I ate*, *a feast, shared with Bo*
 * ``evaluation`` — phasic dopamine (reward prediction error) and its cause:
   *snack: better than I expected (+0.42)*, *things are looking up (+0.25)*
 * ``surprise`` — cerebellar prediction error: *that surprised me (0.71)*
@@ -45,7 +47,9 @@ Kinds, what each reads, and an example:
 * ``dream`` — an episode replayed in slow-wave sleep:
   *I dream of turning left (from 09:12) — it felt good (+0.60)*
 * ``state`` — sleep stages: *I'm falling asleep*
-* ``social`` — someone talking, smiling, frowning: *someone says "ma ma"*
+* ``social`` — someone talking, smiling, frowning; another creature talking or
+  getting to the food first: *someone says "ma ma"*, *Bo says "ba"*,
+  *Bo got to the food first*
 * ``program`` — a program it used, and the answer:
   *I use snack (with hand 2) → 'nyam', reward +0.60*
 
@@ -89,7 +93,8 @@ URGE_MARGIN = 0.06
 # of the same family its salience is near zero, recovering as 1 - exp(-dt/tau)
 _HABITUATION = {"feeling": 20.0, "smell": 12.0, "wall": 15.0, "intention": 5.0, "urge": 10.0, "inner": 8.0,
                 "speech": 8.0, "bump": 8.0, "reach": 12.0, "eval+": 5.0, "eval-": 5.0,
-                "surprise": 8.0, "memory": 6.0, "dream": 6.0}
+                "surprise": 8.0, "memory": 6.0, "dream": 6.0, "talk": 10.0, "kin": 15.0, "missed": 8.0,
+                "feast": 15.0}
 
 
 def thoughts_path(brain_path: str | Path) -> Path:
@@ -185,8 +190,10 @@ class ThoughtStream:
         self._hands = "hands" if "hands" in has and getattr(agent.body, "hands", None) is not None else None
         self._vocal = all(k in has for k in ("vocal.C", "vocal.V"))
         self._bearing = "sense.bearing" if "sense.bearing" in agent.brain.inputs else None
+        self._kin = "sense.kin" if "sense.kin" in agent.brain.inputs else None
+        self._near: str | None = None
         self._events = ("stage", "replay", "memory", "ate", "bump", "heard", "utterance", "tool_call",
-                        "tool_result", "hand")
+                        "tool_result", "hand", "missed", "feast_alone")
         for kind in self._events:
             agent.on(kind, self._on_event)
         agent.add_tick_hook(self._on_tick)
@@ -314,7 +321,21 @@ class ThoughtStream:
                                                    "surprise": round(float(e.get("surprise", 0.0)), 3)},
                        salience=0.4 + 0.4 * min(1.0, abs(r)))
         elif k == "ate":
-            self.think("action", "I ate", {"hunger": round(float(b.drives.hunger), 3)})
+            data = {"hunger": round(float(b.drives.hunger), 3)}
+            if e.get("feast"):
+                who = " and ".join(e.get("with", [])) or "the others"
+                self.think("action", f"a feast, shared with {who}", {**data, "feast": True,
+                                                                   "with": e.get("with", [])})
+            elif e.get("beat"):
+                self.think("action", f"I ate — before {' and '.join(e['beat'])} could",
+                           {**data, "beat": e["beat"]})
+            else:
+                self.think("action", "I ate", data)
+        elif k == "missed":
+            self.offer("missed", "social", f"{e.get('by', 'someone')} got to the food first",
+                       {"by": e.get("by")}, salience=0.6)
+        elif k == "feast_alone":
+            self.offer("feast", "perception", "a feast — but it is too big to eat alone", {}, salience=0.65)
         elif k == "bump":
             self.offer("bump", "action", "ouch — I bumped into a wall", {}, salience=0.6)
         elif k == "heard":
@@ -323,7 +344,13 @@ class ThoughtStream:
             val = float(e.get("valence", 0.0))
             spoken, _ = parse_social_signals(text)  # what is left once smiles and frowns are taken out
             words = " ".join(w for w in spoken.split() if any(ch.isalpha() for ch in w))
-            if words:
+            who = e.get("from")
+            if words and who:  # another creature: one voice among others, it competes for attention
+                self._listen(words, now)
+                self.offer("talk", "social", f"{who} says \"{words[:40]}\"",
+                           {"text": text[:80], "from": who, "loudness": e.get("loudness")},
+                           salience=0.35 + 0.3 * float(e.get("loudness") or 1.0))
+            elif words:
                 self._listen(words, now)
                 self.think("social", f"someone says \"{words[:40]}\"", {"text": text[:80]})
             if val > 0:
@@ -450,6 +477,21 @@ class ThoughtStream:
                            salience=0.3 + (0.15 if strength == "strong" else 0.0), on_admit=admit)
         else:
             self._candidates.pop("smell", None)
+        if self._kin:
+            kd = _direction(np.asarray(b.get_input(self._kin), dtype=float), b.inputs[self._kin].labels)
+            near = None if kd is None or kd[2] < 2.0 else kd[0]  # 2.0: another creature within ~7 units
+            if near != self._near:
+                def admit_kin(near=near) -> None:
+                    self._near = near
+                if near is None:
+                    self.offer("kin", "perception", "nobody near me now", {}, salience=0.25, on_admit=admit_kin)
+                else:
+                    where = "all around me" if near == "all around" else near
+                    self.offer("kin", "perception", f"someone nearby, {where}",
+                               {"side": near, "bearing": round(kd[1], 1), "strength": round(kd[2], 3)},
+                               salience=0.3, on_admit=admit_kin)
+            else:
+                self._candidates.pop("kin", None)
         if "sense.wall" in b.inputs:
             wall = b.get_input("sense.wall")
             if len(wall) > 1 and wall[1] > 0.6 and now - self._wall_t > 4.0:

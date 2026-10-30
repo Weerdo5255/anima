@@ -2,7 +2,8 @@
 
 *Built 28 Oct 2026 (Python ≥3.10, NumPy only). v0.2 adds a local-LLM
 (Ollama) tutor, v0.3 programs it can use, a thought log and a bridge to
-other programs — see the last two sections.*
+other programs, v0.4 a colony — creatures that compete, cooperate and are
+selected by a genetic algorithm — see the last three sections.*
 
 ## Goal
 A local framework that builds **not an LLM but a brain-like neural network**,
@@ -320,3 +321,150 @@ not claimed (README: "How far is this from an LLM agent?").
 * The thought log is a readout in our words; the predictive readouts are
   modest (inclinations ~0.5 vs ~0.35 chance) and the mouthing readout is
   right about half the time.
+
+## v0.4 — a colony: competing, cooperating, and a genetic algorithm
+
+*Added 29 Oct 2026. Raw numbers: [`results/colony/`](../results/README.md).*
+
+**Request:** let creatures compete against one another, or collaborate if
+they find it appropriate; at the end of a day, if one shows a noticeable
+performance gain, use a genetic algorithm so that it and variations of it
+run the next day; a flag to delete the old creatures.
+
+### Design
+* **One arena, many creatures** (`SharedArena`, per-creature `World` views):
+  shared food (first come; rivals within 2.5 are told they *missed*), feasts
+  that need ≥2 creatures within 1.6 at once (0.4 energy each vs 0.25 for a
+  meal; stag hunt), hearing within 7 units (loudness scales the social
+  contact), and an opt-in `sense.kin` bearing code (80 neurons → cortex, and
+  → motor with reward-STDP).  Food and feasts nobody eats wither after
+  60–120 s and grow back elsewhere.  Competition and cooperation are not
+  choices the code makes for them; they follow from what each brain learns.
+* **Rounds** (`anima/evolve/hosting.py`): every creature senses the arena as
+  the round began, lives 10 ms, reports completed movements; the colony
+  applies them in a shuffled order and delivers consequences next round
+  (`Body.receive`, incl. the approach reward).  This makes worker processes
+  exact: one process vs two give identical lives (tested).
+* **Fitness** = food eaten in the day (energy).  **Stands out** = best ≥
+  1.25 × median(others) and ≥ median + 0.5.  **Next day** = champion
+  (elitism) + mutated variations; `inherit="brain"` (default: copy of the
+  champion's state, new random streams, 5% multiplicative noise on plastic
+  non-recurrent synapses — exploit-and-explore as in PBT) or `"genes"`
+  (fresh brain from the mutated spec, aligned to the colony's time of day);
+  optional uniform crossover with the runner-up; children are born within 2
+  units of the parent; replaced creatures archived (`retired/`) or deleted
+  (`delete_old`).  `selection="random"` (a control for experiments): same
+  turnover rule, random parent.  11 genes, log-normal mutation
+  with bounds, stored in the creature's state (spec / brain settings / body
+  settings), so they survive save/load.
+* **CLI** `anima arena` (`--days --new --from --population --cortex --day
+  --margin --min-gain --mutation --mutation-rate --inherit --crossover
+  --delete-old --workers --watch --thoughts --status`), Ctrl-C/SIGTERM save
+  cleanly; `anima experiment colony` (`--policies` to run it in parts,
+  `--collect` to put the parts together); `examples/06_colony.py`.
+* Thought log: other creatures by name ("Bo says …", "Bo got to the food
+  first", "a feast, shared with Bo", "someone nearby, to my left", "a feast
+  — but it is too big to eat alone"); other creatures' voices compete for
+  the workspace instead of always getting in.
+
+### Lessons learned
+1. **Ending a day by a clock crossing could fire twice** (found in a test):
+   a fresh child's clock starts exactly at dawn, so the next tick looked like
+   another dawn.  Days now also need half a day to have passed.
+2. **The first colony was sequential**: each creature saw the arena after
+   the creatures before it had moved, so worker processes would have changed
+   the results.  Synchronous rounds with consequences delivered next round
+   make one and N processes identical (a test compares them).
+3. **Spawned workers re-import `__main__`** and failed when the colony was
+   started from stdin → workers are forked on Linux; elsewhere scripts need
+   the usual `if __name__ == "__main__":` guard (`ANIMA_MP_START` overrides).
+4. **Every voice was an "important" thought**: with neighbours talking,
+   "someone says" filled 40% of a creature's log (65 of 164 lines in a test
+   colony).  Other creatures' voices now compete for the workspace.
+5. Two things done by design rather than learned the hard way: the order in
+   which movements are applied is shuffled every round (otherwise the first
+   creature would always win a contested meal), and a copied brain gets new
+   random streams (otherwise it would replay its parent's noise).
+6. **Food that grew back only when eaten was a trap.**  In the first 4-day
+   run, the colony that was never replaced starved: mean food per creature
+   2.54 → 1.07 → 0.64 on days 1–3, mean energy ~0.05 on day 3.  Its brains
+   were not broken.  Put alone in the arena, its day-3 creatures still found
+   food (2–4 meals in 2 minutes each, against 2–5 for the same creatures a
+   day or two earlier), and their synapses steered *more* strongly toward
+   food than a day or two earlier (steering index,
+   `anima.experiments.colony.steering`, mean 0.12 → 0.30).  Their steering toward each other had grown too, in 3
+   of 4 (mean 0.08 → 0.12) — probably because being near others means
+   hearing them, hearing relieves loneliness and relief is rewarding.  They
+   moved as a tight herd in the middle (mean distance 2.2; near another 70%
+   of their waking time, against 22% for four creatures placed at random), all
+   four pieces of food ended up near the edges where the herd never went,
+   and since food only grew back after being eaten, nothing new grew.  In
+   60 s from that state the herd ate nothing; with their sense of each other
+   silenced it spread out (mean distance 5.2) and ate 2 meals and a feast;
+   with the food moved to random spots, 2 meals; scattered to random spots
+   themselves, they re-formed the herd within seconds (mean distance 2.9,
+   1 meal).  The evolving colony herded as much (near another 66–80% of the
+   time) but kept eating.  Fix: food nobody eats withers and grows back
+   elsewhere.
+7. **That first comparison was also confounded.**  The children of a new
+   generation were put at random spots — which by itself breaks up a herd
+   and stumbles onto stranded food — and nothing separated selection from
+   turnover as such.  Children are now born next to their parent, and the
+   experiment has a third colony with the same turnover but a random parent.
+
+### Results (`anima experiment colony`)
+Run in three parts (`--policies evolving`, `random`, `static`; each
+`--days 4 --seeds 1,2 --workers 2 --keep keep`, ~70 min on 2 cores) and put
+together with `--collect keep`.  Per seed, three colonies of four young
+creatures (600-neuron cortex, genes varied around the defaults), four
+10-minute days, one and the same colony until the first evening with a
+standout: *evolving* (best + 3 variations born next to it), *random parent*
+(same rule, random parent), *static* (nobody replaced).
+
+| food per creature, seed 1 / 2 | day 1 | day 2 | day 3 | day 4 |
+|---|---|---|---|---|
+| evolving | 2.40 / 2.74 | 2.83 / 1.83 | 2.55 / 2.75 | 2.67 / 2.23 |
+| random parent | 2.40 / 2.74 | 2.83 / 1.83 | 1.77 / 2.75 | 2.09 / 2.42 |
+| static | 2.40 / 2.74 | 2.83 / 1.83 | 2.27 / 2.75 | 2.85 / 3.01 |
+
+* **First standouts:** seed 1 after day 2 (Bo 3.85 vs the others' median
+  2.30; the random parent was Ada), seed 2 after day 3 (and the random draw
+  picked the best as well, so evolving and random differ only by mutations
+  and chance: 2.23 vs 2.42 on day 4).  On the three colony-days that
+  differed, per creature: static 2.71, evolving 2.48, random 2.09.
+* **Selection copies luck at this scale.**  In the static colonies a
+  creature's food on one day did not predict the next (r = −0.05, 24
+  pairs); the day's best out-ate the others the next day on 3 of 6 days.
+  `anima.experiments.colony.repeatability` computes this; it is the check to
+  run before trusting any selection scheme here.
+* Seed 1's selected lineage steered least toward the others (kin steering
+  0.03 on day 3, against 0.13 in the random parent's lineage) and ate more
+  than the random lineage, like the first run's champion (0.006).  Over all
+  56 creature-days, though, steering toward others only weakly predicted
+  eating less (Spearman −0.23, p = 0.09, and the days are not independent).
+* **Competition:** a rival within reach for 34–45% of meals on day 1,
+  53–87% on day 4 — 77–87% in the evolving colonies (near-copies born side
+  by side).  **Cooperation:** feasts were 11–42% of the food (1–6 per
+  colony-day).  **Herding:** near another creature 57–70% of waking time on
+  day 1 (22% for random placement), 79–84% (static) and 85–95% (colonies
+  with turnover) on day 4.  13–24 pieces of food per colony-day withered
+  uneaten, mostly at night.
+* **Determinism:** the three colonies of a seed, run in separate processes
+  and at different times, were identical meal for meal until they first
+  differed.
+* 128 tests; fresh-venv install of the zip checked (tests, `anima arena`
+  with two worker processes and `--delete-old`, `--status`).
+
+### Honest limits (v0.4)
+* At four creatures and ten-minute days the genetic algorithm mostly
+  copies the luckiest; selecting ability needs longer judging (longer days,
+  larger colonies, or several days per verdict — not built).  Two seeds ×
+  four days is a pilot.
+* Inheritance is Lamarckian (a copy of the champion's synapses); children
+  with fresh brains (`inherit="genes"`) were not evaluated.
+* Nothing decides to compete or cooperate: they want the same food, and a
+  feast is shared when two arrive together.  They learn to stay together,
+  which raises competition; whether shared feasts make up for it was not
+  measured.
+* An ecological detail (food that never moved unless eaten) dominated the
+  first result completely (lesson 6); conclusions here are about this arena.

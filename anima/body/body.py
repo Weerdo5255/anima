@@ -43,7 +43,7 @@ class BodyConfig:
     hand_cost: float = 0.0005  # energy per use of a hand (creatures with hands)
     #: sensor name in the world -> input port in the brain
     sensor_ports: dict[str, str] = field(default_factory=lambda: {
-        "bearing": "sense.bearing", "wall": "sense.wall", "taste": "sense.taste"})
+        "bearing": "sense.bearing", "wall": "sense.wall", "taste": "sense.taste", "kin": "sense.kin"})
     motor: MotorConfig = field(default_factory=MotorConfig)
     voice: VoiceConfig = field(default_factory=VoiceConfig)
     # hands reach rarely and deliberately: higher threshold, a few seconds' rest
@@ -74,11 +74,12 @@ class Body:
             self.stats["reaches"] = 0
 
     # ------------------------------------------------------------ senses
-    def hear(self, text: str, valence: float = 0.0) -> None:
-        """Someone speaks to us (``valence`` from smiles / frowns)."""
+    def hear(self, text: str, valence: float = 0.0, loudness: float = 1.0) -> None:
+        """Someone speaks to us (``valence`` from smiles / frowns; ``loudness``
+        < 1 for someone further away, which is less of a contact)."""
         n = self.ear.hear(text) if self.ear is not None else 0
         if n or valence:
-            self.brain.social_contact(self.cfg.speech_contact if n else 0.6, valence)
+            self.brain.social_contact((self.cfg.speech_contact if n else 0.6) * float(loudness), valence)
             if not self.brain.awake:
                 self.brain.sleep.stimulate(0.08 * n)
             self.stats["heard"] += 1
@@ -122,26 +123,18 @@ class Body:
                     self.energy -= cfg.move_cost
                     self.stats["moves"] += 1
                     events.append(("action", {"action": label, "t": t_ms / 1000.0}))
+                elif getattr(self.world, "deferred", False):
+                    # a colony applies everyone's movements together; the
+                    # consequences arrive as events (see Body.receive)
+                    self.world.apply(label)
                 else:  # movement completed: apply it and feel the consequences
-                    outcome = self.world.apply(label)
-                    for ev in outcome:
-                        events.append(ev)
-                        if ev[0] == "ate":
-                            gained = min(1.0 - self.energy, ev[1].get("energy", 0.25))
-                            hunger = b.drives.hunger
-                            self.energy += gained
-                            b.deliver_reward(cfg.food_reward * (0.5 + hunger) * gained / 0.25, "food")
-                            self.stats["ate"] += 1
-                        elif ev[0] == "bump":
-                            b.deliver_reward(cfg.bump_reward, "pain")
-                            self.stats["bumps"] += 1
+                    events += self.receive(self.world.apply(label))
                     # did the food smell ahead get stronger?  Relative change
                     # (Weber's law): turning toward food and stepping closer
                     # are judged on the same scale at any distance.
                     after = self.world.smell_ahead()
                     before = self._smell_at_start
-                    rel = (after - before) / (0.5 * (after + before) + 0.02)
-                    b.deliver_reward(cfg.approach_reward * b.drives.hunger * rel, "smell")
+                    self._approach((after - before) / (0.5 * (after + before) + 0.02))
         if self.hands is not None:
             res = self.hands.update(t_ms)
             if res is not None and res[0] == "start":
@@ -158,6 +151,34 @@ class Body:
                 elif ev[0] == "utterance":
                     self.stats["utterances"] += 1
         return events
+
+    def receive(self, outcome: list[tuple[str, dict[str, Any]]]) -> list[tuple[str, dict[str, Any]]]:
+        """Feel what the world did: eating and bumping into walls bring their
+        rewards; anything else (e.g. a shared arena's "missed") is passed on.
+        Returns the events, for the agent to publish.  Used for the outcome
+        of its own movements, and by a colony for things that happen to it
+        while it is not moving (a feast shared by another's arrival)."""
+        b, cfg = self.brain, self.cfg
+        passed = []
+        for kind, data in outcome:
+            if kind == "approach":  # a deferred world's verdict on the smell ahead
+                self._approach(float(data["rel"]))
+                continue
+            passed.append((kind, data))
+            if kind == "ate":
+                gained = min(1.0 - self.energy, data.get("energy", 0.25))
+                hunger = b.drives.hunger
+                self.energy += gained
+                b.deliver_reward(cfg.food_reward * (0.5 + hunger) * gained / 0.25, "food")
+                self.stats["ate"] += 1
+            elif kind == "bump":
+                b.deliver_reward(cfg.bump_reward, "pain")
+                self.stats["bumps"] += 1
+        return passed
+
+    def _approach(self, rel: float) -> None:
+        """Mildly rewarding, when hungry, to have moved toward the smell of food."""
+        self.brain.deliver_reward(self.cfg.approach_reward * self.brain.drives.hunger * rel, "smell")
 
     def metabolism(self, dt_s: float) -> None:
         cost = self.cfg.basal_cost_per_s * dt_s

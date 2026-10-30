@@ -1,7 +1,10 @@
-"""The program experiments' plumbing and metrics (tiny runs; the real ones take ~40 minutes)."""
+"""The program and colony experiments' plumbing and metrics (tiny runs; the real ones take hours)."""
 
 import json
 
+import math
+
+from anima.experiments import colony as C
 from anima.experiments import programs as P
 
 
@@ -34,3 +37,27 @@ def test_tiny_runs_summarise_and_serialise(tmp_path):
     assert res["mind"][0]["thought_rates"]["per_min"] > 0
     assert isinstance(P.report(res), str)
     json.loads(json.dumps(res, default=float))
+
+
+def test_a_tiny_colony_experiment_runs_in_parts_and_is_collected(tmp_path):
+    keep = tmp_path / "keep"
+    kw = dict(days=2, seeds=(1,), day_length_s=12.0, population=2, cortex=100, keep=str(keep), verbose=False)
+    a = C.main(policies=("evolving", "random"), **kw)
+    b = C.main(policies=("static",), **kw)
+    both = C.collect(keep, verbose=False)
+    assert both["settings"]["policies"] == ["evolving", "random", "static"]
+    assert [r["policy"] for r in both["runs"]] == ["evolving", "random", "static"]
+    assert both["summary"]["static"] == b["summary"]["static"]
+    assert both["summary"]["evolving"] == a["summary"]["evolving"]
+    day = both["runs"][0]["daily"][0]
+    assert not math.isnan(day["steer_food"]) and not math.isnan(day["steer_kin"])
+    assert isinstance(C.report(both), str)
+    rep = both["repeatability"]
+    assert rep["n_pairs"] == 2 and len(rep["pairs"]) == 2 and rep["of_days"] == 1
+    json.loads(json.dumps(both, default=float))
+    try:
+        import matplotlib  # noqa: F401
+    except ImportError:
+        return
+    C.collect(keep, plot=str(tmp_path / "colony.png"), verbose=False)
+    assert (tmp_path / "colony.png").stat().st_size > 10_000

@@ -78,3 +78,23 @@ day and slept through minutes 13–19 (same outcome; see `docs/NOTES.md`).
 | `voice_{plastic,frozen}_s{1,2}.json` | per run: share of "b" (pays) and "d" (does not) syllables in 2-minute bins |
 | `mind_s{1,2}.json` | the thought-log checks after 10 minutes of foraging practice: inclinations vs what it did in the next 3 s, silent echoes vs what it heard, thoughts per minute, and the first 80 lines of its log |
 | `thoughts_sample.txt` | a stretch of a creature's thought log, with the example programs of `examples/tools.toml` |
+
+## `colony/` — creatures together, and a genetic algorithm (README section 8)
+
+`anima experiment colony --days 4 --seeds 1,2 --workers 2 --keep keep`
+(about 3.5 hours on the 2-core VM; it was run in three parts,
+`--policies evolving`, `random` and `static`, and put together with
+`anima experiment colony --collect keep`): per seed, three colonies of four
+young creatures with varied genes, identical until the first evening.  In
+the *evolving* colony the day's best, when it stands out, is followed by
+itself and three variations born next to it; in the *random* colony the
+same happens on the same rule, but the parent is picked at random (the
+control for selection); in the *static* colony nobody is ever replaced.
+Days of 10 minutes (`--seconds 600`), 600 cortical neurons per creature.
+
+| file | contents |
+|---|---|
+| `colony.json` | per colony and day: mean / best / worst food eaten, feasts, share of food from feasts, share of meals contested, food that withered, time spent near another creature, mean energy, the creatures' steering toward food and toward each other read from their synapses at the end of the day, whether a new generation followed, who its parent was and why (the decision's numbers), each creature's food; mean genes of the creatures alive each day; a summary per policy; `repeatability` — one creature's food on a day against the next day, in the static colonies |
+| `keep/colony_{evolving,random,static}_s{1,2}.json` | each colony's own `colony.json` at the end: every creature's parent, generation, genes, mutations and day-by-day statistics, and every day's report |
+| `arena_session.txt`, `arena_status.txt` | the `anima arena` session shown in the README, and `anima arena --status` after it |
+| `first_run/` | the first run (seed 1, two colonies), before food withered and before children were born next to their parent: the static colony starved.  `colony_{static,evolving}_s1.json`, and `diagnosis.json` — the creatures' steering, how they foraged alone, and what happened to the starving herd when their sense of each other was silenced, the food moved, or they were scattered (docs/NOTES.md, v0.4, lessons 6–7) |

@@ -1,0 +1,47 @@
+$ anima arena --dir sample_colony --day 600 --days 1 --workers 2
+a new colony at sample_colony: Ada, Bo, Cyd, Dee (1347 neurons each, day = 600 s)
+selection: a creature that eats 25% (and 0.5) more than the others' median makes the next day's population with 3 variations of itself (copies of its brain with mutated genes); those it replaces are archived in sample_colony/retired.
+living 1 day(s) as fast as the CPU allows in 2 worker processes; Ctrl-C saves and stops
+
+[day 1 09:00] Ada 1+0f e0.85 | Bo 0+0f e0.60 | Cyd 0+0f e0.60 | Dee 3+0f e1.00 | feasts 0, contested meals 0
+[day 1 12:00] Ada 3+0f e0.87 | Bo 2+0f e0.86 | Cyd 2+0f e0.86 | Dee 4+0f e0.98 | feasts 0, contested meals 3
+[day 1 15:00] Ada 4+0f e0.88 | Bo 3+0f e0.83 | Cyd 3+0f e0.87 | Dee 5+0f e0.99 | feasts 0, contested meals 7
+[day 1 18:00] Ada 6+0f e0.89 | Bo 3+1f e0.96 | Cyd 4+1f e0.96 | Dee 5+0f e0.75 | feasts 1, contested meals 7
+[day 1 21:00] Ada 6+0f e0.65 | Bo 4+1f e0.77 | Cyd 5+2f e0.94 | Dee 6+1f e0.94 | feasts 2, contested meals 8
+[day 1 00:00] Ada 9+0f e0.89 (asleep) | Bo 7+1f e0.97 (asleep) | Cyd 7+2f e0.98 (asleep) | Dee 8+1f e0.88 (asleep) | feasts 2, contested meals 11
+[day 1 03:00] Ada 9+0f e0.84 (asleep) | Bo 7+1f e0.91 (asleep) | Cyd 7+2f e0.93 (asleep) | Dee 8+1f e0.82 (asleep) | feasts 2, contested meals 11
+[day 1 06:00] Ada 9+0f e0.79 (asleep) | Bo 7+1f e0.86 (asleep) | Cyd 7+2f e0.88 (asleep) | Dee 8+1f e0.77 (asleep) | feasts 2, contested meals 11
+=== end of day 1 ===
+  creature        gen  fitness  meals  feasts  beat  missed  near others  heard  mean energy
+  Dee (c4)          0     2.65      9       1     1       2         52%    217         0.85
+  Cyd (c3)          0     2.55      7       2     2       7         60%    247         0.87
+  Ada (c1)          0     2.25      9       0     5       2         62%    247         0.86
+  Bo (c2)           0     2.15      7       1     3       2         55%    240         0.85
+  -> nobody stands out (best Dee 2.65 vs the others' median 2.25 (+18%); needs +25% and +0.5): everyone lives on.
+
+saved the colony (day 2) at sample_colony — continue: anima arena --dir sample_colony   family tree: anima arena --dir sample_colony --status
+
+$ anima arena --dir sample_colony --days 1 --workers 2
+resumed the colony at sample_colony: day 2 (07:12), Ada (gen 0), Bo (gen 0), Cyd (gen 0), Dee (gen 0)
+selection: a creature that eats 25% (and 0.5) more than the others' median makes the next day's population with 3 variations of itself (copies of its brain with mutated genes); those it replaces are archived in sample_colony/retired.
+living 1 day(s) as fast as the CPU allows in 2 worker processes; Ctrl-C saves and stops
+
+[day 2 09:00] Ada 0+1f e0.92 | Bo 1+0f e0.93 | Cyd 1+1f e0.98 | Dee 4+0f e0.94 | feasts 1, contested meals 2
+[day 2 12:00] Ada 2+1f e0.91 | Bo 3+0f e0.88 | Cyd 3+2f e0.99 | Dee 6+1f e0.97 | feasts 2, contested meals 6
+[day 2 15:00] Ada 2+1f e0.67 | Bo 3+1f e0.82 | Cyd 5+2f e0.97 | Dee 7+2f e0.98 | feasts 3, contested meals 8
+[day 2 18:00] Ada 4+1f e0.92 | Bo 4+1f e0.82 | Cyd 5+3f e0.81 | Dee 9+3f e0.99 | feasts 4, contested meals 11
+[day 2 21:00] Ada 5+1f e0.85 | Bo 4+1f e0.58 | Cyd 6+3f e0.82 | Dee 9+3f e0.75 | feasts 4, contested meals 12
+[day 2 00:00] Ada 5+1f e0.63 (asleep) | Bo 4+2f e0.80 (asleep) | Cyd 7+4f e0.93 (asleep) | Dee 9+3f e0.57 (asleep) | feasts 5, contested meals 12
+[day 2 03:00] Ada 5+1f e0.58 (asleep) | Bo 4+2f e0.75 (asleep) | Cyd 7+4f e0.88 (asleep) | Dee 9+3f e0.51 (asleep) | feasts 5, contested meals 12
+[day 2 06:00] Ada 5+1f e0.52 (asleep) | Bo 4+2f e0.70 (asleep) | Cyd 7+4f e0.83 (asleep) | Dee 9+3f e0.46 (asleep) | feasts 5, contested meals 12
+=== end of day 2 ===
+  creature        gen  fitness  meals  feasts  beat  missed  near others  heard  mean energy
+  Cyd (c3)          0     3.60      8       4     1       5         67%    287         0.89
+  Dee (c4)          0     3.45      9       3     7       4         72%    275         0.76
+  Bo (c2)           0     2.05      5       2     2       4         55%    271         0.79
+  Ada (c1)          0     1.65      5       1     3       6         70%    292         0.73
+  -> Cyd stands out: 3.60 vs the others' median 2.05 (+76%).
+     Next day: Cyd and its variations: Eli (eagerness 0.28->0.196 (-30%), move_lr 0.0673->0.0602 (-11%), appetite 1->0.944 (-6%), sociability 1.7->1.5 (-12%), loneliness 60.4->58 (-4%), chatty 3->3.34 (+11%), voice_lr 0.0597->0.0677 (+13%)), Fay (move_lr 0.0673->0.0742 (+10%), curiosity 0.6->0.556 (-7%), loneliness 60.4->66.4 (+10%), voice_lr 0.0597->0.0682 (+14%)), Gus (explore 3.5->3.1 (-12%), eagerness 0.28->0.308 (+10%), move_lr 0.0673->0.0596 (-11%), move_trace 314->299 (-5%), vigor 3->3.01 (+0%), sociability 1.7->1.8 (+6%), loneliness 60.4->49.1 (-19%), chatty 3->3.69 (+23%)).
+     Retired: Ada, Bo, Dee (archived in retired/).
+
+saved the colony (day 3) at sample_colony — continue: anima arena --dir sample_colony   family tree: anima arena --dir sample_colony --status

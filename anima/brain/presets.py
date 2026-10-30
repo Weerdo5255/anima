@@ -29,7 +29,7 @@ MOTOR_LABELS = ["forward", "left", "right"]
 
 
 def infant_spec(cortex_size: int = 1000, seed: int = 7, day_length_s: float = 1200.0,
-                hands: int = 0, **brain_overrides: Any) -> dict[str, Any]:
+                hands: int = 0, kin: bool = False, **brain_overrides: Any) -> dict[str, Any]:
     """The default brain.
 
     cortex_size: total cortical neurons (80% excitatory, 20% inhibitory).
@@ -38,6 +38,9 @@ def infant_spec(cortex_size: int = 1000, seed: int = 7, day_length_s: float = 12
         :mod:`anima.tools`).  0 (the default) builds exactly the brain of
         earlier versions; with hands > 0 a small extra motor area is added
         after everything else.
+    kin: add a sense of where other creatures are (``sense.kin``), for
+        creatures that share an arena (see :mod:`anima.world.arena`).  Off
+        by default, which again leaves the default brain unchanged.
     brain_overrides: e.g. ``effects={"social_reward": 2.0}``.
     """
     nE = int(round(cortex_size * 0.8))
@@ -154,6 +157,8 @@ def infant_spec(cortex_size: int = 1000, seed: int = 7, day_length_s: float = 12
     ]
     if hands:
         add_hands(pops, projs, hands)
+    if kin:
+        add_kin(pops, projs)
     brain: dict[str, Any] = {"drives": {"day_length_s": day_length_s}}
     for k, v in brain_overrides.items():
         brain.setdefault(k, {}).update(v)
@@ -194,6 +199,22 @@ def add_hands(pops: list[dict[str, Any]], projs: list[dict[str, Any]], n: int) -
         {"pre": "hands.inh", "post": "hands", "p": 0.5, "weight": 0.06, "fixed_indegree": True},
         {"pre": "sense.hands", "post": "cortex.E", "p": 0.1, "weight": 0.025},
         {"pre": "hands", "post": "cortex.E", "p": 0.05, "weight": 0.02},
+    ]
+
+
+def add_kin(pops: list[dict[str, Any]], projs: list[dict[str, Any]]) -> None:
+    """A sense of where the others are: eight bearing channels like the
+    smell's, fed by a shared arena's ``kin`` code.  It reaches cortex, and
+    the movement channels through dopamine-gated synapses — so whether to
+    approach the others or keep away from them is learned from what being
+    near them brings (company, a shared feast, or a lost meal)."""
+    pops.append({"name": "sense.kin", "size": 80, "channels": 8, "kind": "RS", "noise": 2.0,
+                 "role": "sensory", "input": {"max_current": 12.0, "labels": BEARING_LABELS}})
+    projs += [
+        {"pre": "sense.kin", "post": "cortex.E", "p": 0.1, "weight": 0.02},
+        {"pre": "sense.kin", "post": "motor", "p": 0.5, "weight": 0.006, "w_max": 0.05,
+         "fixed_indegree": True, "rule": {"type": "reward_stdp", "a_plus": 1.0, "a_minus": 0.0,
+                                          "tau_e": 300.0, "lr": 0.05, "normalize": "both"}},
     ]
 
 

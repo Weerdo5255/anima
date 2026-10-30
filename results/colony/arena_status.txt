@@ -1,0 +1,25 @@
+$ anima arena --dir sample_colony --status
+colony sample_colony: day 3 (07:12), 4 creatures alive, 7 have lived here
+  Eli (c5, generation 1, born day 3, copy of its parent's brain): energy 1.00, awake
+  Fay (c6, generation 1, born day 3, copy of its parent's brain): energy 1.00, awake
+  Cyd (c3, generation 0, born day 1, born in the colony): energy 1.00, awake
+  Gus (c7, generation 1, born day 3, copy of its parent's brain): energy 1.00, awake
+
+=== end of day 2 ===
+  creature        gen  fitness  meals  feasts  beat  missed  near others  heard  mean energy
+  Cyd (c3)          0     3.60      8       4     1       5         67%    287         0.89
+  Dee (c4)          0     3.45      9       3     7       4         72%    275         0.76
+  Bo (c2)           0     2.05      5       2     2       4         55%    271         0.79
+  Ada (c1)          0     1.65      5       1     3       6         70%    292         0.73
+  -> Cyd stands out: 3.60 vs the others' median 2.05 (+76%).
+     Next day: Cyd and its variations: Eli (eagerness 0.28->0.196 (-30%), move_lr 0.0673->0.0602 (-11%), appetite 1->0.944 (-6%), sociability 1.7->1.5 (-12%), loneliness 60.4->58 (-4%), chatty 3->3.34 (+11%), voice_lr 0.0597->0.0677 (+13%)), Fay (move_lr 0.0673->0.0742 (+10%), curiosity 0.6->0.556 (-7%), loneliness 60.4->66.4 (+10%), voice_lr 0.0597->0.0682 (+14%)), Gus (explore 3.5->3.1 (-12%), eagerness 0.28->0.308 (+10%), move_lr 0.0673->0.0596 (-11%), move_trace 314->299 (-5%), vigor 3->3.01 (+0%), sociability 1.7->1.8 (+6%), loneliness 60.4->49.1 (-19%), chatty 3->3.69 (+23%)).
+     Retired: Ada, Bo, Dee (archived in retired/).
+
+family tree (fitness = food eaten each day, in energy):
+Ada (c1, gen 0, born day 1, retired after day 2) food by day: 2.25, 1.65
+Bo (c2, gen 0, born day 1, retired after day 2) food by day: 2.15, 2.05
+Cyd (c3, gen 0, born day 1, alive) food by day: 2.55, 3.60
+  Eli (c5, gen 1, born day 3, alive) food by day: -
+  Fay (c6, gen 1, born day 3, alive) food by day: -
+  Gus (c7, gen 1, born day 3, alive) food by day: -
+Dee (c4, gen 0, born day 1, retired after day 2) food by day: 2.65, 3.45

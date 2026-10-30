@@ -86,9 +86,15 @@ class Agent:
         return cls(brain, w, body_config, world_spec={"type": world, "kwargs": wk})
 
     # ------------------------------------------------------------ I/O
-    def hear(self, text: str) -> None:
-        """Speak to the agent.  Thread-safe; returns immediately."""
-        self._inbox.put(("text", text))
+    def hear(self, text: str, source: str | None = None, loudness: float = 1.0) -> None:
+        """Speak to the agent.  Thread-safe; returns immediately.
+
+        ``source``: who is speaking (another creature's name), reported in
+        the ``heard`` event; ``loudness`` < 1 for a speaker further away."""
+        if source is None and loudness == 1.0:
+            self._inbox.put(("text", text))
+        else:
+            self._inbox.put(("speech", (text, source, float(loudness))))
 
     def call_soon(self, fn: Callable[["Agent"], None]) -> None:
         """Run ``fn(agent)`` on the agent's own thread at the next tick."""
@@ -139,6 +145,12 @@ class Agent:
                 text, valence = parse_social_signals(payload)
                 body.hear(text, valence)
                 self._emit("heard", {"text": payload, "valence": valence})
+            elif kind == "speech":
+                raw, source, loudness = payload
+                text, valence = parse_social_signals(raw)
+                body.hear(text, valence, loudness)
+                self._emit("heard", {"text": raw, "valence": valence, "from": source,
+                                     "loudness": round(loudness, 3)})
             elif kind == "call":
                 payload(self)
         body.sense(self.tick_ms)

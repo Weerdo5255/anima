@@ -15,7 +15,9 @@ Quick start::
 
 Programs it may use (``anima.tools``), the log of its thoughts
 (``anima.mind``) and the local HTTP connection for other programs
-(``anima.bridge``) are separate modules you attach to a living agent.
+(``anima.bridge``) are separate modules you attach to a living agent;
+``anima.evolve`` runs a colony of creatures sharing an arena, with a
+genetic algorithm between days.
 """
 
 from .body import Body, BodyConfig
@@ -24,7 +26,7 @@ from .core import Network, Population, Projection
 from .runtime import Agent
 from .world import EmptyWorld, ForagingWorld, World
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "Agent", "Brain", "BrainBuilder", "build_brain", "infant_spec", "minimal_spec",

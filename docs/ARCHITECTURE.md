@@ -380,7 +380,102 @@ feed it, and answer remote programs' calls.  `BridgeClient` is the other end
 in the standard library.  Requests are served on their own threads and act
 on the creature at its next tick: the creature never waits for a client.
 
-## 7. Building your own
+## 7. A colony: living together, and evolving (`anima/world/arena.py`, `anima/evolve`)
+
+### The shared arena
+
+`SharedArena` is the foraging world with several creatures in it.  Each sees
+it through its own view (a `World`), so neither bodies nor brains change.
+Nobody is told to compete or to cooperate; the arena only makes both
+possible:
+
+* **competition** — food is eaten by whoever gets there first; a creature
+  within 2.5 units when another eats is told it *missed* the meal.  Food (and
+  a feast) that nobody eats withers after 60–120 s and grows back elsewhere —
+  without this, food in a corner nobody visits stays there for ever, nothing
+  new grows, and a colony that keeps to the middle starves (see results);
+* **cooperation** — now and then a *feast* appears: it smells twice as
+  strong and is worth 0.4 energy *to each* eater (a meal is 0.25), but it
+  can only be eaten when two or more creatures are within 1.6 units of it at
+  the same time.  Going for it pays only if someone else comes too — the
+  stag hunt (Skyrms 2004).  A creature that arrives alone feels *a feast too
+  big to eat alone*;
+* **company** — what one says is heard by the others within 7 units, more
+  faintly further away, and relieves their loneliness just as your words
+  do; turn-taking and the answering reflex make them babble back and forth;
+* **sensing each other** — an opt-in `sense.kin` port (`infant_spec(kin=True)`,
+  80 neurons) carries a bearing code of where the others are, to cortex and
+  — through dopamine-gated synapses — to the movement channels, so
+  approaching or avoiding the others is learned.
+
+### Rounds, and worker processes
+
+A colony advances in rounds of 10 ms (`anima/evolve/hosting.py`): each
+creature senses the arena *as the round began*, lives 10 ms, and reports the
+movements it completed; the colony then applies all movements in a shuffled
+order and hands each creature its consequences (food, pain, a feast shared,
+a missed meal, the change in smell its movement brought) at the start of the
+next round, together with the voices that reached it.  Because no creature
+feels another's movement within a round, creatures can live in separate
+processes (`workers`) with exactly the same result — a test checks that one
+process and two worker processes produce identical lives.  Consequences
+arrive 10 ms after a movement completes, well inside the ~0.3 s that its
+synapses stay eligible.
+
+### Days, fitness, and the genetic algorithm
+
+At dawn each creature's day is scored: its **fitness** is the food it ate
+(energy; meals 0.25, feast shares 0.4).  The day's best **stands out** if it
+ate at least 25% (`margin`) and 0.5 energy (`min_gain`, two meals) more than
+the median of the others (with `compare = "itself"`: the creature that
+improved most on its own previous day, by as much).  Then:
+
+* the champion lives on unchanged (elitism);
+* every other place is taken by a variation of it, born within 2 units of
+  it: its **genes** mutated
+  (each gene with probability 0.5, multiplied by `exp(0.2 z)`, kept within
+  bounds), and — with `inherit = "brain"`, the default — a copy of its brain,
+  synapses and memories included, with 5% multiplicative noise on its
+  learned synapses and fresh random streams.  This is exploit-and-explore as
+  in population-based training (Jaderberg et al. 2017): Lamarckian, not
+  biological.  `inherit = "genes"` builds fresh brains (new wiring) from the
+  mutated genes instead — classic neuroevolution (Floreano, Dürr & Mattiussi
+  2008) — which must learn everything again;
+* `crossover` mixes the champion's genes with the runner-up's (uniform);
+* the replaced creatures are archived (`retired/`, their final state saved)
+  or, with `delete_old`, deleted.
+
+If nobody stands out, nobody is replaced.  `selection = "random"` is a
+control for experiments: the same turnover on the same days, but the parent
+is a member picked at random instead of the best.  The genes are inborn settings,
+not synapses:
+
+| gene | default | range | what it sets |
+|---|---|---|---|
+| explore | 3.5 | 1.5–6 | noise of the movement channels |
+| eagerness | 0.28 | 0.15–0.45 | the movement decoder's threshold (lower moves sooner) |
+| move_lr | 0.05 | 0.01–0.25 | learning rate of the synapses that steer it |
+| move_trace | 300 ms | 100–1500 | eligibility time constant of those synapses |
+| appetite | 1.0 | 0.2–4 | reward for moving toward the smell of food |
+| vigor | 3.0 | 0.5–8 | how much tonic dopamine energises movement |
+| curiosity | 0.6 | 0.05–2.5 | reward for novelty when bored |
+| sociability | 1.5 | 0.2–5 | reward per unit of loneliness relieved |
+| loneliness | 90 s | 20–400 | how slowly loneliness builds |
+| chatty | 3.0 | 1.5–5 | noise of the urge to speak |
+| voice_lr | 0.06 | 0.01–0.25 | learning rate of what it says |
+
+Genes live in a creature's saved state (brain spec, brain settings, body
+settings), so a creature with new genes is built, saved and loaded like any
+other.  `colony.json` keeps the lineage: every creature's parent,
+generation, genes, mutations and fitness by day.
+
+Whether selection helps is measured, not assumed (README, results 8): with
+four creatures and ten-minute days a creature's food on one day did not
+predict the next (r = −0.05), so the day's best is mostly the luckiest.
+`anima.experiments.colony.repeatability` is the check to run before
+trusting a selection scheme.
+
+## 8. Building your own
 
 Everything above is data.  `anima spec --out brain.toml` writes the default
 brain; edit populations, projections, rules and system settings, then
@@ -422,5 +517,9 @@ see `examples/03_custom_brain.py`.
 * Baars BJ (1988) *A Cognitive Theory of Consciousness.* Cambridge University Press.
 * Dehaene S, Changeux JP (2011) Experimental and theoretical approaches to conscious processing. *Neuron* 70:200.
 * Raymond JE, Shapiro KL, Arnell KM (1992) Temporary suppression of visual processing in an RSVP task: an attentional blink? *J Exp Psychol Hum Percept Perform* 18:849.
+* Skyrms B (2004) *The Stag Hunt and the Evolution of Social Structure.* Cambridge University Press.
+* Holland JH (1975) *Adaptation in Natural and Artificial Systems.* University of Michigan Press.
+* Jaderberg M et al. (2017) Population based training of neural networks. arXiv:1711.09846.
+* Floreano D, Dürr P, Mattiussi C (2008) Neuroevolution: from architectures to learning. *Evol Intell* 1:47.
 * Thompson RF, Spencer WA (1966) Habituation: a model phenomenon for the study of neuronal substrates of behavior. *Psychol Rev* 73:16.
 * Toth LA, Gardiner TW (2000) Food and water restriction protocols: physiological and behavioral considerations. *Contemp Top Lab Anim Sci* 39(6):9.

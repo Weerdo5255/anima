@@ -55,8 +55,11 @@ anything.  The bracketed times are its own clock — one simulated day lasts
 
 It can also use programs you allow, by learning which of its acts make
 them do something good for it; it keeps a log of its thoughts, read out of
-its own brain activity; and other programs can connect to it while it lives
-([below](#programs-thoughts-and-other-programs)).  Everything runs locally on
+its own brain activity; other programs can connect to it while it lives
+([below](#programs-thoughts-and-other-programs)); and several creatures can
+share an arena, compete for food or share a feast, and — when one of them
+does clearly better — be followed by it and variations of it, chosen by a
+genetic algorithm ([a colony](#a-colony-living-together-competing-cooperating-evolving)).  Everything runs locally on
 a CPU with **NumPy as the only dependency**.
 
 ---
@@ -390,6 +393,116 @@ anima.serve({"bell": lambda call: {"say": "ding", "reward": 0.3}})   # be its "b
 complete program that is the creature's bell (it starts its own creature if
 none is being served).
 
+## A colony: living together, competing, cooperating, evolving
+
+Several creatures can share one arena.  Nobody tells them to compete or to
+cooperate; the arena just makes both possible, and what each one does is
+whatever its own brain learns:
+
+* **Food is shared.**  Whoever gets to a piece first eats it.  A creature
+  that was close by when another ate learns it *missed* it.  Food nobody
+  eats withers after a minute or two and grows back somewhere else.
+* **Feasts need two.**  Now and then a feast appears.  It smells twice as
+  strong and is worth more to *each* eater than a meal, but one creature
+  alone cannot eat it: two or more must be at it at the same time.  Going for
+  it pays only if someone else comes too — the stag hunt of game theory.
+* **They hear each other.**  What one says reaches the others nearby (more
+  faintly further away) and relieves their loneliness, as your words do;
+  they babble back and forth.  They can also sense where the others are.
+
+At dawn every creature's day is scored by the food it ate.  If the best one
+**stands out** — at least 25% and two meals more than the median of the
+others — a **genetic algorithm** makes the next day's colony: the champion
+and variations of it (its genes mutated; by default each starting from a
+copy of its brain), while the creatures they replace are archived — or
+**deleted, with `--delete-old`**.  If nobody stands out, everyone lives on.
+Does it make better creatures?  Not yet at this scale: with four creatures
+and ten-minute days a day's winner was mostly the luckiest, and the colonies
+that kept everyone did as well ([results 8](#8-living-together-and-selecting-the-best)).
+
+```bash
+anima arena --days 3                          # 4 new creatures in ./colony live 3 days, then it is saved
+anima arena --days 2                          # later: the same colony goes on
+anima arena --status                          # who lives there now, and the family tree
+anima arena --days 1 --delete-old             # creatures that lose their place are deleted, not archived
+anima arena --new --from anima_brain.npz      # a colony of your creature and variations of it
+anima arena --thoughts all --watch            # print their thoughts as they happen, draw the arena
+```
+
+A real session, with 10-minute days (`--day 600`).  On the first day nobody
+stood out (the best, Dee, ate 18% more than the others' median); the second
+day — the colony resumed, keeping its day length — went like this (the
+lists of mutations are shortened here; [the whole
+session](results/colony/arena_session.txt)):
+
+```
+$ anima arena --dir sample_colony --days 1 --workers 2
+resumed the colony at sample_colony: day 2 (07:12), Ada (gen 0), Bo (gen 0), Cyd (gen 0), Dee (gen 0)
+selection: a creature that eats 25% (and 0.5) more than the others' median makes the next day's population with 3 variations of itself (copies of its brain with mutated genes); those it replaces are archived in sample_colony/retired.
+living 1 day(s) as fast as the CPU allows in 2 worker processes; Ctrl-C saves and stops
+
+[day 2 09:00] Ada 0+1f e0.92 | Bo 1+0f e0.93 | Cyd 1+1f e0.98 | Dee 4+0f e0.94 | feasts 1, contested meals 2
+[day 2 12:00] Ada 2+1f e0.91 | Bo 3+0f e0.88 | Cyd 3+2f e0.99 | Dee 6+1f e0.97 | feasts 2, contested meals 6
+[day 2 15:00] Ada 2+1f e0.67 | Bo 3+1f e0.82 | Cyd 5+2f e0.97 | Dee 7+2f e0.98 | feasts 3, contested meals 8
+[day 2 18:00] Ada 4+1f e0.92 | Bo 4+1f e0.82 | Cyd 5+3f e0.81 | Dee 9+3f e0.99 | feasts 4, contested meals 11
+[day 2 21:00] Ada 5+1f e0.85 | Bo 4+1f e0.58 | Cyd 6+3f e0.82 | Dee 9+3f e0.75 | feasts 4, contested meals 12
+[day 2 00:00] Ada 5+1f e0.63 (asleep) | Bo 4+2f e0.80 (asleep) | Cyd 7+4f e0.93 (asleep) | Dee 9+3f e0.57 (asleep) | feasts 5, contested meals 12
+[day 2 03:00] Ada 5+1f e0.58 (asleep) | Bo 4+2f e0.75 (asleep) | Cyd 7+4f e0.88 (asleep) | Dee 9+3f e0.51 (asleep) | feasts 5, contested meals 12
+[day 2 06:00] Ada 5+1f e0.52 (asleep) | Bo 4+2f e0.70 (asleep) | Cyd 7+4f e0.83 (asleep) | Dee 9+3f e0.46 (asleep) | feasts 5, contested meals 12
+=== end of day 2 ===
+  creature        gen  fitness  meals  feasts  beat  missed  near others  heard  mean energy
+  Cyd (c3)          0     3.60      8       4     1       5         67%    287         0.89
+  Dee (c4)          0     3.45      9       3     7       4         72%    275         0.76
+  Bo (c2)           0     2.05      5       2     2       4         55%    271         0.79
+  Ada (c1)          0     1.65      5       1     3       6         70%    292         0.73
+  -> Cyd stands out: 3.60 vs the others' median 2.05 (+76%).
+     Next day: Cyd and its variations: Eli (eagerness 0.28->0.196 (-30%), move_lr 0.0673->0.0602 (-11%), …), Fay (move_lr 0.0673->0.0742 (+10%), …), Gus (explore 3.5->3.1 (-12%), …).
+     Retired: Ada, Bo, Dee (archived in retired/).
+
+saved the colony (day 3) at sample_colony — continue: anima arena --dir sample_colony   family tree: anima arena --dir sample_colony --status
+```
+
+`7+4f` is 7 meals and 4 shared feasts so far; *beat* counts meals eaten with
+a rival within reach, *missed* the reverse.  Each creature also keeps its
+own thought log.  Bo's, on the first day, around a feast (Bo was retired
+after day 2, so its files are now in `retired/`: `anima thoughts --brain
+sample_colony/retired/c2.npz`):
+
+```
+16:43  social     Cyd says "bemo"
+16:49  perception someone nearby, to my left
+16:55  feeling    I'm getting hungry (0.32)
+17:01  inner      I mouth "ma" silently (I heard "mi")
+17:07  evaluation getting closer to food: worse than I expected (-0.29)
+17:13  perception a strong smell of food, to my right
+17:19  perception a feast — but it is too big to eat alone
+17:25  evaluation getting closer to food: better than I expected (+0.50)
+17:30  action     a feast, shared with Cyd
+17:31  memory     I'll remember this: going ahead (+1.00)
+17:37  social     Cyd says "dehu"
+```
+
+| | |
+|---|---|
+| what is scored | the food a creature ate that day, in energy (a meal 0.25, its share of a feast 0.4) |
+| who stands out | the day's best, if it ate ≥ 25% (`--margin`) and ≥ 0.5 (`--min-gain`) more than the others' median — or, with `--gain-over itself`, the creature that improved most on its own previous day, by as much |
+| the next day | the champion, unchanged, and `population − 1` variations of it, born next to it |
+| a variation | the champion's 11 genes, each mutated with probability 0.5 by a factor `exp(0.2 z)` (`--mutation`, `--mutation-rate`); with `--inherit brain` (default) a copy of its brain — synapses, memories — with 5% synaptic noise; with `--inherit genes` a fresh brain that must learn everything again; `--crossover` first mixes its genes with the runner-up's |
+| the genes | how much it explores, how readily it moves, how fast and over what time window its steering synapses learn, how rewarding food smell, novelty and company are, how fast it gets lonely, how chatty it is, how fast its voice learns ([the list](docs/ARCHITECTURE.md#7-a-colony-living-together-and-evolving-animaworldarenapy-animaevolve)) |
+| the replaced | archived in `colony/retired/` with their thought logs, or deleted with `--delete-old` (`--new --delete-old` also deletes a whole old colony; `--from` never touches the file it copies) |
+
+Colony creatures are built with 600 cortical neurons (`--cortex`) and a
+sense of where the others are.  Each has its own brain file (about 0.7 MB)
+and thought log in the colony directory, which also keeps the lineage of
+every creature that ever lived there (`colony.json`); any of them can be
+loaded on its own (`anima chat --brain colony/c7.npz`).  Archived creatures
+add up over the days — `--delete-old` keeps only the living.  The creatures
+run in parallel worker processes, one per CPU core (`--workers`), with
+exactly the same results as in one process.  Four creatures live at about
+0.5–0.7× real time on the 2-core development VM, so a 20-minute day takes
+about half an hour there; `--day 600` makes shorter days.  From Python:
+`anima.evolve.Colony` ([`examples/06_colony.py`](examples/06_colony.py)).
+
 ## What is in the default creature
 
 About 1,700 Izhikevich spiking neurons in 15 populations, 38 projections,
@@ -422,7 +535,7 @@ Every number here was produced by the shipped code: two seeds for each
 learning experiment, one simulated day for the first.  The first four take
 roughly 1.5 hours on the 2-core development VM, the tutoring comparison
 about 2.5 hours, the program and thought-log checks (6–7) about 40 minutes
-with `--workers 2`.  `anima experiment <name>` reruns any of them, and the
+with `--workers 2`, the colony (8) about 3.5 hours.  `anima experiment <name>` reruns any of them, and the
 raw numbers are in [`results/`](results/README.md).  Nothing was tuned per
 seed.
 
@@ -602,6 +715,68 @@ wrong, and `anima experiment programs` checks them:
 With the workspace competition the log ran at 30 lines a minute awake; about
 320 further candidates per 8 minutes faded without getting in.
 
+### 8. Living together, and selecting the best
+
+Per seed, three colonies of four young creatures (600 cortical neurons,
+genes varied around the defaults) share an arena for four 10-minute days
+(`anima experiment colony`).  The three are one and the same colony until
+the first evening on which someone stands out; from then on:
+
+* **evolving** — the day's best and three variations of it (copies of its
+  brain with mutated genes, born next to it) make up the next day;
+* **random parent** — the same turnover on the same rule, but the parent is
+  picked at random: the control for selection;
+* **static** — nobody is replaced; they keep learning.
+
+| food per creature (energy), seed 1 / seed 2 | day 1 | day 2 | day 3 | day 4 |
+|---|---|---|---|---|
+| evolving | 2.40 / 2.74 | 2.83 / 1.83 | **2.55** / 2.75 | 2.67 / 2.23 |
+| random parent | 2.40 / 2.74 | 2.83 / 1.83 | 1.77 / 2.75 | 2.09 / 2.42 |
+| static | 2.40 / 2.74 | 2.83 / 1.83 | 2.27 / 2.75 | **2.85** / **3.01** |
+
+Nobody stood out on day 1.  In seed 1, Bo stood out on day 2 (3.85 against
+the others' median 2.30), so from day 3 the evolving colony was Bo and its
+variations, the random one Ada and hers, the static one everyone.  In seed
+2 the first standout came on day 3, and the random draw happened to pick
+the best creature too, so those two colonies differ only by the mutations
+and by chance — and still ended day 4 0.19 apart.
+
+**Selecting the best did not make a better colony.**  On the three days on
+which the colonies differed, the one that kept everyone ate the most (2.71
+per creature, against 2.48 for evolving and 2.09 for a random parent).  The
+reason shows in the static colonies: **a creature's food on one day says
+nothing about the next** (r = −0.05 over 24 pairs of days; the day's best
+ate more than the others the next day on 3 of 6 days).  At four creatures
+and ten minutes, a day's winner is mostly the luckiest, and copying luck
+does not help.  The mechanism itself works as specified — it picks the
+standout, copies and varies it, archives or deletes the rest — but for it
+to select ability, judging has to cover more than one short day (longer
+`--day`s, larger colonies, or several days per verdict; the last is not
+built yet).
+
+What the creatures did, in every colony:
+
+* **They compete without deciding to.**  A rival was within reach for
+  34–45% of the meals on day 1 and for 53–87% on day 4 — most of all in the
+  evolving colonies, whose members were near-copies born side by side.
+* **They share feasts.**  Feasts, which need two, were 11–42% of the food
+  (1–6 a day per colony).
+* **They stay together.**  On day 1 they spent 57–70% of their waking time
+  within 3 units of another creature, where four creatures placed at random
+  would spend 22%; on day 4, 79–84% in the static colonies and 85–95% in the
+  others.  Probably for two reasons nobody wrote down as a rule: the same
+  smell draws them to the same food, and hearing one another relieves
+  loneliness, which is rewarding.
+
+The first version of this experiment found a trap worth knowing about.
+Food grew back only once eaten; the static colony herded in the middle of
+the arena while all the food sat uneaten at the edges, and it starved (2.54
+→ 0.64 food per creature in three days) with brains that still foraged
+well alone.  Food nobody eats now withers and grows back elsewhere
+([NOTES, v0.4](docs/NOTES.md), lessons 6–7; [`results/colony/first_run/`](results/colony/first_run/)).
+
+![colonies by day, and one day vs the next](docs/figures/colony.png)
+
 ## Build your own brain
 
 A brain is data.  Dump the default and edit it:
@@ -667,18 +842,19 @@ anima/
   brain/       drives, neuromodulators, sleep, hippocampus, cerebellum, critic,
                Brain orchestrator, spec builder, presets (incl. optional hands)
   body/        physiology, senses, motor decoding, voice and hearing
-  world/       World interface, foraging arena, empty world
+  world/       World interface, foraging arena, shared arena, empty world
   runtime/     the never-blocking life loop, save/load
   tools/       programs it may use: commands, web services, functions, remote
   mind/        the thought log: readouts, the workspace, JSONL log
   bridge/      `anima serve` (HTTP + server-sent events) and its client
+  evolve/      colonies: rounds and worker processes, genes, the genetic algorithm
   tutor/       teaching: Ollama client, reflex rules, skill meters, curriculum,
                scripted and LLM teachers, the tutor loop
   ui/          terminal chat, curses dashboard
   experiments/ the experiments below, runnable with `anima experiment ...`
-tests/         pytest suite (101 tests, about 3 minutes), incl. a mock Ollama server
+tests/         pytest suite (128 tests, about 5 minutes), incl. a mock Ollama server
 examples/      01 alone · 02 talk from code · 03 build your own brain + world · 04 LLM tutor ·
-               05 another program as its "bell" · tools.toml + tools/ (example programs)
+               05 another program as its "bell" · 06 a colony · tools.toml + tools/ (example programs)
 configs/       infant.toml — the default brain as an editable spec
 docs/          ARCHITECTURE.md (how it works), NOTES.md (design notes, lessons learned), figures
 results/       the raw numbers behind every table and figure, with a guide
@@ -699,6 +875,8 @@ where it stands, measured rather than claimed:
 | knowledge | much of the written world, from pre-training | nothing it has not lived |
 | learning while working | none: the weights are fixed, only the context changes | always: every reward changes synapses and sleep consolidates them |
 | time | wakes up for each request | lives continuously; gets hungry, bored, lonely and sleepy; acts unprompted |
+| working with others | negotiates, divides work and reports back, in language | shares an arena: competes for food, sometimes shares a feast that needs two, babbles back and forth — no plans, no agreements ([a colony](#a-colony-living-together-competing-cooperating-evolving)) |
+| getting better over time | improved by its makers between versions | learns while it lives; a genetic algorithm can copy a colony's best and vary its inborn settings — so far, at four creatures and ten-minute days, it selects luck rather than ability ([results 8](#8-living-together-and-selecting-the-best)) |
 | explaining itself | fluent explanations, which need not reflect how it computed | none; its thought log is read out of its activity by code, and the readouts are checked against what it does next ([results 7](#7-is-the-thought-log-true)) |
 | hardware | GPUs, billions of parameters | one CPU core, ~1,800 neurons |
 
@@ -752,6 +930,18 @@ as another program talking to it through `anima serve`.
   stored episodes) and are true by construction; the readouts that make a
   claim about what it will do or what it is echoing are measured in results
   7, and they are far from perfect.
+* **Colonies: selection picks luck, and nobody decides anything.** With
+  four creatures and ten-minute days, one day's food does not predict the
+  next (r = −0.05), so the genetic algorithm mostly copies the luckiest;
+  in two seeds the colonies that were never replaced did as well (results
+  8).  Two seeds and four days are a pilot, not a verdict.  Children copy
+  the champion's learned synapses (Lamarckian, as in population-based
+  training), so most of what is passed on was learned, not inborn; fresh
+  brains from mutated genes (`--inherit genes`) were not evaluated.
+  Competing and cooperating are not choices: creatures compete because they
+  want the same food, and share a feast when two happen to arrive together;
+  there is no negotiation, and what they say to each other is babble.  Four
+  creatures live at about 0.6× real time on two cores.
 * **A narrow curriculum, and asking is not solved.** Four lessons about food
   and sounds. The optional *ask* lesson (`--with-ask`: no food grows, calls
   made when hungry are answered with food, calls made when full with a
