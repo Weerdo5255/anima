@@ -16,6 +16,13 @@ Design notes
   or inhibitory (all outgoing synapses GABA-A).
 * Time step is 1 ms by default.  ``step()`` advances one step and never
   waits for anything; the simulation is a free-running dynamical system.
+* ``device="cpu"`` (the default) is this NumPy implementation, the
+  reference.  Any other device (a GPU: ``"cuda"``, ``"mps"``, ``"auto"``;
+  see :mod:`anima.core.device`) hands the arrays to
+  :class:`~anima.core.engine.DeviceEngine` after ``build()``.  The network's
+  state arrays (``v``, ``W``, ``rate`` ...) can still be read — as host copies
+  — and changed through methods (``set_weights``, ``scale_weights``,
+  ``params_changed`` after writing ``I_ext``/``gain``/... directly).
 """
 
 from __future__ import annotations
@@ -156,14 +163,32 @@ class Projection:
         return self.post_pop.slice
 
 
-class Network:
-    """A free-running spiking neural network."""
+#: state that lives on the device when a network runs on one (read through
+#: host copies there; see :meth:`Network.__getattr__`)
+DEVICE_STATE = ("v", "u", "g_ampa", "g_gaba", "g_nmda", "trace", "readout", "rate", "w_slow",
+                "bias_homeo", "spike_count", "W", "fired", "last_spikes", "_S")
 
-    def __init__(self, seed: int | None = None, dt: float = 1.0) -> None:
+
+class Network:
+    """A free-running spiking neural network.
+
+    ``device``: ``"cpu"`` (NumPy, the reference engine; the default unless the
+    ``ANIMA_DEVICE`` environment variable says otherwise), a GPU (``"cuda"``,
+    ``"mps"``, ``"auto"``, ...) or ``"emulate"``; ``engine_options`` are passed
+    to :class:`~anima.core.engine.DeviceEngine` (``dtype``, ``noise``,
+    ``propagation``, ``fused``).
+    """
+
+    def __init__(self, seed: int | None = None, dt: float = 1.0, device: Any = None,
+                 engine_options: dict[str, Any] | None = None) -> None:
         if dt != 1.0:
             # The Izhikevich half-step integration and all time constants are
             # tuned for 1 ms; keep the API honest instead of silently wrong.
             raise ValueError("anima currently supports dt = 1.0 ms only")
+        from .device import resolve_device
+        self.device = resolve_device(device)
+        self.engine_options = dict(engine_options or {})
+        self.engine: Any = None
         self.dt = dt
         self.rng = np.random.default_rng(seed)
         self.populations: dict[str, Population] = {}
@@ -283,7 +308,8 @@ class Network:
             self.W[ps, qs] = w.astype(np.float32)
         self._plastic = [p for p in self.projections.values() if p.rule is not None]
         for proj in self._plastic:
-            proj.rule.setup(self, proj)
+            if self.device.is_reference:  # (a device engine keeps the rules' state itself)
+                proj.rule.setup(self, proj)
         self._pop_list = list(self.populations.values())
         self._edges = np.array([p.start for p in self._pop_list] + [N])
         taus = np.array([TAU_AMPA, TAU_GABA, TAU_NMDA, TAU_TRACE, TAU_READOUT, TAU_RATE,
@@ -292,7 +318,30 @@ class Network:
         self._noise_buf = np.empty((0, N))
         self._noise_pos = 0
         self.built = True
+        if not self.device.is_reference:
+            self._to_device()
         return self
+
+    def _to_device(self) -> None:
+        """Hand the state to a device engine; drop the host copies."""
+        from .engine import DeviceEngine
+        self.engine = DeviceEngine(self, self.device, **self.engine_options)
+        for name in DEVICE_STATE:
+            self.__dict__.pop(name, None)
+
+    def __getattr__(self, name: str) -> Any:
+        # only called for attributes that are not there: on a device, the state
+        # arrays, served as read-only host copies (change weights with
+        # set_weights / scale_weights / jitter_weights)
+        if name in DEVICE_STATE:
+            engine = self.__dict__.get("engine")
+            if engine is not None:
+                return engine.host(name)
+        raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
+
+    @property
+    def on_device(self) -> bool:
+        return self.engine is not None
 
     @staticmethod
     def _channel_gain(proj: Projection) -> np.ndarray | None:
@@ -367,10 +416,14 @@ class Network:
         self._noise_pos += 1
         return row
 
-    def step(self) -> np.ndarray:
-        """Advance the network by one time step; return indices that spiked."""
+    def step(self) -> np.ndarray | None:
+        """Advance the network by one time step; return indices that spiked
+        (on a device: None — read ``last_spikes`` if you need them)."""
         if not self.built:
             self.build()
+        if self.engine is not None:
+            self.engine.step()
+            return None
         v, u = self.v, self.u
         # Synaptic conductances relax v toward their combined reversal
         # potential.  That linear part is integrated exactly (exponential
@@ -453,8 +506,18 @@ class Network:
         return idx
 
     def run(self, ms: float) -> None:
+        if not self.built:
+            self.build()
+        if self.engine is not None:
+            self.engine.run(ms)
+            return
         for _ in range(int(round(ms / self.dt))):
             self.step()
+
+    def sync(self) -> None:
+        """Wait until the device has finished its queued work (for timing)."""
+        if self.engine is not None:
+            self.engine.B.sync()
 
     def _split_spikes(self, idx: np.ndarray) -> dict[str, np.ndarray]:
         bounds = np.searchsorted(idx, self._edges)
@@ -520,6 +583,15 @@ class Network:
         pop = self.populations[name]
         s = pop.slice if channel is None else pop.channel_slice(channel)
         self.I_ext[s] = current
+        self.params_changed()
+
+    def params_changed(self) -> None:
+        """The per-neuron settings (``I_ext``, ``gain``, ``adapt``,
+        ``bias_mod``, ``noise_sigma``, ``slow_inc``) were written: a device
+        engine uploads them before the next step (it also does so at the
+        start of every 10 ms window).  Nothing to do on the CPU."""
+        if self.engine is not None:
+            self.engine.mark_params()
 
     def channel_activity(self, name: str, trace: str = "readout") -> np.ndarray:
         """Mean activity trace per channel of a population."""
@@ -531,9 +603,73 @@ class Network:
         return float(self.rate[self.populations[name].slice].mean())
 
     def weights(self, proj_name: str) -> np.ndarray:
-        """View of a projection's weight block (pre x post)."""
+        """A projection's weight block (pre x post): a view on the CPU, a
+        copy from a device."""
         proj = self.projections[proj_name]
+        if self.engine is not None:
+            return self.engine.block(proj)
         return self.W[proj.pre_slice, proj.post_slice]
+
+    def set_weights(self, proj_name: str, values: np.ndarray) -> None:
+        """Overwrite a projection's weight block."""
+        proj = self.projections[proj_name]
+        if self.engine is not None:
+            self.engine.set_block(proj, values)
+        else:
+            self.W[proj.pre_slice, proj.post_slice] = values
+
+    def scale_weights(self, proj_name: str, factor: float) -> None:
+        """Multiply a projection's weights by ``factor`` (e.g. downscaling in sleep)."""
+        proj = self.projections[proj_name]
+        if self.engine is not None:
+            self.engine.scale_block(proj, factor)
+        else:
+            self.W[proj.pre_slice, proj.post_slice] *= np.float32(factor)
+
+    def jitter_weights(self, sigma: float, rng: np.random.Generator) -> None:
+        """Multiplicative noise (``1 + sigma z``) on the learned synapses
+        (plastic, non-recurrent projections), kept within ``[0, w_max]``."""
+        if sigma <= 0:
+            return
+        for proj in self.projections.values():
+            if proj.rule is None or proj.pre == proj.post:
+                continue
+            W = self.weights(proj.name)
+            M = self.mask(proj.name)
+            noisy = W * (1.0 + sigma * rng.standard_normal(W.shape)).astype(np.float32)
+            new = np.where(M, np.clip(noisy, 0.0, proj.w_max), W)
+            if self.engine is not None:
+                self.engine.set_block(proj, new)
+            else:
+                W[...] = new
+
+    def drive(self, projs: Iterable[Projection], post: str) -> np.ndarray:
+        """Per neuron of population ``post``: presynaptic firing rates through
+        the current weights, summed over ``projs`` (which must end in ``post``)."""
+        projs = list(projs)
+        size = self.populations[post].size
+        if self.engine is not None:
+            return self.engine.drive(projs, size)
+        total = np.zeros(size)
+        for p in projs:
+            total += self.rate[p.pre_slice] @ self.W[p.pre_slice, p.post_slice]
+        return total
+
+    def eligibility(self, proj_name: str) -> np.ndarray:
+        """The eligibility traces of a reward-learning (RewardSTDP) projection."""
+        proj = self.projections[proj_name]
+        if self.engine is not None:
+            return self.engine.eligibility(proj)
+        return proj.rule.eligibility(self)
+
+    def reseed(self, seed: int) -> None:
+        """New random streams from now on (e.g. for a copied creature, so it
+        does not replay its parent's noise)."""
+        self.rng = np.random.default_rng(seed)
+        self._noise_pos = len(self._noise_buf)  # draw fresh noise from the new generator
+        if self.engine is not None:
+            from .engine import _seed_from_state
+            self.engine.reseed_noise(_seed_from_state(self.rng.bit_generator.state))
 
     def mask(self, proj_name: str) -> np.ndarray:
         proj = self.projections[proj_name]
@@ -563,6 +699,8 @@ class Network:
     )
 
     def state_dict(self) -> dict[str, Any]:
+        if self.engine is not None:
+            return self._device_state_dict()
         out: dict[str, Any] = {k: getattr(self, k).copy() for k in self._STATE_ARRAYS}
         out["t"] = self.t
         out["step_count"] = self.step_count
@@ -574,9 +712,37 @@ class Network:
         }
         return out
 
+    def _device_state_dict(self) -> dict[str, Any]:
+        """The same format as on the CPU, so a file runs on either."""
+        out: dict[str, Any] = dict(self.engine.state_arrays())
+        out["t"] = self.t
+        out["step_count"] = self.step_count
+        out["rng"] = self.rng.bit_generator.state
+        out["noise_buf"] = np.array(self._noise_buf)
+        out["noise_pos"] = self._noise_pos
+        out["rules"] = {p.name: self.engine.rule_state(p) for p in self._plastic}
+        return out
+
     def load_state_dict(self, state: dict[str, Any]) -> None:
         if not self.built:
             self.build()
+        if self.engine is not None:
+            for k in self._STATE_ARRAYS:
+                want = (self.N, self.N) if k == "W" else (self.N,)
+                if np.shape(state[k]) != want:
+                    raise ValueError(f"state {k!r} has shape {np.shape(state[k])}, expected {want}")
+            self.engine.load_arrays(state)
+            self.t = float(state["t"])
+            self.step_count = int(state["step_count"])
+            self.rng.bit_generator.state = state["rng"]
+            self._noise_buf = np.array(state["noise_buf"])
+            self._noise_pos = int(state["noise_pos"])
+            for p in self._plastic:
+                if p.name in state.get("rules", {}):
+                    self.engine.load_rule_state(p, state["rules"][p.name])
+            from .engine import _seed_from_state
+            self.engine.reseed_noise(_seed_from_state(state["rng"]))
+            return
         for k in self._STATE_ARRAYS:
             arr = np.asarray(state[k])
             if arr.shape != getattr(self, k).shape:

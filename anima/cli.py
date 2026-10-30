@@ -10,8 +10,14 @@
     anima tutor-check          check that Ollama and the model work as a teacher
     anima run --seconds 600    let it live headless, print what it does
     anima experiment foraging  reproduce the learning experiments
+    anima gpu-check            can it run on this computer's GPU? (checks it against the CPU)
+    anima bench --device auto  how fast it runs here, by brain size, on the CPU and the GPU
     anima spec --out my.toml   dump the default brain spec to edit
     anima info anima_brain.npz describe a saved creature
+
+Every command that runs a creature takes ``--device`` (``cpu``, ``auto``,
+``cuda``, ``mps`` ...); the ``ANIMA_DEVICE`` environment variable sets the
+default.
 
 The creature is saved to ``anima_brain.npz`` (or ``--brain PATH``) when you
 leave and resumed next time, so it keeps its memories and learned habits;
@@ -52,9 +58,11 @@ def _make_agent(args: argparse.Namespace):
     need = max([t.hand + 1 for t in tools if t.hand is not None], default=0)
     hands = getattr(args, "hands", None)
     path = Path(args.brain) if getattr(args, "brain", None) else None
+    device = _device(args)
     if path is not None and path.exists() and not args.new:
-        agent = Agent.load(path)
+        agent = Agent.load(path, device=device)
         print(f"resumed {path} (age {agent.t_ms / 1000:.0f}s of simulated life)")
+        _print_device(agent)
         _print_schooling(path)
         have = len(agent.body.hands.labels) if agent.body.hands is not None else 0
         if hands is not None and hands != have:
@@ -69,8 +77,24 @@ def _make_agent(args: argparse.Namespace):
             hands = max(4, need) if need else 0
         if hands:
             kwargs["hands"] = hands
-    agent = Agent.create(seed=args.seed, world=args.world, spec=spec, **kwargs)
+    agent = Agent.create(seed=args.seed, world=args.world, spec=spec, device=device, **kwargs)
+    _print_device(agent)
     return agent, path
+
+
+def _device(args: argparse.Namespace) -> Any:
+    """The --device option, checked (exits with what to install if unusable)."""
+    from .core.device import DeviceError, resolve_device
+    try:
+        return resolve_device(getattr(args, "device", None))
+    except DeviceError as exc:
+        sys.exit(f"--device {getattr(args, 'device', None) or '(ANIMA_DEVICE)'}: {exc}")
+
+
+def _print_device(agent) -> None:
+    if agent.device != "cpu":
+        from .core.device import describe_device
+        print(f"  brain on {describe_device(agent.brain.net.device)}")
 
 
 def _attach(agent, path: Path | None, args: argparse.Namespace, quiet: bool = False):
@@ -139,6 +163,13 @@ def _common(p: argparse.ArgumentParser, brain_default: str | None = "anima_brain
     p.add_argument("--hands", type=int, default=None,
                    help="hands for a new creature (default: 4 if --tools binds programs to hands, else none)")
     p.add_argument("--no-thoughts", action="store_true", help="do not keep a log of its thoughts")
+    _device_arg(p)
+
+
+def _device_arg(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--device", default=None,
+                   help="where its brain runs: cpu, auto (a GPU if there is one), cuda, cuda:1, mps, "
+                        "torch:cuda, cupy:cuda ... (default: $ANIMA_DEVICE or cpu; see anima gpu-check)")
 
 
 def cmd_chat(args: argparse.Namespace) -> None:
@@ -271,7 +302,7 @@ def cmd_arena(args: argparse.Namespace) -> None:
     if args.status:
         if not exists:
             sys.exit(f"no colony at {d} (start one: anima arena --dir {d})")
-        col = Colony.load(d, printer=None)
+        col = Colony.load(d, printer=None, device="cpu")
         print(f"colony {d}: day {col.day} ({col.clock()}), {len(col.members)} creatures alive, "
               f"{len(col.records)} have lived here")
         for slot, cid in enumerate(col.members):
@@ -305,11 +336,12 @@ def cmd_arena(args: argparse.Namespace) -> None:
             print(line, flush=True)
 
     import os
+    device = _device(args)
     workers = args.workers if args.workers else min(args.population, os.cpu_count() or 1)
     if exists:
         if args.from_:
             sys.exit(f"{d} already holds a colony; --from starts a new one (add --new)")
-        col = Colony.load(d, printer=out, workers=min(workers, 64), **policy)
+        col = Colony.load(d, printer=out, workers=min(workers, 64), device=device, **policy)
         print(f"resumed the colony at {d}: day {col.day} ({col.clock()}), "
               + ", ".join(f"{n} (gen {col.records[c]['generation']})" for c, n in zip(col.members, col.names)))
     else:
@@ -317,12 +349,15 @@ def cmd_arena(args: argparse.Namespace) -> None:
                            day_length_s=args.day, kin=not args.no_kin,
                            **{k: v for k, v in policy.items() if v is not None})
         try:
-            col = Colony.create(d, cfg, founder=args.from_, printer=out, workers=workers)
+            col = Colony.create(d, cfg, founder=args.from_, printer=out, workers=workers, device=device)
         except (ValueError, OSError, KeyError) as exc:
             sys.exit(f"cannot start a colony: {exc}")
         src = f" from a copy of {args.from_} (the file itself is left alone)" if args.from_ else ""
         print(f"a new colony at {d}{src}: " + ", ".join(col.names)
               + f" ({col.info(0)['neurons']} neurons each, day = {col.cfg.day_length_s:g} s)")
+    if str(device) != "cpu":
+        from .core.device import describe_device
+        print(f"brains on {describe_device(device)}")
     c = col.cfg
     against = "the others' median" if c.compare == "others" else "it did the day before"
     print(f"selection: a creature that eats {c.margin:.0%} (and {c.min_gain:g}) more than {against} "
@@ -446,6 +481,9 @@ def cmd_tools(args: argparse.Namespace) -> None:
 def cmd_experiment(args: argparse.Namespace) -> None:
     seeds = tuple(int(s) for s in args.seeds.split(","))
     secs = args.seconds
+    if args.device:  # every creature the experiment builds (also in worker processes)
+        import os
+        os.environ["ANIMA_DEVICE"] = str(_device(args))
     if args.name == "foraging":
         from .experiments.foraging import main
         res = main(seconds=secs or 600.0, seeds=seeds, plot=args.plot)
@@ -478,6 +516,35 @@ def cmd_experiment(args: argparse.Namespace) -> None:
         sys.exit(f"unknown experiment {args.name}")
     if args.json:
         Path(args.json).write_text(json.dumps(res, indent=2, default=float))
+        print(f"wrote {args.json}")
+
+
+def cmd_gpu_check(args: argparse.Namespace) -> None:
+    from .benchmark import gpu_check
+    from .core.device import DeviceError
+    try:
+        res = gpu_check(args.device, quick=args.quick)
+    except DeviceError as exc:
+        sys.exit(str(exc))
+    if args.json:
+        Path(args.json).write_text(json.dumps(res, indent=2, default=float))
+        print(f"wrote {args.json}")
+    if not res.get("ok"):
+        sys.exit(1)
+
+
+def cmd_bench(args: argparse.Namespace) -> None:
+    from .benchmark import bench
+    from .core.device import DeviceError
+    try:
+        sizes = tuple(int(x) for x in args.cortex.split(",") if x)
+        rows = bench(args.device, sizes, seconds=args.seconds, cpu=not args.no_cpu)
+    except DeviceError as exc:
+        sys.exit(str(exc))
+    except ValueError as exc:
+        sys.exit(f"--cortex: {exc}")
+    if args.json:
+        Path(args.json).write_text(json.dumps(rows, indent=2, default=float))
         print(f"wrote {args.json}")
 
 
@@ -716,6 +783,7 @@ def main(argv: list[str] | None = None) -> None:
                    "(comma-separated names, or all)")
     p.add_argument("--no-thoughts", action="store_true", help="do not keep thought logs")
     p.add_argument("--status", action="store_true", help="show the colony and its family tree, then exit")
+    _device_arg(p)
     p.add_argument("--workers", type=int, default=0,
                    help="worker processes for the creatures (default: one per creature, up to the CPU count; "
                         "1 = all in this process)")
@@ -793,7 +861,23 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--seeds", default="1,2")
     p.add_argument("--plot", help="save a figure (needs matplotlib)")
     p.add_argument("--json", help="save the numbers")
+    _device_arg(p)
     p.set_defaults(func=cmd_experiment)
+
+    p = sub.add_parser("gpu-check", help="can it run on this computer's GPU? (checks the GPU against the CPU)")
+    p.add_argument("--device", default="auto", help="the device to check (default: auto; emulate checks "
+                   "the device engine on the CPU)")
+    p.add_argument("--quick", action="store_true", help="shorter checks")
+    p.add_argument("--json", help="save the numbers")
+    p.set_defaults(func=cmd_gpu_check)
+
+    p = sub.add_parser("bench", help="how fast it lives here, by brain size (CPU and GPU)")
+    p.add_argument("--device", default="auto", help="device to measure (default: auto)")
+    p.add_argument("--cortex", default="1000,4000,10000", help="cortex sizes (default: %(default)s)")
+    p.add_argument("--seconds", type=float, default=3.0, help="simulated seconds per measurement")
+    p.add_argument("--no-cpu", action="store_true", help="do not measure the CPU engine for comparison")
+    p.add_argument("--json", help="save the numbers")
+    p.set_defaults(func=cmd_bench)
 
     p = sub.add_parser("spec", help="print or save a brain spec")
     p.add_argument("--preset", default="infant", choices=["infant", "minimal"])

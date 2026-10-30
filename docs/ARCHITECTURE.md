@@ -475,7 +475,77 @@ predict the next (r = −0.05), so the day's best is mostly the luckiest.
 `anima.experiments.colony.repeatability` is the check to run before
 trusting a selection scheme.
 
-## 8. Building your own
+## 8. Running on a GPU (`anima/core/device.py`, `anima/core/engine.py`)
+
+`Network(device=...)` — and through it `build_brain`, `Agent.create/load`,
+`Colony.create/load` and every command's `--device` — chooses where the
+spiking network runs.  `cpu` is the NumPy code of section 2, the reference.
+Anything else hands the network, once built, to a `DeviceEngine`, written
+once against a small NumPy-style array interface (`Backend`) with three
+implementations: CuPy (NVIDIA CUDA; AMD with a ROCm build), PyTorch (CUDA,
+ROCm, Apple `mps`, and `torch:cpu`), and NumPy itself (`emulate`: the device
+engine on the CPU, which is how it is tested without a GPU).
+
+**What lives where.**  On the device: membrane potentials, recovery
+variables, the seven decaying per-neuron variables (three conductances,
+STDP trace, readout, rate, slow adaptation), intrinsic-plasticity biases,
+spike counts, the weight matrix (float32, as on the CPU), the learning
+rules' state (masks as one byte per synapse slot, eligibility matrices,
+budgets) and the noise buffer.  On the host: the network's structure (the
+connection mask `M`), the per-neuron settings the brain writes every tick
+(`I_ext`, `gain`, `adapt`, `bias_mod`, `noise_sigma`, `slow_inc` — uploaded
+together when the brain marks them changed and at every window start), the
+neuromodulator levels and flags, and everything outside the network (slow
+systems, body, world, thought log).  Reading `net.v`, `net.W`, `net.rate` ...
+returns a read-only host copy, cached until the next step; weights change
+through `set_weights`, `scale_weights`, `jitter_weights`.
+
+**One millisecond.**  The per-neuron update is the reference arithmetic in
+the same order — as about 40 array operations, or as one fused CUDA kernel
+with CuPy (checked against the array path on the actual device when the
+engine starts, and dropped with a warning if they disagree).  Spikes are
+then delivered: networks up to 2,500 neurons with one dense product
+`[exc; inh] · fired @ W` (it reads all of W but needs no host round trip);
+bigger ones gather only the rows of the neurons that fired, which needs one
+wait for the device per millisecond to learn how many there were.
+
+**Every 10 ms window.**  Each step records the spikes and the STDP traces
+(after decay, before that step's spikes — what the reference rules read).
+At the window's end, one wait for the device finds every neuron that fired
+in it, and each plastic projection is updated with small matrix products
+over the window, restricted to the columns (postsynaptic neurons) and rows
+(presynaptic neurons) that fired:
+
+* RewardSTDP: `E[:, post] += A+ · (X·s)ᵀ S_post`, `E[pre, :] −= A− · (S_pre·s)ᵀ Y`,
+  with `s` each step's eligibility frame scale — exactly the per-spike rule,
+  because eligibility updates do not depend on the eligibility or on the
+  weight;
+* Hebbian: the same sums, added to the weights;
+* STDP: the same sums, with soft bounds taken from the weights at the start
+  of the window (the per-spike rule compounds within a window: a
+  second-order difference, ~1e-4 relative after 150 ms in the tests).
+
+Weight changes of Hebbian and STDP therefore take effect at the end of the
+window instead of the next millisecond.  Then come the reference engine's
+slow updates (dopamine-driven weight changes, budget normalisation,
+intrinsic plasticity, synaptic scaling), unchanged.
+
+**Checks** (`tests/test_device.py`, `anima gpu-check`): with NumPy in
+float64, the reference noise stream and plasticity off, the device engine's
+spike trains, potentials and rates are identical to the reference engine's
+for 2,000 ms (including intrinsic plasticity and synaptic scaling); with
+plasticity on and identical spikes, eligibility traces and reward-learning
+weights agree to rounding and STDP to ~1e-4; controlled single pairings
+reproduce each rule (STDP soft and hard bounds, Hebbian, RewardSTDP with
+normalisation and a weight floor) to 2e-5; files move between engines.
+
+**Saving.**  `state_dict()` on a device returns the CPU format (host
+copies, float64 neuron state), so a creature saved from a GPU loads on a
+CPU and vice versa.  Device noise is re-seeded from the saved NumPy
+generator state on load (deterministic, but not the stream an uninterrupted
+run would have drawn).
+
+## 9. Building your own
 
 Everything above is data.  `anima spec --out brain.toml` writes the default
 brain; edit populations, projections, rules and system settings, then

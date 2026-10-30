@@ -74,11 +74,13 @@ class Agent:
     @classmethod
     def create(cls, preset: str = "infant", world: str = "foraging", seed: int = 7,
                world_kwargs: dict[str, Any] | None = None, body_config: BodyConfig | None = None,
-               spec: dict[str, Any] | None = None, **preset_kwargs: Any) -> "Agent":
-        """Build an agent from a named preset (or an explicit ``spec``)."""
+               spec: dict[str, Any] | None = None, device: Any = None, **preset_kwargs: Any) -> "Agent":
+        """Build an agent from a named preset (or an explicit ``spec``).
+        ``device``: where its brain runs (``"cpu"``, ``"cuda"``, ``"mps"``,
+        ``"auto"``; default ``ANIMA_DEVICE`` or cpu)."""
         if spec is None:
             spec = PRESETS[preset](seed=seed, **preset_kwargs)
-        brain = build_brain(spec, seed=seed)
+        brain = build_brain(spec, seed=seed, device=device)
         wk = dict(world_kwargs or {})
         if world == "foraging":
             wk.setdefault("seed", seed + 1)
@@ -277,16 +279,26 @@ class Agent:
     def clone(self) -> "Agent":
         """An independent copy of the creature as it is right now — same
         synapses, memories, drives and world — e.g. to test it without
-        disturbing it.  Listeners and tick hooks are not copied."""
-        return type(self).from_state(self.snapshot_state())
+        disturbing it.  Listeners and tick hooks are not copied.  It runs on
+        the same device."""
+        net = self.brain.net
+        return type(self).from_state(self.snapshot_state(), device=net.device,
+                                     engine_options=net.engine_options)
+
+    @property
+    def device(self) -> str:
+        """Where its brain runs (``cpu``, ``cupy:cuda:0``, ``torch:mps`` ...)."""
+        return str(self.brain.net.device)
 
     @classmethod
-    def load(cls, path: str | Path, world: World | None = None) -> "Agent":
-        return cls.from_state(load_state(path), world)
+    def load(cls, path: str | Path, world: World | None = None, device: Any = None) -> "Agent":
+        """Load a creature; a file runs on any device, whichever it was saved from."""
+        return cls.from_state(load_state(path), world, device=device)
 
     @classmethod
-    def from_state(cls, s: dict[str, Any], world: World | None = None) -> "Agent":
-        brain = build_brain(s["spec"])
+    def from_state(cls, s: dict[str, Any], world: World | None = None, device: Any = None,
+                   engine_options: dict[str, Any] | None = None) -> "Agent":
+        brain = build_brain(s["spec"], device=device, engine_options=engine_options)
         brain.load_state_dict(s["brain"])
         ws = s.get("world_spec", {"type": "void", "kwargs": {}})
         if world is None:

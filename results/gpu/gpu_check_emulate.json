@@ -1,0 +1,60 @@
+{
+  "device": "emulate",
+  "agreement": {
+    "steps": 2000,
+    "dtype": "float64",
+    "identical": true,
+    "first_difference_ms": null,
+    "spikes_cpu": 11929,
+    "spikes_device": 11929,
+    "max_dv_mV": 0.0
+  },
+  "plasticity": {
+    "steps": 150,
+    "same_spikes": true,
+    "max_relative_difference": {
+      "STDP": 6.787641905248165e-05,
+      "RewardSTDP": 0.0,
+      "Hebbian": 0.0
+    }
+  },
+  "speed": [
+    {
+      "device": {
+        "device": "emulate",
+        "cortex": 1000,
+        "neurons": 1667,
+        "x_real_time": 2.32246020507218,
+        "ms_per_sim_second": 430.5778836666529,
+        "build_s": 0.054222163000304135
+      },
+      "cpu": {
+        "device": "cpu",
+        "cortex": 1000,
+        "neurons": 1667,
+        "x_real_time": 2.297695902410876,
+        "ms_per_sim_second": 435.21860266658524,
+        "build_s": 0.0954564010003196
+      }
+    },
+    {
+      "device": {
+        "device": "emulate",
+        "cortex": 4000,
+        "neurons": 4667,
+        "x_real_time": 0.19862148548242542,
+        "ms_per_sim_second": 5034.702049333343,
+        "build_s": 0.4035869580002327
+      },
+      "cpu": {
+        "device": "cpu",
+        "cortex": 4000,
+        "neurons": 4667,
+        "x_real_time": 0.5219221262260423,
+        "ms_per_sim_second": 1915.9946470000857,
+        "build_s": 0.535501030999967
+      }
+    }
+  ],
+  "ok": true
+}

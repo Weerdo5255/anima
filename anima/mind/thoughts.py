@@ -511,9 +511,7 @@ class ThoughtStream:
             projs = [p for p in net.projections.values() if p.post == group and not p.pre.startswith(group)]
             self._drive_projs[group] = projs
         pop = net.populations[group]
-        total = np.zeros(pop.size)
-        for p in projs:
-            total += net.rate[p.pre_slice] @ net.W[p.pre_slice, p.post_slice]
+        total = net.drive(projs, group)
         return total.reshape(pop.channels, pop.channel_size).mean(axis=1)
 
     @staticmethod

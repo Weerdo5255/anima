@@ -51,7 +51,7 @@ def steering(agent: Agent, source: str = "sense.bearing") -> float:
         return float("nan")
     proj = net.projections[name]
     pre, post = net.populations[proj.pre], net.populations[proj.post]
-    W = np.where(net.M[proj.pre_slice, proj.post_slice], net.W[proj.pre_slice, proj.post_slice], np.nan)
+    W = np.where(net.mask(name), net.weights(name), np.nan)
     m = np.nanmean(W.reshape(pre.channels, pre.size // pre.channels, post.channels, post.size // post.channels),
                    axis=(1, 3)) / proj.w_max
     labels = agent.brain.outputs["motor"].labels

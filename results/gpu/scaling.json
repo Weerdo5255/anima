@@ -1,0 +1,56 @@
+[
+ {
+  "device": "cpu",
+  "cortex": 1000,
+  "neurons": 1667,
+  "x_real_time": 2.3936308923995337,
+  "ms_per_sim_second": 417.7753567499849,
+  "build_s": 0.07347920799975327,
+  "max_rss_gb": 0.06525802612304688
+ },
+ {
+  "device": "emulate",
+  "cortex": 1000,
+  "neurons": 1667,
+  "x_real_time": 2.258088823180376,
+  "ms_per_sim_second": 442.85237575002157,
+  "build_s": 0.054195509999772185,
+  "max_rss_gb": 0.06774139404296875
+ },
+ {
+  "device": "cpu",
+  "cortex": 4000,
+  "neurons": 4667,
+  "x_real_time": 0.42347380552893144,
+  "ms_per_sim_second": 2361.421147999863,
+  "build_s": 0.5784309810001105,
+  "max_rss_gb": 0.3131256103515625
+ },
+ {
+  "device": "emulate",
+  "cortex": 4000,
+  "neurons": 4667,
+  "x_real_time": 0.14562479115093357,
+  "ms_per_sim_second": 6866.9626379999045,
+  "build_s": 0.5531770900001902,
+  "max_rss_gb": 0.3942718505859375
+ },
+ {
+  "device": "cpu",
+  "cortex": 10000,
+  "neurons": 10667,
+  "x_real_time": 0.04597025599287876,
+  "ms_per_sim_second": 21753.19624399981,
+  "build_s": 3.7718426219998946,
+  "max_rss_gb": 1.6515693664550781
+ },
+ {
+  "device": "emulate",
+  "cortex": 10000,
+  "neurons": 10667,
+  "x_real_time": 0.010154532625316131,
+  "ms_per_sim_second": 98478.19066600004,
+  "build_s": 2.307466621000003,
+  "max_rss_gb": 1.957061767578125
+ }
+]

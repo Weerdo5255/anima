@@ -181,15 +181,17 @@ class Colony:
     many worker processes (same results, faster on a multi-core machine)."""
 
     def __init__(self, directory: str | Path, cfg: ColonyConfig, printer: Callable[[str], None] | None = print,
-                 workers: int = 1) -> None:
+                 workers: int = 1, device: Any = None) -> None:
         cfg.check()
         self.dir = Path(directory)
         self.cfg = cfg
         self.printer = printer
         self.workers = max(1, int(workers))
+        from ..core.device import resolve_device
+        self.device = resolve_device(device)  # where the creatures' brains run (not part of the colony)
         self.rng = np.random.default_rng(cfg.seed * 7919 + 17)
         self.arena = SharedArena(**{"seed": cfg.seed * 31 + 5, **cfg.arena})
-        self.hosts = make_hosts(self.workers)
+        self.hosts = make_hosts(self.workers, device=self.device)
         self.members: list[str] = []
         self.where: list[int] = []  # slot -> host
         self.names: list[str] = []
@@ -214,12 +216,12 @@ class Colony:
     # ================================================================ creation
     @classmethod
     def create(cls, directory: str | Path, cfg: ColonyConfig | None = None, founder: str | Path | None = None,
-               printer: Callable[[str], None] | None = print, workers: int = 1) -> "Colony":
+               printer: Callable[[str], None] | None = print, workers: int = 1, device: Any = None) -> "Colony":
         """A new colony: ``cfg.population`` young creatures with varied genes,
         or a copy of ``founder`` (an existing creature file, left untouched)
         plus variations of it."""
         cfg = cfg or ColonyConfig()
-        col = cls(directory, cfg, printer, workers)
+        col = cls(directory, cfg, printer, workers, device)
         try:
             col.dir.mkdir(parents=True, exist_ok=True)
             if founder is not None:
@@ -239,7 +241,7 @@ class Colony:
                     genes = wild if k == 0 else mutate(wild, col.rng, cfg.mutation, cfg.mutation_rate)[0]
                     spec = infant_spec(cortex_size=cfg.cortex, seed=cfg.seed * 1000 + k + 1,
                                        day_length_s=cfg.day_length_s, kin=cfg.kin)
-                    st = Agent(build_brain(spec), None, BodyConfig()).state_dict()
+                    st = Agent(build_brain(spec, device="cpu"), None, BodyConfig()).state_dict()
                     col.phase0 = float(st["brain"]["drives"]["cfg"]["start_phase"])
                     col._add(st, genes, parent=None, origin="born in the colony")
             col._prev_phase = col.phase()
@@ -512,7 +514,7 @@ class Colony:
         """A fresh brain of the parent's design (new wiring), born at the colony's time of day."""
         spec = copy.deepcopy(parent_state["spec"])
         spec["seed"] = int(self.rng.integers(1, 2 ** 31 - 1))
-        st = Agent(build_brain(spec), None, _body_config(parent_state["body"]["cfg"])).state_dict()
+        st = Agent(build_brain(spec, device="cpu"), None, _body_config(parent_state["body"]["cfg"])).state_dict()
         st["brain"]["drives"]["t_s"] = parent_state["brain"]["drives"]["t_s"]
         return st
 
@@ -627,7 +629,7 @@ class Colony:
 
     @classmethod
     def load(cls, directory: str | Path, printer: Callable[[str], None] | None = print, workers: int = 1,
-             **policy: Any) -> "Colony":
+             device: Any = None, **policy: Any) -> "Colony":
         d = Path(directory)
         data = json.loads((d / "colony.json").read_text(encoding="utf-8"))
         cfg = ColonyConfig(**data["config"])
@@ -636,7 +638,7 @@ class Colony:
                 raise ValueError(f"{k} is fixed when a colony is born")
             if v is not None:
                 setattr(cfg, k, v)
-        col = cls(d, cfg, printer, workers)
+        col = cls(d, cfg, printer, workers, device)
         try:
             col.arena = SharedArena.from_state(data["arena"])
             col.day, col.t, col.serial = int(data["day"]), float(data["t"]), int(data["serial"])

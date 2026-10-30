@@ -18,6 +18,10 @@ Programs it may use (``anima.tools``), the log of its thoughts
 (``anima.bridge``) are separate modules you attach to a living agent;
 ``anima.evolve`` runs a colony of creatures sharing an arena, with a
 genetic algorithm between days.
+
+The spiking network runs on the CPU (NumPy) or a GPU (CuPy or PyTorch):
+``Agent.create(device="cuda")``, ``device="auto"``, or ``ANIMA_DEVICE``
+(see ``anima.core.device``).
 """
 
 from .body import Body, BodyConfig
@@ -26,7 +30,7 @@ from .core import Network, Population, Projection
 from .runtime import Agent
 from .world import EmptyWorld, ForagingWorld, World
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 __all__ = [
     "Agent", "Brain", "BrainBuilder", "build_brain", "infant_spec", "minimal_spec",

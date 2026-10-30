@@ -468,3 +468,105 @@ standout: *evolving* (best + 3 variations born next to it), *random parent*
   measured.
 * An ecological detail (food that never moved unless eaten) dominated the
   first result completely (lesson 6); conclusions here are about this arena.
+
+## v0.5 — the spiking network on a GPU
+
+*Added 29 Oct 2026. Raw numbers: [`results/gpu/`](../results/README.md).*
+
+**Request:** restructure the program so that it can run on a local GPU
+instead of the CPU, for speed.
+
+### Design
+* **One switch, everywhere:** `Network(device=...)`, `build_brain(...,
+  device=)`, `Agent.create/load(device=)`, `Colony.create/load(device=)`,
+  `--device` on every command that runs a creature, and `ANIMA_DEVICE` for
+  the default.  `cpu` is the unchanged NumPy reference engine (all earlier
+  results reproduce bit for bit); `auto`, `cuda[:k]`, `mps`, `torch:...`,
+  `cupy:...` pick a GPU; `emulate` runs the device engine on the CPU.
+* **A device engine written once** (`anima/core/engine.py`) against a small
+  NumPy-style interface (`anima/core/device.py`) with three backends: CuPy
+  (NVIDIA; AMD with ROCm builds), PyTorch (CUDA, ROCm, Apple `mps`, CPU) and
+  NumPy (`emulate`).  With CuPy the per-neuron update is one fused
+  elementwise CUDA kernel, verified against the array path at start-up and
+  dropped (with a warning) if they disagree.
+* **Only the spiking network moves.**  Neuron state, synapses, rules' state
+  and noise live on the device; the slow systems, body, world and thought
+  log stay on the host.  Per millisecond: at most one wait for the device
+  (to learn how many neurons fired, for event-driven delivery); networks of
+  ≤2,500 neurons skip it with one dense `[exc; inh]·fired @ W` product.  Per
+  10 ms: the brain's per-neuron settings go up once, the readouts (activity
+  traces, rates) come down once.
+* **Plasticity per 10 ms window**, from recorded spike trains and traces,
+  with small matrix products restricted to the neurons that fired (one wait
+  per window): exact for RewardSTDP eligibility; Hebbian/STDP changes take
+  effect at the window's end; STDP's soft bound uses the window-start weight.
+* **float32** on the device; **noise drawn on the device** (`noise="host"`
+  draws the reference stream, for checks); **files are device-independent**
+  (`state_dict` returns the CPU format).
+* `anima gpu-check` (finds the GPU, compares it with the CPU engine, times
+  both) and `anima bench` (speed by brain size).
+
+### Lessons learned
+1. **Neither CuPy nor PyTorch could be installed** on the development VM
+   (no GPU, and package downloads were blocked), so the engine was written
+   against an interface NumPy also satisfies and tested that way, against
+   the reference engine.  The checks that matter were made exact on
+   purpose: in float64 with the reference noise stream and plasticity off,
+   the device engine's arithmetic follows the reference's operation by
+   operation, so any slip shows up as a difference in the spike trains.
+2. **A float32 engine cannot load a float64 state exactly**: a creature
+   saved on the CPU and loaded on a device differs in the 7th digit of its
+   membrane potentials (found by the save/load test, which now allows it).
+3. **`python -m anima` re-ran the whole CLI in spawned worker processes**
+   (`anima/__main__.py` had no `__main__` guard).  Linux forked its workers,
+   so it never showed; GPU colonies spawn them (a GPU library cannot be used
+   in a forked process), so it would have.
+4. (By design rather than learned the hard way.)  **On a GPU, waiting is
+   the cost, not arithmetic.**  The default creature
+   needs ~40 array operations per neuron update per millisecond; each is a
+   kernel launch, and every host round trip stalls the pipeline.  Hence the
+   fused kernel, dense delivery for small networks, per-window plasticity
+   (about 10 kernels per plastic projection per window instead of a few per
+   spike), one parameter upload and one readout download per tick.
+
+### Results (CPU only — there was no GPU)
+All on the 2-core development VM; `--device emulate` is the device engine
+with NumPy standing in for the GPU library.
+
+* **Exactness** (`anima gpu-check --device emulate`, `tests/test_device.py`):
+  float64, the reference noise stream, plasticity off — spike counts,
+  potentials and rates identical to the CPU engine for 2,000 ms (11,929
+  spikes in a brain with a 200-neuron cortex; intrinsic plasticity and two
+  rounds of synaptic scaling included).  Plasticity on, identical spikes for the first
+  150 ms: RewardSTDP eligibility and weights and Hebbian weights equal (to
+  the last bit, as it happens, at this scale), STDP within 6.8e-5 relative.
+  Single controlled pairings: STDP (soft and hard bounds), Hebbian and
+  RewardSTDP (with budget normalisation, with a weight floor) within 2e-5.
+* **Learning in the GPU configuration** (float32, engine-drawn noise,
+  plasticity per window; `anima experiment foraging`'s protocol, 10 min):
+  correct choices 0.31 → 0.65 → 0.64 → 0.67 → **0.77** (seed 1, 19 meals)
+  and 0.25 → 0.58 → 0.66 → 0.69 → **0.78** (seed 2, 40 meals); frozen
+  0.33 and 0.36 (9 and 8 meals).  The CPU engine's published runs: 0.38 →
+  0.75 and 0.33 → 0.77 (16 and 24 meals), frozen 0.33 and 0.31.
+* **CPU engine speed by size** (whole creature): 2.39x real time at 1,667
+  neurons, 0.42x at 4,667, 0.046x at 10,667 (21.8 s per simulated second;
+  1.7 GB of memory).  Emulated device engine: 2.26x, 0.15x, 0.010x — its
+  STDP update gathers whole columns of the weight matrix, cheap on a GPU and
+  slow in NumPy.
+* 142 tests (14 for the device engine).
+
+### Honest limits (v0.5)
+* **Not run on a GPU.**  The CuPy and PyTorch backends are thin and use only
+  operations the NumPy path also uses, but they were never executed; `anima
+  gpu-check` is the first thing to run.  How much faster a GPU is was not
+  measured.
+* **Small brains gain little.**  The default creature's millisecond is
+  ~10–40 small operations however fast the GPU, so expect it to run about
+  as fast as on a good CPU core; the gain is for large brains.
+* **Memory is dense.**  The weight matrix is N×N float32 on the device (1.7 GB
+  at 20,000 neurons) and the connection mask N×N bytes on the host;
+  building a large brain also needs a few GB of host memory for a moment.
+* Continuation after save/load on a device is deterministic but not the
+  noise stream an uninterrupted run would have drawn; spike-for-spike
+  equality with the CPU engine holds only with `noise="host"`, float64 and
+  plasticity off.

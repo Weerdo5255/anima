@@ -98,3 +98,16 @@ Days of 10 minutes (`--seconds 600`), 600 cortical neurons per creature.
 | `keep/colony_{evolving,random,static}_s{1,2}.json` | each colony's own `colony.json` at the end: every creature's parent, generation, genes, mutations and day-by-day statistics, and every day's report |
 | `arena_session.txt`, `arena_status.txt` | the `anima arena` session shown in the README, and `anima arena --status` after it |
 | `first_run/` | the first run (seed 1, two colonies), before food withered and before children were born next to their parent: the static colony starved.  `colony_{static,evolving}_s1.json`, and `diagnosis.json` — the creatures' steering, how they foraged alone, and what happened to the starving herd when their sense of each other was silenced, the food moved, or they were scattered (docs/NOTES.md, v0.4, lessons 6–7) |
+
+
+## `gpu/` — the device engine, checked on the CPU (README "Running on a GPU")
+
+There was no GPU, and neither CuPy nor PyTorch could be installed, so these
+check the device engine with NumPy standing in for the GPU library
+(`--device emulate`).
+
+| file | contents |
+|---|---|
+| `gpu_check_emulate.json` | `anima gpu-check --device emulate --json ...`: spike trains with plasticity off (float64, the reference noise stream: identical for 2,000 ms), the largest relative difference in learned weights and eligibility traces per learning rule after 150 ms with plasticity on, and the speed of a whole creature (cortex 1000 and 4000) emulated and on the CPU engine |
+| `forage_emulate_{plastic,frozen}_s{1,2}.json` | the foraging protocol of `anima experiment foraging` (10 minutes, policy probed every 2.5 minutes, plasticity paused while probing) with the device engine in its GPU configuration — float32, noise drawn by the engine, plasticity per 10 ms window: `points` (time, share of correct choices, meals so far, the probe counts) |
+| `scaling.json` | a whole creature's speed by cortex size (1000, 4000, 10000) on the CPU engine and emulated: times real time, ms per simulated second, build time, peak memory |

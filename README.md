@@ -60,7 +60,10 @@ its own brain activity; other programs can connect to it while it lives
 share an arena, compete for food or share a feast, and — when one of them
 does clearly better — be followed by it and variations of it, chosen by a
 genetic algorithm ([a colony](#a-colony-living-together-competing-cooperating-evolving)).  Everything runs locally on
-a CPU with **NumPy as the only dependency**.
+a CPU with **NumPy as the only dependency** — or, with CuPy or PyTorch
+installed, its spiking network can run on a GPU, which is meant for brains
+several times larger than the default ([running on a GPU](#running-on-a-gpu);
+not yet tried on real GPU hardware).
 
 ---
 
@@ -529,6 +532,73 @@ weight change is local: spike timing, the current weight, and a broadcast
 neuromodulator.  See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the
 full design and the neuroscience behind each piece.
 
+## Running on a GPU
+
+Every command that runs a creature takes `--device`, and so does the Python
+API:
+
+```bash
+pip install cupy-cuda12x        # NVIDIA (cupy-cuda11x for CUDA 11) — or:
+pip install torch               # NVIDIA, AMD (a ROCm build) or Apple silicon
+anima gpu-check                 # finds the GPU and checks it against the CPU engine (a minute or two)
+anima bench                     # how fast it lives here, by brain size, on the GPU and on the CPU
+anima chat --device auto        # a GPU if there is one; or cuda, cuda:1, mps, torch:cuda, cupy:cuda ...
+ANIMA_DEVICE=auto anima arena   # or set it once, for everything
+```
+
+From Python: `Agent.create(device="cuda")`, `Agent.load(path, device="mps")`,
+`build_brain(spec, device="auto")`, `Colony.create(..., device="cuda")`.  A
+creature file does not belong to a device: a brain raised on a GPU lives on
+a CPU, and back.
+
+What runs on the GPU is the spiking network — neurons, synapses, spike
+delivery, the three learning rules, homeostasis
+([`anima/core/engine.py`](anima/core/engine.py)).  Drives, neuromodulators,
+sleep, critic, hippocampus, cerebellum, the body, the world and the thought
+log stay on the CPU: they handle a few hundred numbers every 10 ms.  Three
+things differ from the CPU engine, all so that the GPU computes instead of
+waiting:
+
+* numbers are float32 (the CPU engine keeps the neuron state in float64);
+* the learning rules are applied once per 10 ms window, from that window's
+  spikes, with small matrix products.  For reward learning's eligibility
+  traces this is exact; a Hebbian or STDP weight change takes effect at the
+  end of its window instead of the next millisecond;
+* the background noise is drawn on the GPU.
+
+**What to expect.**  The default creature is small (1,667 neurons) and
+already lives 2–3x faster than real time on one CPU core.  Every simulated
+millisecond still costs a GPU a handful of small kernel launches, so a GPU
+will not make *it* much faster, and may make it slower.  The GPU is for
+bigger brains.  The CPU engine slows with the square of the number of
+neurons (its weight matrix is dense): on the development VM it ran 2.4x
+real time with the default 1,667 neurons, 0.42x with 4,667 (`--cortex
+4000`) and 0.046x with 10,667 (`--cortex 10000`), where one simulated
+second took 22 seconds.  A GPU's time per millisecond should grow far more
+slowly, until the weight matrix fills its memory (float32: 0.45 GB at
+10,000 neurons, 1.7 GB at 20,000) — how much faster it actually is, `anima
+bench` will tell.
+
+**It has not met a GPU yet.**  The development VM has none, and package
+downloads were blocked there, so neither CuPy nor PyTorch could even be
+installed.  The device engine was built and tested on the CPU, with NumPy
+standing in for the GPU library (`--device emulate`), against the CPU
+engine.  Without plasticity, in float64 and with the same noise, its spike
+trains are identical to the CPU engine's for 2,000 ms.  With plasticity,
+the eligibility traces and reward-learning weights match to rounding and
+STDP to ~1e-4 relative (150 ms, identical spikes); rules driven by
+controlled spike pairings match to 2e-5.  And in the GPU configuration
+(float32, noise drawn by the engine, plasticity per window) it learns to
+forage like the CPU engine: correct choices 0.31/0.25 → **0.77/0.78**
+after 10 minutes (seeds 1/2; the CPU engine: 0.38/0.33 → 0.75/0.77), frozen
+controls 0.33/0.36 ([results](results/README.md#gpu--the-device-engine-checked-on-the-cpu-readme-running-on-a-gpu)).
+Emulated, it is not fast: slower than the CPU engine for big brains — it
+is there to check the code, not to run it.  The CuPy and PyTorch layers on top
+([`anima/core/device.py`](anima/core/device.py)) are thin — the same array
+operations — but they were never executed.  `anima gpu-check` runs the same
+comparisons on your GPU (and `--device torch:cpu` runs the PyTorch path on
+the CPU); if it reports a disagreement, please report it.
+
 ## Results
 
 Every number here was produced by the shipped code: two seeds for each
@@ -838,7 +908,8 @@ you can use on its own.
 
 ```
 anima/
-  core/        spiking simulator: neurons, network, plasticity rules, monitors
+  core/        spiking simulator: neurons, network, plasticity rules, monitors;
+               the device engine (GPU) and its CuPy / PyTorch / NumPy backends
   brain/       drives, neuromodulators, sleep, hippocampus, cerebellum, critic,
                Brain orchestrator, spec builder, presets (incl. optional hands)
   body/        physiology, senses, motor decoding, voice and hearing
@@ -852,7 +923,8 @@ anima/
                scripted and LLM teachers, the tutor loop
   ui/          terminal chat, curses dashboard
   experiments/ the experiments below, runnable with `anima experiment ...`
-tests/         pytest suite (128 tests, about 5 minutes), incl. a mock Ollama server
+  benchmark.py `anima gpu-check` (the GPU against the CPU engine) and `anima bench`
+tests/         pytest suite (142 tests, about 5 minutes), incl. a mock Ollama server
 examples/      01 alone · 02 talk from code · 03 build your own brain + world · 04 LLM tutor ·
                05 another program as its "bell" · 06 a colony · tools.toml + tools/ (example programs)
 configs/       infant.toml — the default brain as an editable spec
@@ -878,7 +950,7 @@ where it stands, measured rather than claimed:
 | working with others | negotiates, divides work and reports back, in language | shares an arena: competes for food, sometimes shares a feast that needs two, babbles back and forth — no plans, no agreements ([a colony](#a-colony-living-together-competing-cooperating-evolving)) |
 | getting better over time | improved by its makers between versions | learns while it lives; a genetic algorithm can copy a colony's best and vary its inborn settings — so far, at four creatures and ten-minute days, it selects luck rather than ability ([results 8](#8-living-together-and-selecting-the-best)) |
 | explaining itself | fluent explanations, which need not reflect how it computed | none; its thought log is read out of its activity by code, and the readouts are checked against what it does next ([results 7](#7-is-the-thought-log-true)) |
-| hardware | GPUs, billions of parameters | one CPU core, ~1,800 neurons |
+| hardware | GPUs, billions of parameters | one CPU core, ~1,700 neurons by default; a GPU engine for bigger brains (untested on real GPUs so far) |
 
 What it has that LLM agents lack is a life: it runs continuously, learns
 from consequences while it lives, has motives of its own, and what we read
@@ -902,9 +974,13 @@ as another program talking to it through `anima serve`.
   cerebellar forward model and the hippocampal store (their outputs act on
   the spiking network). Each is a few hundred lines and can be swapped for a
   spiking version.
-* **Speed.** Pure NumPy, one core. On the development VM a 2,000-neuron
-  cortex runs at about real time and a 4,000-neuron one at half real time;
-  the dense weight matrix grows as N².
+* **Speed.** The CPU engine is pure NumPy on one core. On the development
+  VM a whole creature lives 2.4x faster than real time with the default
+  1,000-neuron cortex, 0.42x with a 4,000-neuron one and 0.046x with
+  10,000; the dense weight matrix grows as N².  A GPU engine exists
+  (`--device`), but it has never run on a GPU: whether it is faster on
+  yours, and by how much, `anima bench` will tell (see [running on a
+  GPU](#running-on-a-gpu)).
 * **Reproducibility.** Runs are deterministic for a given seed and sequence
   of inputs; anything typed live makes a run unique, as it should.  So do
   real programs: a command or web service answers at wall-clock speed (the

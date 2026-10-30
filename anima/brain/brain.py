@@ -272,7 +272,7 @@ class Brain:
         if self.stage == "nrem" and eff.downscale_per_s > 0:
             f = np.float32(1.0 - eff.downscale_per_s * dt_s)
             for proj in self._downscale_projs:
-                net.W[proj.pre_slice, proj.post_slice] *= f
+                net.scale_weights(proj.name, f)
         # ---- write neuromodulatory effects into the network
         self._apply_effects()
 
@@ -396,6 +396,7 @@ class Brain:
                 s = self._pop_slices[name]
                 net.bias_mod[s] = motor_bias
                 net.gain[s] = ne_gain
+        net.params_changed()  # (a device engine uploads them before the next step)
 
     def action_threshold_scale(self) -> float:
         """Serotonin sets patience: low 5-HT releases actions more easily."""

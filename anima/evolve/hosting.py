@@ -68,30 +68,20 @@ class ProxyView(World):
 
 def reseed(agent: Agent, seed: int) -> None:
     """New random streams, so a copied brain does not replay its parent's noise."""
-    net = agent.brain.net
-    net.rng = np.random.default_rng(seed)
-    net._noise_pos = len(net._noise_buf)  # draw fresh noise from the new generator
+    agent.brain.net.reseed(seed)
     agent.brain.rng = np.random.default_rng(seed + 1)
 
 
 def jitter(agent: Agent, sigma: float, rng: np.random.Generator) -> None:
     """Multiplicative noise on the learned (plastic, non-recurrent) synapses."""
-    if sigma <= 0:
-        return
-    net = agent.brain.net
-    for proj in net.projections.values():
-        if proj.rule is None or proj.pre == proj.post:
-            continue
-        W = net.W[proj.pre_slice, proj.post_slice]
-        M = net.M[proj.pre_slice, proj.post_slice]
-        noisy = W * (1.0 + sigma * rng.standard_normal(W.shape)).astype(np.float32)
-        W[...] = np.where(M, np.clip(noisy, 0.0, proj.w_max), W)
+    agent.brain.net.jitter_weights(sigma, rng)
 
 
 class LocalHost:
-    """Creatures living in this process."""
+    """Creatures living in this process (their brains on ``device``)."""
 
-    def __init__(self, forward_thoughts: bool = False) -> None:
+    def __init__(self, forward_thoughts: bool = False, device: Any = None) -> None:
+        self.device = device
         self.agents: dict[int, Agent] = {}
         self.views: dict[int, ProxyView] = {}
         self.minds: dict[int, Any] = {}
@@ -107,7 +97,7 @@ class LocalHost:
         state = dict(state)
         state["name"] = name
         view = ProxyView()
-        agent = Agent.from_state(state, world=view)
+        agent = Agent.from_state(state, world=view, device=self.device)
         agent.world_spec = dict(world_spec)
         if seed is not None:
             reseed(agent, seed)
@@ -116,7 +106,7 @@ class LocalHost:
 
     def load(self, slot: int, path: str, thoughts_path: str | None = None) -> None:
         view = ProxyView()
-        self._install(slot, Agent.load(path, world=view), view, thoughts_path)
+        self._install(slot, Agent.load(path, world=view, device=self.device), view, thoughts_path)
 
     def _install(self, slot: int, agent: Agent, view: ProxyView, thoughts_path: str | None) -> None:
         self.agents[slot], self.views[slot] = agent, view
@@ -148,7 +138,7 @@ class LocalHost:
 
     def info(self, slot: int) -> dict[str, Any]:
         a = self.agents[slot]
-        return {"name": a.name, "energy": float(a.body.energy), "awake": bool(a.brain.awake),
+        return {"name": a.name, "device": a.device, "energy": float(a.body.energy), "awake": bool(a.brain.awake),
                 "stage": a.brain.stage, "clock": a.brain.drives.clock_string(), "t_ms": a.t_ms,
                 "neurons": int(a.brain.net.N), "kin": "sense.kin" in a.brain.inputs,
                 "stats": dict(a.body.stats)}
@@ -191,12 +181,12 @@ class WorkerError(RuntimeError):
     pass
 
 
-def _serve(conn: Any, forward_thoughts: bool) -> None:  # pragma: no cover - runs in a worker process
+def _serve(conn: Any, forward_thoughts: bool, device: Any = None) -> None:  # pragma: no cover - a worker
     # Ctrl-C and a service manager's SIGTERM are the colony's to handle: it saves
     # everyone and then closes the workers (which also exit if it disappears)
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
-    host = LocalHost(forward_thoughts)
+    host = LocalHost(forward_thoughts, device)
     while True:
         try:
             op, args, kwargs = conn.recv()
@@ -213,10 +203,11 @@ def _serve(conn: Any, forward_thoughts: bool) -> None:  # pragma: no cover - run
 class RemoteHost:
     """Creatures living in a worker process (same interface as LocalHost)."""
 
-    def __init__(self, forward_thoughts: bool = False, ctx: Any = None) -> None:
-        ctx = ctx or mp_context()
+    def __init__(self, forward_thoughts: bool = False, ctx: Any = None, device: Any = None) -> None:
+        ctx = ctx or mp_context(device)
         self.conn, child = ctx.Pipe()
-        self.proc = ctx.Process(target=_serve, args=(child, forward_thoughts), daemon=True,
+        dev = None if device is None else str(device)  # (a plain string crosses into a spawned process)
+        self.proc = ctx.Process(target=_serve, args=(child, forward_thoughts, dev), daemon=True,
                                 name="anima-colony-worker")
         self.proc.start()
         child.close()
@@ -278,22 +269,28 @@ class RemoteHost:
         self.conn.close()
 
 
-def mp_context() -> Any:
+def mp_context(device: Any = None) -> Any:
     """How worker processes are started: forked on Linux (fast, and works from
-    any script or notebook); spawned elsewhere, where a script that runs a
-    colony with workers needs the usual ``if __name__ == "__main__":`` guard.
-    ``ANIMA_MP_START`` overrides it (fork, spawn or forkserver)."""
+    any script or notebook); spawned elsewhere — and for creatures on a GPU,
+    since a GPU library cannot be used in a forked process — where a script
+    that runs a colony with workers needs the usual
+    ``if __name__ == "__main__":`` guard.  ``ANIMA_MP_START`` overrides it
+    (fork, spawn or forkserver)."""
     import multiprocessing as mp
-    method = os.environ.get("ANIMA_MP_START") or ("fork" if sys.platform.startswith("linux") else "spawn")
+    gpu = device is not None and getattr(device, "library", "numpy") in ("cupy", "torch") \
+        and getattr(device, "device", "cpu") != "cpu"
+    method = os.environ.get("ANIMA_MP_START") or (
+        "fork" if sys.platform.startswith("linux") and not gpu else "spawn")
     return mp.get_context(method)
 
 
-def make_hosts(workers: int, forward_thoughts: bool = False) -> list[Any]:
-    """``workers`` <= 1: one in-process host; otherwise that many worker processes."""
+def make_hosts(workers: int, forward_thoughts: bool = False, device: Any = None) -> list[Any]:
+    """``workers`` <= 1: one in-process host; otherwise that many worker
+    processes (each creature's brain on ``device``)."""
     if workers <= 1:
-        return [LocalHost(forward_thoughts)]
-    ctx = mp_context()
-    return [RemoteHost(forward_thoughts, ctx) for _ in range(workers)]
+        return [LocalHost(forward_thoughts, device)]
+    ctx = mp_context(device)
+    return [RemoteHost(forward_thoughts, ctx, device) for _ in range(workers)]
 
 
 __all__ = ["ProxyView", "LocalHost", "RemoteHost", "WorkerError", "make_hosts", "reseed", "jitter"]

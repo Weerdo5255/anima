@@ -50,9 +50,13 @@ _PROJ_FIELDS = {"pre", "post", "p", "weight", "weight_jitter", "w_max", "topolog
                 "name"}
 
 
-def build_network(spec: dict[str, Any], seed: int | None = None) -> Network:
+def build_network(spec: dict[str, Any], seed: int | None = None, device: Any = None,
+                  engine_options: dict[str, Any] | None = None) -> Network:
+    """``device``: where the network runs — ``"cpu"`` (default, or the
+    ``ANIMA_DEVICE`` environment variable), a GPU (``"cuda"``, ``"mps"``,
+    ``"auto"``) ... see :mod:`anima.core.device`."""
     seed = spec.get("seed") if seed is None else seed
-    net = Network(seed=seed)
+    net = Network(seed=seed, device=device, engine_options=engine_options)
     for p in spec.get("population", []):
         unknown = set(p) - _POP_FIELDS - {"role", "input", "output", "tags"}
         if unknown:
@@ -74,12 +78,14 @@ def build_network(spec: dict[str, Any], seed: int | None = None) -> Network:
     return net.build()
 
 
-def build_brain(spec: dict[str, Any], seed: int | None = None) -> Brain:
-    """Compile a spec into a running :class:`Brain`."""
+def build_brain(spec: dict[str, Any], seed: int | None = None, device: Any = None,
+                engine_options: dict[str, Any] | None = None) -> Brain:
+    """Compile a spec into a running :class:`Brain` (on ``device``, see
+    :func:`build_network`)."""
     spec = copy.deepcopy(spec)
     if seed is not None:
         spec["seed"] = seed
-    net = build_network(spec)
+    net = build_network(spec, device=device, engine_options=engine_options)
     return Brain(net, spec)
 
 
@@ -128,8 +134,8 @@ class BrainBuilder:
         self.spec["brain"].setdefault(system, {}).update(kwargs)
         return self
 
-    def build(self, seed: int | None = None) -> Brain:
-        return build_brain(self.spec, seed=seed)
+    def build(self, seed: int | None = None, device: Any = None) -> Brain:
+        return build_brain(self.spec, seed=seed, device=device)
 
 
 # ------------------------------------------------------------------ files
