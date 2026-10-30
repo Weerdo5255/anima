@@ -1,0 +1,113 @@
+resumed anima_brain.npz (age 541s of simulated life)
+  schooling: in lesson 2 of 4 (echo), mastered: forage  [anima_brain.tutor.json]
+  thoughts: anima_brain.thoughts.jsonl  (anima thoughts --brain anima_brain.npz --follow)
+resumed teaching from anima_brain.tutor.json
+teacher: scripted teacher (no LLM)
+lesson 2 of 4: Copy me — repeat the word it just heard, starting with its first sound
+training for up to 12 creature-minutes as fast as the CPU allows; Ctrl-C stops (progress is saved)
+
+   [18:00 echo] scripted: A new word to copy (wo wo). The reflex rewards it when its reply repeats the word. → say 'wo wo'
+      anima › wo didi ku
+      anima › nu
+   [18:10 echo] scripted: Say 'wo wo' again until it repeats it (0 times so far, said 1 times). → say 'wo wo'
+      anima › pepe
+   [18:20 echo] scripted: Say 'wo wo' again until it repeats it (0 times so far, said 2 times). → say 'wo wo'
+      anima › sososo
+   [18:29 echo] scripted: Say 'wo wo' again until it repeats it (0 times so far, said 3 times). → say 'wo wo'
+      anima › woba lo
+   [18:39 echo] scripted: Say 'wo wo' again until it repeats it (1 times so far, said 4 times). → say 'wo wo'
+      anima › wawame
+   [18:48 echo] scripted: Say 'wo wo' again until it repeats it (1 times so far, said 5 times). → say 'wo wo'
+      anima › luwowa
+   [18:58 echo] scripted: A new word to copy (pu pu); enough of 'wo wo'. The reflex rewards it when its reply repeats the word. → say 'pu pu'
+      anima › wa
+      anima › punu
+   [19:08 echo] scripted: Say 'pu pu' again until it repeats it (1 times so far, said 1 times). → say 'pu pu'
+      anima › mumuwawu
+      anima › wa
+   [19:17 echo] scripted: Say 'pu pu' again until it repeats it (1 times so far, said 2 times). → say 'pu pu'
+      anima › mululu
+   [19:27 echo] scripted: Say 'pu pu' again until it repeats it (1 times so far, said 3 times). → say 'pu pu'
+      anima › kamowa
+   [19:37 echo] scripted: Say 'pu pu' again until it repeats it (1 times so far, said 4 times). → say 'pu pu'
+      anima › puhuhu
+   [19:47 echo] scripted: Say 'pu pu' again until it repeats it (1 times so far, said 5 times). → say 'pu pu'
+      anima › wuwu
+   [19:56 echo] scripted: Say 'pu pu' again until it repeats it (1 times so far, said 6 times). → say 'pu pu'
+      anima › bubuno
+   [20:06 echo] scripted: Say 'pu pu' again until it repeats it (1 times so far, said 7 times). → say 'pu pu'
+      anima › sususu
+   [20:16 echo] scripted: A new word to copy (no no); enough of 'pu pu'. The reflex rewards it when its reply repeats the word. → say 'no no'
+      anima › lala
+   [20:25 echo] scripted: Say 'no no' again until it repeats it (0 times so far, said 1 times). → say 'no no'
+      anima › wupupu
+   [20:35 echo] scripted: Say 'no no' again until it repeats it (0 times so far, said 2 times). → say 'no no'
+      anima › bobobo
+   [20:45 echo] scripted: Say 'no no' again until it repeats it (0 times so far, said 3 times). → say 'no no'
+      anima › nowa
+   [20:54 echo] scripted: It is starving; feed it, whatever the lesson. → give_food(ahead)
+   [21:04 echo] scripted: Say 'no no' again until it repeats it (1 times so far, said 4 times). → say 'no no'
+      anima › tohehe
+   [21:14 echo] scripted: Say 'no no' again until it repeats it (1 times so far, said 5 times). → say 'no no'
+      anima › nosa
+   [21:23 echo] scripted: A new word to copy (te te); enough of 'no no'. The reflex rewards it when its reply repeats the word. → say 'te te'
+      anima › neneme
+   [21:33 echo] scripted: Say 'te te' again until it repeats it (0 times so far, said 1 times). → say 'te te'
+      anima › henana
+   [21:43 echo] scripted: Say 'te te' again until it repeats it (0 times so far, said 2 times). → say 'te te'
+      anima › wonawu
+   [21:52 echo] scripted: Say 'te te' again until it repeats it (0 times so far, said 3 times). → say 'te te'
+      anima › wekowo
+   [22:02 echo] scripted: Say 'te te' again until it repeats it (0 times so far, said 4 times). → say 'te te'
+      anima › deme
+   [22:12 echo] scripted: Say 'te te' again until it repeats it (0 times so far, said 5 times). → say 'te te'
+      anima › sewewe
+   [22:21 echo] scripted: Say 'te te' again until it repeats it (0 times so far, said 6 times). → say 'te te'
+      anima › weweno
+   [22:31 echo] scripted: Say 'te te' again until it repeats it (0 times so far, said 7 times). → say 'te te'
+      anima › sasasa
+   [22:41 echo] scripted: A new word to copy (be be); enough of 'te te'. The reflex rewards it when its reply repeats the word. → say 'be be'
+      anima › ohu
+   [22:51 echo] scripted: Say 'be be' again until it repeats it (0 times so far, said 1 times). → say 'be be'
+      anima › watata
+      anima › wa
+   [23:00] it is asleep — the teacher waits (replay consolidates the day)
+   ·· [00:01] lesson 2 of 4 'echo': exam not taken yet (need: repeats the first sound of a word >= 30% of the time, and 2.5x as often as chance); practised 4.4/5 awake min | energy 0.44
+   ·· [06:01] lesson 2 of 4 'echo': exam not taken yet (need: repeats the first sound of a word >= 30% of the time, and 2.5x as often as chance); practised 4.4/5 awake min | energy 0.44
+      anima › wawanowo
+      anima › do we
+      anima › wipa
+      anima › wawa wa wa wo
+   ✎ [07:15] exam 'forage': score 0.73 (chance 0.33; correct moves left 18/20, ahead 12/20, right 14/20)
+   [07:15 echo] scripted: A new word to copy (ku ku); enough of 'be be'. The reflex rewards it when its reply repeats the word. → say 'ku ku'
+      anima › wa nunu
+      anima › wa
+   [07:20 echo] scripted: Say 'ku ku' again until it repeats it (0 times so far, said 1 times). → say 'ku ku'
+      anima › wawa
+      anima › sawa
+   [07:29 echo] scripted: Say 'ku ku' again until it repeats it (0 times so far, said 2 times). → say 'ku ku'
+      anima › kawana
+      anima › su
+      anima › na wa
+      anima › su
+      anima › wa
+      anima › wa na na no
+      anima › nu suna
+      anima › so wa
+      anima › na na
+      anima › ho
+      anima › wa
+      anima › wasu
+      anima › wa si
+      anima › ka nahi
+      anima › sasa wa sasu sa
+   ✎ [08:35] exam 'imitate': repeats the first sound 32% (chance 9%), the syllable 13% (chance 2%), the whole word 0% (n=31/33)
+   [08:35 echo] scripted: Say 'ku ku' again until it repeats it (0 times so far, said 3 times). → say 'ku ku'
+
+Tutor report — creature age 21.2 min, teacher scripted
+  ✓ forage        passed at 8.7 min after 8.7 awake min of practice
+  … echo          in progress: exam: repeats the first sound 0.32 (need 0.30; chance 0.09), the syllable 0.13 (chance 0.02), n=31/33; must pass the next exam too
+  skills: food 1.0/min, 'm' share 0.02, echo 0.17 (chance 0.10), energy 0.45
+  last exam 'forage' at 20.0 min: score 0.73 (chance 0.33; correct moves left 18/20, ahead 12/20, right 14/20)
+  last exam 'imitate' at 21.2 min: repeats the first sound 32% (chance 9%), the syllable 13% (chance 2%), the whole word 0% (n=31/33)
+saved anima_brain.npz and anima_brain.tutor.json — run the same command again to continue the lessons, or meet it:  anima chat --brain anima_brain.npz

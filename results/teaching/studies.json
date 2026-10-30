@@ -1,0 +1,252 @@
+{
+ "practice": [
+  {
+   "seed": 1,
+   "word": "ba ba",
+   "reward": true,
+   "old_mirror": false,
+   "row_before": 1.78,
+   "row_after": 5.76,
+   "copies_by_ten": [
+    1,
+    0,
+    4,
+    5
+   ]
+  },
+  {
+   "seed": 2,
+   "word": "ba ba",
+   "reward": true,
+   "old_mirror": false,
+   "row_before": 1.45,
+   "row_after": 3.26,
+   "copies_by_ten": [
+    0,
+    0,
+    0,
+    4
+   ]
+  },
+  {
+   "seed": 1,
+   "word": "ba ba",
+   "reward": false,
+   "old_mirror": false,
+   "row_before": 1.78,
+   "row_after": 3.1,
+   "copies_by_ten": [
+    2,
+    0,
+    2,
+    1
+   ]
+  },
+  {
+   "seed": 2,
+   "word": "ba ba",
+   "reward": false,
+   "old_mirror": false,
+   "row_before": 1.45,
+   "row_after": 2.08,
+   "copies_by_ten": [
+    0,
+    0,
+    0,
+    2
+   ]
+  },
+  {
+   "seed": 1,
+   "word": "ba ba",
+   "reward": true,
+   "old_mirror": true,
+   "row_before": 1.79,
+   "row_after": 1.29,
+   "copies_by_ten": [
+    1,
+    0,
+    2,
+    1
+   ]
+  },
+  {
+   "seed": 2,
+   "word": "ba ba",
+   "reward": true,
+   "old_mirror": true,
+   "row_before": 1.44,
+   "row_after": 1.27,
+   "copies_by_ten": [
+    0,
+    0,
+    0,
+    5
+   ]
+  },
+  {
+   "seed": 1,
+   "word": "ba ba",
+   "reward": false,
+   "old_mirror": true,
+   "row_before": 1.79,
+   "row_after": 1.32,
+   "copies_by_ten": [
+    1,
+    3,
+    2,
+    2
+   ]
+  },
+  {
+   "seed": 2,
+   "word": "ba ba",
+   "reward": false,
+   "old_mirror": true,
+   "row_before": 1.44,
+   "row_after": 1.24,
+   "copies_by_ten": [
+    0,
+    0,
+    0,
+    2
+   ]
+  }
+ ],
+ "ceiling": [
+  {
+   "seed": 1,
+   "natural": {
+    "trials": 44,
+    "n": 44,
+    "consonant": 0.136,
+    "syllable": 0.0,
+    "word": 0.0,
+    "vowel": 0.318,
+    "consonant_chance": 0.083,
+    "syllable_chance": 0.022,
+    "word_chance": 0.0009
+   },
+   "diagonal_50": {
+    "trials": 44,
+    "n": 44,
+    "consonant": 0.5,
+    "syllable": 0.182,
+    "word": 0.023,
+    "vowel": 0.386,
+    "consonant_chance": 0.089,
+    "syllable_chance": 0.02,
+    "word_chance": 0.0008
+   },
+   "diagonal_100": {
+    "trials": 44,
+    "n": 44,
+    "consonant": 0.909,
+    "syllable": 0.636,
+    "word": 0.068,
+    "vowel": 0.659,
+    "consonant_chance": 0.091,
+    "syllable_chance": 0.023,
+    "word_chance": 0.0008
+   }
+  },
+  {
+   "seed": 2,
+   "natural": {
+    "trials": 44,
+    "n": 44,
+    "consonant": 0.227,
+    "syllable": 0.045,
+    "word": 0.0,
+    "vowel": 0.227,
+    "consonant_chance": 0.087,
+    "syllable_chance": 0.017,
+    "word_chance": 0.0006
+   },
+   "diagonal_50": {
+    "trials": 44,
+    "n": 44,
+    "consonant": 0.5,
+    "syllable": 0.136,
+    "word": 0.0,
+    "vowel": 0.409,
+    "consonant_chance": 0.087,
+    "syllable_chance": 0.02,
+    "word_chance": 0.0007
+   },
+   "diagonal_100": {
+    "trials": 44,
+    "n": 44,
+    "consonant": 0.841,
+    "syllable": 0.409,
+    "word": 0.045,
+    "vowel": 0.5,
+    "consonant_chance": 0.091,
+    "syllable_chance": 0.024,
+    "word_chance": 0.001
+   }
+  }
+ ],
+ "shaping": [
+  {
+   "seed": 1,
+   "recall": true,
+   "target": "m",
+   "share_by_block": [
+    0.075,
+    0.05,
+    0.03,
+    0.114,
+    0.079
+   ],
+   "pleasures": 26,
+   "block_minutes": 2.0,
+   "syllables": 501
+  },
+  {
+   "seed": 2,
+   "recall": true,
+   "target": "m",
+   "share_by_block": [
+    0.055,
+    0.102,
+    0.029,
+    0.03,
+    0.04
+   ],
+   "pleasures": 20,
+   "block_minutes": 2.0,
+   "syllables": 492
+  },
+  {
+   "seed": 1,
+   "recall": false,
+   "target": "m",
+   "share_by_block": [
+    0.111,
+    0.07,
+    0.087,
+    0.076,
+    0.098
+   ],
+   "pleasures": 36,
+   "block_minutes": 2.0,
+   "syllables": 501
+  },
+  {
+   "seed": 2,
+   "recall": false,
+   "target": "m",
+   "share_by_block": [
+    0.105,
+    0.079,
+    0.059,
+    0.058,
+    0.111
+   ],
+   "pleasures": 30,
+   "block_minutes": 2.0,
+   "syllables": 499
+  }
+ ]
+}

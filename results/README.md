@@ -14,6 +14,7 @@ any of them (runs are deterministic for a given seed).
 | `babble_{contingent,yoked,frozen}_s{1,2}.json` | smiles after "m" syllables vs random smiles vs frozen (`anima experiment babble`) | §3 |
 | `imitation_{learned,frozen}_s{1,2}.json` | echoing after babbling alone (`anima experiment imitation`) | §4 |
 | `summary.json` | the numbers quoted in the README, collected | §1–4 |
+| `imitation_v05.png` | the figure of the imitation run above (anima 0.5; §4 now shows the 0.6 rerun in `v0.6/`) | §4 |
 
 ## `tutoring/` — what a teacher adds (README section 5)
 
@@ -27,6 +28,31 @@ next morning with plasticity off.
 | `tutored_seed{1,2}.json` | exam results (`forage`, `babble_share`, `ask_hungry`/`ask_sated`, `echo_rate`/`echo_chance`), the graduation record (`graduated`, `milestones`), exams taken during training, and a skill trace sampled every ~30 s |
 | `alone_seed{1,2}.json` | the same exam for the creature that lived alone |
 | `training_seed{1,2}.log` | everything the tutor printed while teaching: lessons, exams (✎), graduations (★), progress |
+| `tutoring_v05.png` | the README figure for this run (anima 0.5) |
+
+## `tutoring_v06/` — what a teacher adds, with anima 0.6 (README section 5)
+
+The same experiment as `tutoring/` (`anima experiment tutoring --workers 2`),
+with the code of anima 0.6: the reflexes give pleasure instead of smiles,
+"Copy me" rewards repeating the teacher's word (graded, with the recall),
+the teacher says each word until it is repeated, the lesson is graduated by
+the imitation exam, and the hearing→speaking mirror learns only while it
+speaks.  The final exam also includes the imitation exam (`imitate`: 44
+words).
+
+| file | contents |
+|---|---|
+| `tutored_seed{1,2}.json` | as in `tutoring/`, plus `imitate` |
+| `alone_seed{1,2}.json` | the same exam for the creature that lived alone |
+| `training_seed{1,2}.log` | everything the tutor printed while teaching |
+| `tutoring.png` | its figure (`docs/figures/tutoring.png`) |
+
+## `v0.6/` — the creature on its own, rerun with anima 0.6 (README section 4)
+
+| file | experiment | README |
+|---|---|---|
+| `imitation.json` | echoing after babbling alone (`anima experiment imitation`), with the v0.6 mirror rule | §4 |
+| `imitation.png` | its figure (`docs/figures/imitation.png`) | §4 |
 
 ## `ask_lesson/` — why "ask for food" is optional (README honest limits)
 
@@ -58,11 +84,13 @@ seed 1 needed 28 creature-minutes (a night included) to scrape past the
 stopped.  With copying taught first, both passed at about 0.2 within 6–8
 awake minutes (`tutoring/training_seed*.log`).
 
-## `sessions/` — what `anima train` looks like
+## `sessions/` — what `anima train` and `anima chat` look like
 
-A real session with the scripted teacher (`anima train --teacher scripted
---minutes 8.5 --fast`) and its continuation two creature-minutes later,
-including the forage exams and the first graduation.
+| file | contents |
+|---|---|
+| `scripted_session.log`, `scripted_session_resumed.log` | anima 0.5: a real session with the scripted teacher (`anima train --teacher scripted --minutes 8.5 --fast`) and its continuation two creature-minutes later, including the forage exams and the first graduation |
+| `scripted_session_v06.log`, `scripted_session_v06_resumed.log` | anima 0.6, shown in the README: `--minutes 9`, then `--minutes 12` — foraging graduated, then "Copy me" (a word said until it is repeated, an imitation exam after the night) |
+| `chat_session_v06.txt` | the `anima chat` session at the top of the README: a newborn creature, typed to by a small script that answered each reply with `+` or `-` |
 
 ## `programs/` — programs it learns to use, and whether its thoughts are true (README sections 6–7)
 
@@ -111,3 +139,22 @@ check the device engine with NumPy standing in for the GPU library
 | `gpu_check_emulate.json` | `anima gpu-check --device emulate --json ...`: spike trains with plasticity off (float64, the reference noise stream: identical for 2,000 ms), the largest relative difference in learned weights and eligibility traces per learning rule after 150 ms with plasticity on, and the speed of a whole creature (cortex 1000 and 4000) emulated and on the CPU engine |
 | `forage_emulate_{plastic,frozen}_s{1,2}.json` | the foraging protocol of `anima experiment foraging` (10 minutes, policy probed every 2.5 minutes, plasticity paused while probing) with the device engine in its GPU configuration — float32, noise drawn by the engine, plasticity per 10 ms window: `points` (time, share of correct choices, meals so far, the probe counts) |
 | `scaling.json` | a whole creature's speed by cortex size (1000, 4000, 10000) on the CPU engine and emulated: times real time, ms per simulated second, build time, peak memory |
+
+
+## `teaching/` — what makes it learn to repeat a word (README section 9)
+
+`anima experiment teaching`: a teacher says short words ("ba ba", "ki ki",
+...) to a creature living in its arena (kept a little hungry, as in "Copy
+me") and rewards its replies in different ways; every five minutes a clone
+sits the imitation exam (plasticity off; 44 words, every consonant but "h"
+four times).  Then three closer looks (`--parts practice,ceiling`, and the
+late shaping in `studies`).
+
+| file | contents |
+|---|---|
+| `variants.json` | the main comparison (10 minutes of teaching after a minute alone, three seeds; the teacher says each word until it is repeated twice or 8 times): `runs` — per variant and seed, the exams (`consonant`, `syllable`, `word` and their chance levels, `n` answered of `trials`), replies during teaching per 5-minute block, the pleasure and pain it was given, how many acts it recalled; `summary` — means over seeds |
+| `variants_more.json` | two more variants, run afterwards with the same settings and seeds: `person-reply` (the simulated person's pleasure and pain for its answer, as `+` / `-` in the chat) and `no-recall` (the reflex's graded pleasure without the recall) |
+| `variants.png` | the exams over time (the figure in the README, `docs/figures/teaching.png`, is drawn from both files) |
+| `studies.json` | `practice`: one word ("ba ba") said 40 times, pleasure for copies or not, with the v0.6 mirror rule or anima 0.5's — the "b" row of the hearing→speaking map before and after, copies per ten tries; `ceiling`: the exam with its own map, and with the map made half and fully diagonal by hand; `shaping`: its babbling shaped by pleasure that comes 2.5–4.5 s after each utterance with an "m" syllable (as a person in the chat would), recall on or off — share of "m" per two minutes |
+| `old_mirror_rotate.{json,png,log}` | the first comparison, before the mirror rule was changed (the v0.5 brain with v0.6's pain, pleasure and recall; 15 minutes, a new consonant every word, two seeds; the last exam fell in the creature's night) |
+| `pilot_focus_15min.log` | a pilot with the v0.6 brain and 15 minutes, stopped when it was clear that the last exam fell in the creature's night (it falls asleep ~13 minutes after birth); kept because its 10-minute exams agree with `variants.json` |

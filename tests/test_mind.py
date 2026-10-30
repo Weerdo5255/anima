@@ -71,11 +71,14 @@ def test_habituation_lets_a_new_kind_of_thought_through():
 
 
 def test_rewards_are_evaluated_and_attributed():
-    a = _agent()
+    a = _agent(world="void")  # (no food: fewer things compete for the workspace)
     ts = ThoughtStream(a, None)
     a.run(1.0)
-    a.call_soon(lambda ag: ag.brain.deliver_reward(0.9, "program:snack"))
-    a.run(3.0)  # it gets in when the workspace next opens
+    for _ in range(3):  # (a memory of the moment competes with it, and may win once or twice)
+        a.call_soon(lambda ag: ag.brain.deliver_reward(0.9, "program:snack"))
+        a.run(3.0)  # it gets in when the workspace next opens
+        if ts.recent(0, kinds=("evaluation",)):
+            break
     evals = ts.recent(0, kinds=("evaluation",))
     assert evals, ts.recent(0)
     assert evals[0]["text"].startswith("snack: better than I expected")

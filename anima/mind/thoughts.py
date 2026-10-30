@@ -25,7 +25,9 @@ does: do its inclinations come true, does it mouth what it heard).
 Kinds, what each reads, and an example:
 
 * ``feeling`` — a drive (hunger, fatigue, boredom, loneliness) entering a
-  new band: *I'm getting hungry (0.52)*
+  new band: *I'm getting hungry (0.52)*; pleasure or pain, and what it
+  recalls with it: *that feels good — I think of saying "ba ba"*,
+  *ouch — that hurts — I think of turning left*
 * ``perception`` — the smell's direction and strength, walls ahead, where
   the others are (with a kin sense), a feast too big to eat alone:
   *a clear smell of food, to my left*, *someone nearby, ahead*
@@ -81,7 +83,8 @@ _FEEL = {
 }
 _EASING = {"hunger": "less hungry now", "fatigue": "less tired now", "boredom": "less bored now",
            "loneliness": "less lonely now"}
-_CAUSE = {"food": "the food", "pain": "that bump", "smell": "getting closer to food", "social": "the company"}
+_CAUSE = {"food": "the food", "pain": "that bump", "smell": "getting closer to food", "social": "the company",
+          "feel:pleasure": "that pleasure", "feel:pain": "that pain"}
 _MOVES = {"forward": "go ahead", "left": "turn left", "right": "turn right"}
 _MOVING = {"forward": "going ahead", "left": "turning left", "right": "turning right"}
 _TOWARD = {"left": "to my left", "right": "to my right", "forward": "ahead"}
@@ -95,6 +98,21 @@ _HABITUATION = {"feeling": 20.0, "smell": 12.0, "wall": 15.0, "intention": 5.0, 
                 "speech": 8.0, "bump": 8.0, "reach": 12.0, "eval+": 5.0, "eval-": 5.0,
                 "surprise": 8.0, "memory": 6.0, "dream": 6.0, "talk": 10.0, "kin": 15.0, "missed": 8.0,
                 "feast": 15.0}
+
+
+def feeling_text(kind: str, intensity: float, recalled: list[str], what: str = "speech") -> str:
+    """How pleasure or pain reads in its thought log."""
+    if kind == "pleasure":
+        text = ("that's nice" if intensity < 0.35 else "that feels good" if intensity < 0.75
+                else "that feels wonderful")
+    else:
+        text = "ow" if intensity < 0.35 else "ouch — that hurts" if intensity < 0.75 else "OUCH — that really hurts"
+    if recalled:
+        if what == "movement":
+            text += " — I think of " + " and ".join(_MOVING.get(r, r) for r in recalled)
+        else:
+            text += f" — I think of saying \"{' '.join(recalled)}\""
+    return text
 
 
 def thoughts_path(brain_path: str | Path) -> Path:
@@ -193,7 +211,7 @@ class ThoughtStream:
         self._kin = "sense.kin" if "sense.kin" in agent.brain.inputs else None
         self._near: str | None = None
         self._events = ("stage", "replay", "memory", "ate", "bump", "heard", "utterance", "tool_call",
-                        "tool_result", "hand", "missed", "feast_alone")
+                        "tool_result", "hand", "missed", "feast_alone", "pleasure", "pain")
         for kind in self._events:
             agent.on(kind, self._on_event)
         agent.add_tick_hook(self._on_tick)
@@ -338,6 +356,11 @@ class ThoughtStream:
             self.offer("feast", "perception", "a feast — but it is too big to eat alone", {}, salience=0.65)
         elif k == "bump":
             self.offer("bump", "action", "ouch — I bumped into a wall", {}, salience=0.6)
+        elif k in ("pleasure", "pain"):
+            self.think("feeling", feeling_text(k, float(e.get("intensity", 0.0)), e.get("recalled") or [],
+                                               self._recalled_kind(e)),
+                       {"feeling": k, "intensity": e.get("intensity"), "source": e.get("source"),
+                        "recalled": e.get("recalled") or [], "seconds_ago": e.get("seconds_ago")})
         elif k == "heard":
             from ..body.voice import parse_social_signals
             text = str(e.get("text", ""))
@@ -380,6 +403,14 @@ class ThoughtStream:
             else:
                 self.think("program", f"{e.get('tool')} answers: {e.get('summary', '')}",
                            {"tool": e.get("tool"), "call_id": e.get("call_id"), **answer})
+
+    def _recalled_kind(self, e: dict[str, Any]) -> str:
+        """Were the recalled acts words or movements?"""
+        rec = e.get("recalled") or []
+        if self._motor and self.agent.body.motor is not None and rec and all(
+                r in self.agent.body.motor.labels for r in rec):
+            return "movement"
+        return "speech"
 
     def _listen(self, words: str, now: float) -> None:
         self._last_heard = words

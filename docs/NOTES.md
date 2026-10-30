@@ -3,8 +3,9 @@
 *Built 28 Oct 2026 (Python ≥3.10, NumPy only). v0.2 adds a local-LLM
 (Ollama) tutor, v0.3 programs it can use, a thought log and a bridge to
 other programs, v0.4 a colony — creatures that compete, cooperate and are
-selected by a genetic algorithm — and v0.5 a GPU engine; see the last four
-sections.*
+selected by a genetic algorithm — v0.5 a GPU engine, and v0.6 pain and
+pleasure, a reward for repeating the teacher's words and a better LLM
+teacher; see the last five sections.*
 
 ## Goal
 A local framework that builds **not an LLM but a brain-like neural network**,
@@ -571,3 +572,231 @@ with NumPy standing in for the GPU library.
   noise stream an uninterrupted run would have drawn; spike-for-spike
   equality with the CPU engine holds only with `noise="host"`, float64 and
   plasticity off.
+
+## v0.6 — pain and pleasure; learning to repeat words
+
+*Added 30 Oct 2026. Raw numbers: [`results/teaching/`](../results/README.md).*
+
+**Request:** the GPU code works, so keep it.  The LLM teacher needs
+improvement: the creatures are not learning.  Add pain and pleasure to the
+creature; when it repeats a word or lesson from the LLM trainer, reward it;
+in the chat, add a way to inflict pleasure or pain, to train it in real time
+how it should react.
+
+### Why it was not learning
+Measured before anything was changed (the v0.5 brain):
+1. **The rewarded synapses knew nothing about what it had heard.**  At the
+   moment it started a reply, the consonant it had just heard got an extra
+   push of +0.024 (in synaptic-drive units) from the unsupervised
+   hearing→speaking mirror, but only +0.0004 from interoception and +0.0002
+   from cortex — the two dopamine-gated inputs of the voice.  Rewarding a
+   copy could teach "say *b* more often", not "say what you hear".
+2. **Listening blurred the mirror.**  Its Hebbian synapses learned all the
+   time, so a heard sound became linked to whatever it said next: a teacher
+   repeating "ba ba" 40 times *flattened* the "b" row of the map
+   (diagonal/off-diagonal 1.8 → 1.3).
+3. **The map is what limits copying.**  Made diagonal by hand (same synaptic
+   budget per articulator neuron), the creature repeated the first consonant
+   of a word 80% of the time and its first syllable 32% (from 16% and 2%);
+   half-diagonal: 50% and 18% (one v0.5 creature).  With the final code and
+   two seeds (`--parts ceiling`): 84–91% and 41–64% (from 14–23% and 0–4%),
+   half-diagonal 50% and 14–18%.
+4. **Rewards from a person or an LLM come seconds late**, after the
+   eligibility traces (0.3 s for movement, 2 s for the voice) have faded.
+5. **A smile is a confounded reward**: it relieves loneliness, so a frown
+   from a teacher of a lonely creature can be a net reward.
+
+### Design
+* **Pain and pleasure** (`brain/hedonic.py`, `Brain.feel`): a reward of
+  ±(0.4 at once + 3/s for 0.2–0.7 s) × intensity through the critic (a
+  dopamine integral of ~1×, 2× and 4× a smile at 0.3, 0.6, 1.0); a felt
+  level (τ 1.5 s) in the snapshot, the dashboard and the thought log; pain
+  freezes new acts for up to 0.4 s, raises noradrenaline and wakes a
+  sleeper.  Bumps and food keep their old rewards.
+* **Recall** (awake replay, reverse order): the brain keeps every committed
+  act with the input snapshot taken when it was decided (`Brain.acts`); a
+  feeling is *for* something — `auto` (its last words if it spoke in the
+  last 8 s, else its last movement), `speech`, `movement`, `now`, or act
+  ids — and those acts are replayed 80 ms each while the dopamine lasts:
+  gated inputs set to the snapshot (the echo of the sound it had heard is
+  back), the chosen articulator or muscle channel driven, the voice's "go"
+  gate never; the body starts nothing new meanwhile.  The earliest recalled
+  act becomes a hippocampal memory (replayed in sleep).
+* **The mirror learns while it speaks** (and while it relives speaking in a
+  recall or a dream), at a rate × (1 + 10 × phasic dopamine), from 0 up
+  (`Brain._mirror_gate`, the modulator `mirror` that the Hebbian rule
+  already reads as its gate — so the GPU engine needed no change).  A
+  rewarded recall binds heard sound → produced sound ~5–8× faster than
+  babbling; a painful one binds nothing.  **Echo masking**: when it starts a
+  syllable, the echo of earlier sounds drops to 30% (the suffix effect), so
+  what it hears while speaking is its own voice.
+* **Reward for repeating the teacher** (`reward_imitation`): each word the
+  teacher says opens a `WordTrial`; its reply (the syllables after the
+  teacher stops, until it pauses 0.45 s or has said as many syllables as the
+  word) is scored — first consonant 0.3, first syllable 0.5, the whole word
+  1.0 pleasure — with credit for exactly the reply's syllables.  The reflexes
+  reward with pleasure by default (`reinforcer="smile"` restores v0.5).
+* **The LLM teacher:** new tools `pleasure` / `pain` (`amount`, `for`:
+  reply — its answer to the teacher's last word, credited by the ids of
+  exactly those syllables — speech | movement; pleasure 0.1–1, pain 0.1–0.6,
+  at most one per turn, ≥2 s / ≥8 s apart, refused when there is no reply in
+  the last 30 s or, "for speech", no words in the last 8 s); `say` is cut to one short word (≤2 words, ≤4 syllables, smileys
+  removed).  The report is pre-digested: `last_reply` and `recent_replies`
+  (you said / it replied / how much matched / what the reflexes gave),
+  `practice` (the word being taught, said / repeated how often),
+  `suggestion` (what a sound policy would do next), `its_last_words` (and
+  how long ago), `feelings`, and the copy rates with chance levels.  The
+  prompt was rewritten around how to teach (contingency, one word at a
+  time, the same word until it is repeated, pleasure and pain *for* its last
+  words, no random rewards, waiting is often best) with new examples.
+  `anima tutor-check` also asks for a decision in a word-teaching situation.
+* **Curriculum:** "Copy me" uses `reward_imitation`, the teacher keeps
+  saying a word until it is repeated twice (or 8 tries), and the lesson is
+  graduated by an **imitation exam** on a clone: 33 words, every consonant
+  but "h" three times; it must repeat the first sound ≥30% and ≥2.5× chance,
+  in two exams in a row.
+* **Real-time controls:** `/pleasure` `/pain` (amount, for), `+ ++ +++` and
+  `- -- ---` in the chat, single `+` / `-` keys and feeling bars in the
+  dashboard — by default for its answer to what you last said (a
+  `ReplyTracker` follows it, so the credit lands on that answer even if it
+  has babbled on since; after 15 s, its last words or movement), `POST /pleasure` / `POST /pain` on the bridge (and the
+  client's `pleasure()` / `pain()`), `Agent.pleasure()` / `Agent.pain()` /
+  `Agent.feel()`; `pleasure` / `pain` events; thoughts like *that feels good
+  — I think of saying "ba ba"*.
+
+### Lessons learned (each was a real failure first)
+1. **A dopamine-gated auditory area did not make copying teachable.**  The
+   first fix was a new population (`phon`: one channel per phoneme,
+   relaying the ears) with reward-modulated synapses onto the voice.  In five
+   settings of learning rate, eligibility and recall length, 40 tries of "ba
+   ba" with pleasure for copies left its "b" row at 1.5–2.4 (diagonal/off-
+   diagonal) whatever it started from (1.3–5.0), and copies did not rise:
+   food, company and novelty credited whatever it said right after hearing a
+   sound about as much as the teacher's pleasure did.  Removed; the mirror
+   itself became teachable instead.
+2. **The mirror must not learn while it only listens** (diagnosis 2 above);
+   gating it to its own speech turned the flattening into sharpening.  The
+   final check (`--parts practice`, "ba ba" 40 times, two seeds): the "b"
+   row went 1.8 → 3.1 and 1.5 → 2.1 without reward, 1.8 → 5.8 and 1.5 → 3.3
+   with pleasure for copies, and 1.8 → 1.3 and 1.4 → 1.2 with the old rule
+   (with or without pleasure).
+3. **Masking the echo alone did little** (no teacher: diagonal index 4.8 vs
+   4.4 after 10 minutes of babbling); together with the speaking gate it
+   keeps the echo of the teacher's word out of what the reply's syllable
+   learns.
+4. **A painful recall would have taught the very association it punished**:
+   replaying "heard *b*, said *d*" drives both, and a Hebbian synapse cannot
+   tell pleasure from pain.  The mirror is paused (gate 0) while it replays
+   a moment that hurt, in waking recall and in sleep.
+5. **A sustained teaching signal reached its dopamine too slowly**: with only
+   a per-second reward the burst built up over half a second (0.07 → 0.6),
+   while a movement's eligibility lasts 0.3 s.  The signal now starts with an
+   onset (0.4 × intensity), so the burst is there at once (0.9 at intensity
+   1).
+6. **The creature's night spoils an experiment**: in a 15-minute pilot every
+   variant dropped at the last exam, taken from a clone woken at 2 am (it
+   falls asleep ~13 minutes after birth with the default 20-minute day).
+   Teaching experiments now stay in its morning (10 minutes).
+7. **Counting replies through a capped log stops counting**: the first
+   "focus" teacher counted its successes from the toolkit's last-20 trials,
+   which stopped growing once full; successes are now counted as they come.
+8. **Tests that read the thought workspace are fragile**: a reward's
+   evaluation now competed with the memory of the rewarded moment; that test
+   lives in an empty world and gives the reward up to three times.
+
+### Results
+*(final code.  `anima experiment teaching --seeds 1,2,3 --workers 2` (about
+2 hours), `--parts practice,ceiling`, `anima experiment tutoring --workers
+2`, `anima experiment imitation`.)*
+
+**What makes it learn to repeat a word.**  Ten minutes of teaching in the
+creature's morning, after a minute alone: the teacher says short words
+("ba ba", "ki ki", every consonant but *h*) and repeats each one until its
+first sound has been repeated twice (or 8 times in vain).  A clone sits a
+44-word imitation exam every 5 minutes.  Three seeds; "first sound" chance
+≈ 0.09, syllable ≈ 0.02:
+
+| what follows its replies | map rule | first sound: before → 5 → 10 min | syllable at 10 | pleasure / pain |
+|---|---|---|---|---|
+| nothing (the teacher only talks) | 0.6 | 0.09 → 0.17 → **0.42** | 0.18 | — |
+| a smile for the right first sound (0.5's reflex) | 0.6 | 0.09 → 0.27 → **0.36** | 0.16 | smiles |
+| graded pleasure, with recall (0.6's reflex) | 0.6 | 0.09 → 0.19 → **0.44** | 0.16 | 23 / 0 |
+| graded pleasure, no recall | 0.6 | 0.09 → 0.12 → **0.37** | 0.15 | 22 / 0 |
+| a person 2.5–4.5 s late, for its last words | 0.6 | 0.09 → 0.23 → **0.43** | 0.19 | 20 / 80 |
+| the same, for its answer (chat `+` / `-`) | 0.6 | 0.09 → 0.26 → **0.38** | 0.13 | 22 / 78 |
+| the same, no recall | 0.6 | 0.09 → 0.21 → **0.34** | 0.15 | 22 / 78 |
+| graded pleasure, with recall | 0.5 | 0.09 → 0.12 → **0.12** | 0.03 | 14 / 0 |
+| nothing | 0.5 | 0.09 → 0.12 → **0.15** | 0.02 | — |
+
+* **The mirror rule is the effect.**  With the 0.6 rule every condition
+  reached 0.34–0.44 (syllable 0.13–0.19); with the 0.5 rule 0.12–0.15
+  (0.02–0.03).  That is the answer to "the creatures are not learning".
+* **What follows the replies matters much less over ten minutes.**  The
+  teacher who only talks (0.42) did as well as graded pleasure (0.44): every
+  word makes it answer (turn-taking), and every answer is practice for a map
+  that learns from its own speech.  The reward conditions differ by less
+  than the seed-to-seed spread (±0.07).  Recall gave a small edge both times
+  it was tested (0.44 vs 0.37; 0.43 vs 0.34), no more.
+* **Late is fine with recall**: the person's feedback, 2.5–4.5 s after the
+  reply ended, taught as well as the reflex's immediate pleasure.
+* **Practising one word** is where pleasure clearly helps ("ba ba" 40 times,
+  two seeds): "b" row 1.8 → 5.8 and 1.5 → 3.3 with pleasure for copies, 1.8
+  → 3.1 and 1.5 → 2.1 without; copies of *b* in the last ten tries 5 and 4,
+  against 1 and 2.  The 0.5 rule flattened the row (1.8 → 1.3, 1.4 → 1.2).
+* **Ceiling**: a hand-made perfect map gives 84–91% first sound and 41–64%
+  syllable (whole word 4–7%); its own map after babbling, 14–23% and 0–4%.
+* **Late shaping of babbling did not work**: pleasure 2.5–4.5 s after each
+  utterance containing *m* (20–36 times in ten minutes) left the *m* share
+  at 0.03–0.11, with recall or without.
+
+**Tutoring (scripted teacher, two seeds; anima 0.5 in brackets).**  Both
+tutored creatures passed all four lessons at the first attempt: foraging
+after 8 minutes, "Copy me" after 29 (14 awake minutes; 36% and 48% in the
+last exam), the target sound after 42–43 (6–7 awake minutes of pleasure,
+[~20 of smiles]), independence after 53–54.  Final exams, tutored vs alone:
+foraging 0.86 / 0.77 vs 0.89 / 0.90; *m* share 0.26 / 0.56 vs 0.02 / 0.18
+[0.49–0.72 vs 0.05–0.12]; copies the consonant it hears 9 and 9 of 30 vs
+11 and 19 [6 and 2 vs 3 and 4]; repeats a word's first sound 0.40 / 0.55
+vs 0.32 / 0.52, its syllable 0.14 / 0.20 vs 0.20 / 0.23.  The lone
+creatures now copy too — babbling to itself trains the map — and the
+tutored ones copy a little less than their twins, because after "make the
+sound" many of their answers start with *m*.
+
+**Imitation from listening to itself** (5 minutes alone, then a partner):
+consonant map diagonal/off-diagonal 0.98 → 3.94 and 1.00 → 4.10, vowels →
+14.5 and 13.2 [3.5–3.7]; it starts its answer with the heard consonant 24
+times in 96 (~8 by chance, p ≈ 6e-07) [20], with the heard vowel 51 in 96
+(~20, p ≈ 1e-12) [chance]; mirror frozen: 13 (p = 0.06), vowels at chance.
+
+**The chat example** (`examples/07_pain_and_pleasure.py`, one seed, four
+minutes, feedback 2–4 s late — a demonstration, not a controlled test):
+first sound 18% → 27%, syllable 3% → 21%, with 4 pleasures and 45 pains.
+
+165 tests (23 more than v0.5: pain and pleasure, the recall, the mirror
+gate, the chat's credit, word trials and the imitation exam), about 5
+minutes.
+
+### Honest limits (v0.6)
+* **No real LLM was run** (no Ollama here).  The scripted teacher goes
+  through the same tools, validation and report, and the mock-server tests
+  check the plumbing, but how well a real model teaches with the new
+  prompt is untested.  Likewise **no GPU**: v0.6 changed no engine code
+  (the mirror gate is the existing `mirror` modulator), and the device
+  engine's tests pass in its NumPy emulation only (neither CuPy nor
+  PyTorch could be installed here).
+* Over ten minutes, **practice did most of the work**; the reward
+  conditions cannot be told apart with three seeds.  There was no
+  pain-only condition, so what pain contributes on its own is unmeasured.
+* It repeats **first sounds, not words**: syllable copies 13–20%, whole
+  words a few percent even with a perfect map.  The echo of a heard word
+  fades and is masked once it starts to speak, so nothing holds the rest
+  of the word; it has no phonological loop and no meanings.
+* Late pleasure **shaped replies but not babbling**: a late "good" for an
+  utterance credits every sound in it (section 9 of the README).
+* Recall only happens awake; pleasure or pain during sleep gives the
+  signal (and wakes it) but replays nothing.
+* Sections 1–3 and 6–8 of the README were not rerun with 0.6; its voice
+  changed, so their babbling numbers may shift a little.
+* The chat's `+` / `-` credit "its answer to what you last said": the
+  syllables it said after you finished, as many as your word had, within
+  15 s — not necessarily the whole utterance you see (`bibipa` → "bi pa").

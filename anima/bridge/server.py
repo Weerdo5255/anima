@@ -12,13 +12,16 @@ real time and opens a small JSON web service next to it::
     GET  /pending           calls to remote programs still waiting for an answer
     POST /hear        {"text": "ba ba :)"}                   speak to it
     POST /reward      {"amount": 0.5, "source": "my-game"}   treat (+) or buzzer (-), |amount| <= 1
+    POST /pleasure    {"amount": 0.6, "for": "auto"}         pleasure (0-1) for what it just did
+    POST /pain        {"amount": 0.5, "for": "speech"}       pain (0-1) for what it just did
+                      ("for": auto | speech | movement | now; see Agent.pleasure)
     POST /feed        {"where": "ahead"}                     put food near it
     POST /tool_result {"call_id": 12, "answer": {"say": "ding", "reward": 0.3}}
                                                              answer a remote program's call
 
 Events are everything the creature does — ``utterance``, ``syllable``,
 ``action``, ``hand``, ``ate``, ``bump``, ``stage``, ``replay``, ``memory``,
-``heard``, ``tool_call``, ``tool_result``, ``thought`` — each with a sequence
+``heard``, ``pleasure``, ``pain``, ``tool_call``, ``tool_result``, ``thought`` — each with a sequence
 number ``seq``; ask for ``since`` the last one you saw.
 
 Like everything else it never makes the creature wait: requests are served
@@ -169,8 +172,8 @@ class Bridge:
                         "thoughts": self.thoughts is not None,
                         "tools": [t.describe() for t in self.belt.tools] if self.belt else [],
                         "endpoints": ["GET /state", "GET /thoughts", "GET /events", "GET /stream", "GET /tools",
-                                      "GET /pending", "POST /hear", "POST /reward", "POST /feed",
-                                      "POST /tool_result"]}
+                                      "GET /pending", "POST /hear", "POST /reward", "POST /pleasure",
+                                      "POST /pain", "POST /feed", "POST /tool_result"]}
             if path == "/state":
                 snap = dict(a.latest)
                 snap.pop("rates_history", None)
@@ -213,6 +216,21 @@ class Bridge:
                 source = "bridge:" + str(body.get("source", "client"))[:40]
                 a.call_soon(lambda ag: ag.brain.deliver_reward(amount, source))
                 return {"ok": True, "amount": amount}
+            if path in ("/pleasure", "/pain"):
+                from ..brain.hedonic import CREDITS
+                kind = path[1:]
+                try:
+                    amount = float(body.get("amount", 0.6 if kind == "pleasure" else 0.5))
+                except (TypeError, ValueError):
+                    raise BridgeError(400, "amount must be a number between 0 and 1") from None
+                if not math.isfinite(amount) or not 0.0 <= amount <= 1.0:
+                    raise BridgeError(400, "amount must be a number between 0 and 1")
+                credit = str(body.get("for", "auto")).lower()
+                credit = {"move": "movement", "words": "speech"}.get(credit, credit)
+                if credit not in CREDITS:
+                    raise BridgeError(400, f"for must be one of {', '.join(CREDITS)}")
+                a.feel(kind, amount, credit, "bridge:" + str(body.get("source", "client"))[:40])
+                return {"ok": True, "kind": kind, "amount": amount, "for": credit}
             if path == "/feed":
                 from ..world.foraging import OFFER_PLACES
                 where = str(body.get("where", "ahead")).lower()

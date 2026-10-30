@@ -153,6 +153,46 @@ sensory/interoceptive state at the time of the last decision and the action
 taken.  Prioritised by salience, decays over hours, discounted after each
 replay.  (Abstract store; replay itself is spiking activity.)
 
+### Pain and pleasure (`brain/hedonic.py`, `Brain.feel`)
+Two innate feelings, given from outside — by a person in the chat, a teacher's
+reflexes or tools, another program over the bridge — and the most direct way
+to teach (bumping into walls and food keep their own, older rewards).
+
+* **A teaching signal.**  A reward of `0.4 × intensity` at once, then
+  `3 × intensity` per second for `0.2 + 0.5 × intensity` s (negative for pain),
+  through the critic like any reward, so the phasic dopamine is a prediction
+  error.  With the default dopamine system (impulse gain 2, τ 0.2 s, clipped
+  at ±1) the dopamine integral is about that of a smile at intensity 0.3,
+  twice at 0.6 and four times at 1.0; above ~0.8 the burst is saturated and
+  intensity mostly sets its duration.
+* **Recall** (awake replay; Foster & Wilson 2006, Ambrose et al. 2016).  The
+  brain keeps the acts it committed to in the last ~minute (`Brain.acts`:
+  each syllable or movement with the input snapshot taken when it was
+  decided).  A feeling names what it is for — `auto` (its last words if it
+  spoke in the last 8 s, else its last movement), `speech`, `movement`, `now`
+  (nothing recalled) or explicit act ids (the `act` of `syllable` events) —
+  and those acts are replayed, most recent first, 80 ms each: the gated
+  input ports are set to the snapshot (so the echo of the sound it had just
+  heard is back), the decided consonant/vowel or motor channel is driven
+  (+8, the others −2), as in sleep replay; the voice's "go" gate is never
+  driven, and the body starts nothing new until the recall is over (an
+  act in progress may finish first, ≤ 0.4 s).  The teaching signal is made
+  to last at least as long as the recall.  The earliest recalled act is
+  stored in the hippocampus with reward ±intensity, so sleep replays it too.
+* **Pain** also freezes new acts for `0.4 × min(1, 0.4 + intensity)` s
+  (a flinch), raises phasic noradrenaline to `0.6 × intensity`, and wakes a
+  sleeper three times more easily than pleasure.
+* **Felt levels** jump to the intensity and decay with τ 1.5 s
+  (`snapshot()["feelings"]`); `pleasure` / `pain` events carry the
+  intensity, the source, what was recalled and how long ago it happened.
+
+Why recall rather than longer eligibility traces: longer traces would credit
+everything the creature did in the meantime too; a person's `+` three
+seconds after a reply is about the reply, and the recall puts the credit
+there — and, for the voice, re-creates the pairing that matters for
+imitation (heard sound → produced sound), which the trace of the moment
+itself carries only weakly.
+
 ### Cerebellum
 Linear forward model predicting exteroception ~100 ms ahead from the current
 input, bodily state and efference copies of the commands just issued.  Its
@@ -179,6 +219,9 @@ efference copy, hearing itself is less surprising than hearing you
   (c→k, v→b, r→l, …) and played at ~60–100 ms per phoneme.  Each phoneme
   leaves a ~1 s echoic trace (auditory sensory memory; Darwin, Turvey &
   Crowder 1972), so what it just heard can still shape what it says next.
+  A new sound overwrites it: when it starts a syllable, the echo of what it
+  heard before drops to 30% (the "suffix effect"; Crowder & Morton 1969), so
+  while it speaks it hears mostly its own voice (v0.6).
   Emoticons and gestures (`:)`, `*smile*`, `:(`) are non-verbal social
   signals: they relieve loneliness and add approval or disapproval without
   any sound.
@@ -189,7 +232,20 @@ efference copy, hearing itself is less surprising than hearing you
 * **Mirror map**: nothing tells it which sound each articulation makes.
   Hearing its own voice 20 ms after each syllable lets Hebbian synapses from
   hearing to articulation learn that mapping while it babbles alone, which
-  is what later lets it echo you (Heyes 2010).
+  is what later lets it echo you (Heyes 2010).  Since v0.6 these synapses
+  learn *only while it speaks* (or relives speaking, in a recall or a dream),
+  at a rate set by dopamine — `× (1 + 10 × phasic dopamine)`, from 0 up
+  (`Brain._mirror_gate`; dopamine gates cortical LTP, and pairing a sound
+  with dopamine expands its map: Bao, Chan & Merzenich 2001).  Learning
+  while merely listening made every sound it heard a little more linked to
+  whatever it said next: a teacher repeating "ba ba" 40 times *flattened*
+  the "b" row of the map (diagonal/off-diagonal 1.8 → 1.3 and 1.4 → 1.2 in
+  two creatures).  With the v0.6 rule it sharpened instead (1.8 → 3.1 and
+  1.5 → 2.1), and more when its copies were rewarded with pleasure (1.8 →
+  5.8 and 1.5 → 3.3).  How well it copies is set by this map: made perfectly
+  diagonal by hand (same synaptic budget), the creature repeats the first
+  consonant of a word 84–91% of the time and the whole first syllable
+  41–64% (from 14–23% and 0–4% with the map it had learned).
 
 ## 5. Teaching: a local LLM as the teacher (`anima/tutor`)
 
@@ -202,16 +258,17 @@ of a parent or animal trainer — without becoming part of the brain.
      ▲  events: action, syllable, utterance, ate          ▲ tick hooks (every 10 ms)
      │                                                    │
      │      SkillMeter (passive measurement)   TeachingToolkit
-     │        target share, echo rate,           reflex rules, e.g.
-     │        meals, energy upkeep               reward_syllable: smile 0.5 s
-     │      Exams on a clone (plasticity off)     after each "m…" syllable
-     │        forage probe, hungry/sated calls   feed_on_call: food ahead when it
-     │                │                           says "m…" while hungry
+     │        target share, echo rate, copies     reflex rules, e.g.
+     │        of words, meals, energy upkeep      reward_imitation: pleasure the
+     │      Exams on a clone (plasticity off)     moment its reply repeats the word
+     │        forage probe, imitation (33 words), reward_syllable: pleasure 0.5 s
+     │        hungry/sated calls                  after each "m…" syllable
+     │                │                           feed_on_call: food when it calls
      │                ▼
  tutor thread ── every ~8 s: observe ─► teacher.decide ─► validate ─► execute ──►
-                                       (Ollama /api/chat,   (lesson     say, praise,
-                                        JSON schema;        rules,       give food,
-                                        seconds)            welfare)     set rules
+                                       (Ollama /api/chat,   (lesson     say, pleasure,
+                                        JSON schema;        rules,       pain, praise,
+                                        seconds)            welfare)     food, rules
 ```
 
 **Why two speeds.**  Reward-modulated STDP links a reward to whatever the
@@ -226,14 +283,28 @@ same split an animal trainer makes with a clicker (Skinner 1951; Pryor
 1984): the click is instant, the plan is not.
 
 **What the LLM sees and can do.**  Each turn it gets a compact JSON report:
-time of day, drives and energy, the syllables it said and the moves it made
-since the last report, what it heard, the measured skills, the lesson (goal,
+time of day, drives, energy and felt pleasure/pain, the syllables it said
+and the moves it made since the last report, what it heard, **its last
+reply** to the teacher's word (`you_said`, `it_replied`, `match`: nothing /
+the vowel / the first sound / the first syllable / the whole word, and what
+the reflexes already gave for it) and the few before, the word being
+practised (`said_times`, `repeated_times`) and a `suggestion` (in "Copy me":
+say it again, or move on to another consonant), what it said last and how
+many seconds ago, the measured skills with chance levels, the lesson (goal,
 progress, tips, which rules and whether food are allowed), the active rules
 and its own last actions and notes.  It answers `{"thought": …, "actions":
-[…]}` with at most three of: `wait`, `say` (short syllables — the creature
-hears phonemes, not words), `praise`, `scold`, `give_food` (ahead / left /
-right / near), `set_rule` / `clear_rule`, `switch_lesson` (review a passed
-lesson for three minutes) and `note`.  Requests use Ollama's structured
+[…]}` with at most three of: `wait`, `say` (one short word — the creature
+hears phonemes, not words), `pleasure` / `pain` (`amount`, `for`: `reply` —
+its answer to the teacher's last word, by the ids of exactly those
+syllables, even if it has said other things since — `speech`, whatever it
+said last, or `movement`; the creature recalls that act while it feels it,
+so a decision that takes seconds still lands on the right act),
+`praise`, `scold`, `give_food` (ahead / left / right / near), `set_rule` /
+`clear_rule`, `switch_lesson` (review a passed lesson for three minutes) and
+`note`.  The system prompt is about *how to teach*: reward exactly what you
+want; one word at a time, the same word until it is repeated; pleasure and
+pain are for its last words; never reward at random (talking to it is
+already rewarding); waiting is often best — with worked examples.  Requests use Ollama's structured
 outputs (a JSON schema in `format`); replies are still parsed defensively
 (prose, code fences and `<think>` blocks are skipped), and older servers that
 reject schemas get plain JSON mode.
@@ -242,7 +313,10 @@ reject schemas get plain JSON mode.
 rules are dropped, rules outside the current lesson are refused, food is
 refused when the lesson forbids it (in "ask" a free meal would make the call
 meaningless) unless the creature is starving, lessons cannot be skipped,
-speech is reduced to letters and emoticons.  If the model is unreachable,
+speech is cut to one short word (≤ 2 words, ≤ 4 syllables, letters only),
+pleasure is capped at 1 and pain at 0.6, only one of them per turn, the
+tutor spaces them (≥ 2 s between pleasures, ≥ 8 s between pains), and
+neither is accepted "for speech" when it has said nothing for 8 s.  If the model is unreachable,
 slow or answers nonsense, the scripted teacher covers that turn; the creature
 never waits either way.  Graduation is decided by the measurements, never by
 the model's opinion.
@@ -262,7 +336,16 @@ wakes up in a normal world.
 
 **Curriculum** (`anima/tutor/curriculum.py`): forage → echo → babble →
 independence (no reflexes, no help), plus an optional, experimental *ask for
-food* lesson before independence (`--with-ask`).  Copying comes before the
+food* lesson before independence (`--with-ask`).  In *echo* ("Copy me") the
+reflex `reward_imitation` follows each word the teacher says (a `WordTrial`:
+its reply is the syllables it says once the teacher has stopped, until it
+pauses 0.45 s or has said as many as the word has) and gives pleasure for
+the reply's syllables — 0.3 if it repeats the first consonant, 0.5 the first
+syllable, 1.0 the whole word; the teacher says the same word until it has
+been repeated twice (or 8 times), then another consonant; and the lesson is
+graduated by an imitation exam on a clone (33 words; the first sound
+repeated ≥ 30% and ≥ 2.5× chance, twice in a row).  The reflexes reward with
+pleasure since v0.6 (`reinforcer="smile"` gives anima 0.5's smiles).  Copying comes before the
 target sound because once one sound dominates its babbling, the echoic trace
 of a sound it hears keeps being paired with the dominant sound it makes
 next, which blurs the hearing-to-speaking map (with the other order the echo
@@ -376,7 +459,8 @@ programs` checks two readouts against what happened (README, results 7).
 service on 127.0.0.1 (a token is required to listen anywhere else):
 state, thoughts, an event log with sequence numbers (long polling, or
 server-sent events), and POSTs to talk to it, reward it (clipped to ±1),
-feed it, and answer remote programs' calls.  `BridgeClient` is the other end
+give it pleasure or pain for what it just did (`/pleasure`, `/pain`), feed
+it, and answer remote programs' calls.  `BridgeClient` is the other end
 in the standard library.  Requests are served on their own threads and act
 on the creature at its next tick: the creature never waits for a client.
 

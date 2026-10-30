@@ -62,6 +62,8 @@ def _make_agent(args: argparse.Namespace):
     if path is not None and path.exists() and not args.new:
         agent = Agent.load(path, device=device)
         print(f"resumed {path} (age {agent.t_ms / 1000:.0f}s of simulated life)")
+        for what in agent.upgraded:
+            print(f"  brought up to date: {what}")
         _print_device(agent)
         _print_schooling(path)
         have = len(agent.body.hands.labels) if agent.body.hands is not None else 0
@@ -498,11 +500,20 @@ def cmd_experiment(args: argparse.Namespace) -> None:
         res = main(seconds=secs, seed=seeds[0], plot=args.plot)  # default: one full day
     elif args.name == "tutoring":
         from .experiments.tutoring import main
-        res = main(seeds=seeds, max_minutes=(secs or 7200.0) / 60.0, plot=args.plot)
+        res = main(seeds=seeds, max_minutes=(secs or 7200.0) / 60.0, plot=args.plot, workers=args.workers)
     elif args.name == "programs":
         from .experiments.programs import main
         parts = tuple(x for x in (args.parts or "hands,voice,mind").split(",") if x)
         res = main(seconds=secs, seeds=seeds, parts=parts, workers=args.workers, plot=args.plot)
+    elif args.name == "teaching":
+        from .experiments.teaching import VARIANTS, main
+        variants = tuple(x for x in (args.policies or ",".join(VARIANTS)).split(",") if x)
+        bad = [v for v in variants if v not in VARIANTS]
+        if bad:
+            sys.exit(f"unknown variant(s) {', '.join(bad)}; choose from {', '.join(VARIANTS)}")
+        parts = tuple(x for x in (args.parts or "variants,practice,ceiling").split(",") if x)
+        res = main(minutes=(secs or 600.0) / 60.0, seeds=seeds, variants=variants, workers=args.workers,
+                   plot=args.plot, parts=parts, strategy=args.strategy)
     elif args.name == "colony":
         from .experiments.colony import main
         if args.collect:
@@ -600,7 +611,8 @@ def cmd_train(args: argparse.Namespace) -> None:
     from .tutor import LESSONS, LESSONS_WITH_ASK, Curriculum
     curriculum = Curriculum(LESSONS_WITH_ASK if args.with_ask else LESSONS)
     tutor = Tutor(agent, teacher, target=args.target, think_every_s=args.think_every,
-                  printer=out, verbose=not args.quiet, curriculum=curriculum, mind=mind)
+                  printer=out, verbose=not args.quiet, curriculum=curriculum, mind=mind,
+                  reinforcer=args.reinforcer)
     tpath = tutor_path(path) if path is not None else None
     if tpath is not None and tpath.exists() and not args.new:
         tutor.load(tpath)
@@ -685,6 +697,25 @@ def cmd_tutor_check(args: argparse.Namespace) -> None:
     if not times:
         sys.exit("✗ the model did not produce a usable decision; training would fall back to the "
                  "scripted teacher. Try another model (--model).")
+    # a second situation: teaching it to repeat a word ("Copy me"), right after a half-right answer
+    from .tutor.curriculum import ALL_LESSONS, Curriculum
+    echo = Tutor(agent, OllamaTeacher(client, fallback=None), printer=None, verbose=False,
+                 curriculum=Curriculum((ALL_LESSONS["echo"],)))
+    echo.toolkit.trials.append({"n": 1, "t": agent.t_ms / 1000.0 - 2.0, "you_said": "bo bo", "it_replied": "bu",
+                                "match": "consonant", "rewarded": "pleasure 0.3 by reflex"})
+    eobs = echo.observe()
+    try:
+        raw, res = client.chat_json(echo.teacher.messages(eobs), schema=DECISION_SCHEMA)
+        d = validate(raw, eobs, client.model)
+        tools = [a["tool"] for a in d.actions]
+        sensible = "say" in tools or "pleasure" in tools or tools == ["wait"]
+        rej = f"  (rejected: {'; '.join(d.rejected)})" if d.rejected else ""
+        print(f"{'✓' if sensible else '~'} 'Copy me', after it answered 'bo bo' with 'bu' (first sound right), in "
+              f"{res.seconds:.1f}s: {d.thought!r} → {d.summary()}{rej}")
+        times.append(res.seconds)
+    except (OllamaError, ValueError) as exc:
+        print(f"✗ 'Copy me' decision: {exc}")
+    echo.detach()
     lat = min(times)
     print(f"\n{good}/{args.trials} clean decisions; fastest {lat:.1f}s. The creature never waits for the "
           f"teacher, so any speed works; with this latency use --think-every {max(8, round(2 * lat))} or more.")
@@ -827,6 +858,8 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--with-ask", action="store_true",
                    help="add the experimental 'ask for food' lesson (see README: honest limits)")
     p.add_argument("--quiet", action="store_true", help="only lessons, milestones and progress")
+    p.add_argument("--reinforcer", choices=["pleasure", "smile"], default="pleasure",
+                   help="what the teacher's reflexes reward with: pleasure (default) or a smile (as anima 0.5)")
     p.set_defaults(func=cmd_train)
 
     p = sub.add_parser("tutor-check", help="check Ollama and a model for `anima train`")
@@ -846,16 +879,21 @@ def main(argv: list[str] | None = None) -> None:
 
     p = sub.add_parser("experiment", help="reproduce the learning experiments")
     p.add_argument("name", choices=["foraging", "babble", "imitation", "spontaneous", "tutoring", "programs",
-                                     "colony"])
+                                     "colony", "teaching"])
     p.add_argument("--seconds", type=float, default=None,
                    help="simulated seconds (default: 600; imitation 300 per phase; spontaneous one day; "
                         "tutoring: at most 7200 for the curriculum; programs: 1200 hands, 600 voice, 480 mind; "
-                        "colony: the length of a day, 600)")
-    p.add_argument("--parts", help="programs only: any of hands,voice,mind (default all)")
-    p.add_argument("--workers", type=int, default=1, help="programs, colony: runs in parallel processes")
+                        "colony: the length of a day, 600; teaching: 600 of teaching)")
+    p.add_argument("--parts", help="programs: any of hands,voice,mind; teaching: any of variants,practice,ceiling "
+                   "(default all)")
+    p.add_argument("--strategy", choices=["focus", "rotate"], default="focus",
+                   help="teaching only: say each word until it is repeated (focus, default) or a new one each time")
+    p.add_argument("--workers", type=int, default=1, help="programs, colony, teaching, tutoring: runs in parallel processes")
     p.add_argument("--days", type=int, default=4, help="colony only: days per colony (default 4)")
     p.add_argument("--keep", help="colony only: copy each colony's colony.json (lineage, reports) here")
-    p.add_argument("--policies", help="colony only: any of evolving,random,static (default all three)")
+    p.add_argument("--policies", help="colony: any of evolving,random,static (default all three); teaching: "
+                   "any of none,smile,pleasure,no-recall,person,person-reply,person-no-recall,old-mirror,"
+                   "old-mirror-none (default all)")
     p.add_argument("--collect", metavar="DIR", help="colony only: report on colonies kept earlier in DIR (with "
                    "--keep) instead of running new ones - to run a long experiment in parts")
     p.add_argument("--seeds", default="1,2")

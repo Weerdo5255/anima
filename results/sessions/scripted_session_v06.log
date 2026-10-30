@@ -1,0 +1,205 @@
+  thoughts: anima_brain.thoughts.jsonl  (anima thoughts --brain anima_brain.npz --follow)
+teacher: scripted teacher (no LLM)
+lesson 1 of 4: Find food — turn toward the smell of food and walk to it, without help
+training for up to 9 creature-minutes as fast as the CPU allows; Ctrl-C stops (progress is saved)
+
+   [07:11 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › susubo ti ko
+   [07:21 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › we ka
+      anima › to se
+      anima › wuli
+   [07:31 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › lusa ga
+      anima › kese
+   [07:40 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › hi
+      anima › hu
+      anima › tipaga
+      anima › sa
+   [07:50 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › bepe ba
+      anima › ha go
+   [08:00 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › ho
+      anima › wagi
+   [08:10 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › hi bi to hu
+      anima › wa
+      anima › bu suni ba
+   [08:19 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › gisi
+      anima › we ne
+   [08:29 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › go se ge
+      anima › ne
+      anima › kuko
+   [08:39 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › sawa sa ka ne
+      anima › na ku
+   [08:48 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › mage
+      anima › ne we hati
+   [08:58 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › de su
+      anima › pa ku neni
+      anima › no
+   [09:08 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › wu we kala
+   [09:18 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › no husu hu ku pe hu na
+   [09:27 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › guni pi
+      anima › pa supe
+   [09:37 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › pu wu du lo
+      anima › ge pi be
+   [09:47 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › bawi wedo pu
+   [09:57 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › nama la si hu we
+   [10:06 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › gine ne somo
+      anima › kopo seme
+   [10:16 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › kuka wu sotu
+      anima › peku sa
+      anima › gu
+   [10:26 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › so se nida
+      anima › mado
+   [10:35 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › bu
+      anima › waniwu la
+      anima › gugi ga
+   [10:45 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › gi ka
+      anima › we pa gunu
+   [10:55 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › ho pi mamu wu
+      anima › nasu
+   [11:05 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › me datu
+      anima › sa tu gena
+   [11:14 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › noda ba
+      anima › mano
+      anima › pawa
+   [11:24 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+   [11:34 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › sa ga wo hi sise lu si su
+      anima › pupu
+      anima › hi wi
+   [11:44 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › se me du si
+      anima › bi kene
+   [11:53 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › su pe ge gugu so
+   [12:03 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › salo di po ki lo be pa
+   [12:13 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › koba
+      anima › de puto
+   [12:22 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › gi ga so wa so hi
+   [12:32 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › sa ka pa tesi
+   [12:42 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+   [12:51 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › wumu su ki li so li lo bemu ha wale
+      anima › no kipi
+   [13:01 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+   [13:11 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+   ·· [13:12] lesson 1 of 4 'forage': exam not taken yet (need 0.60; chance 0.33), food 3.4/min (need 1.0) | energy 0.46
+      anima › wose ko le ba tuka me ge pe so do ku si ta po po ke
+      anima › heta
+      anima › mi su si wo la le sa
+      anima › su we
+   ✎ [13:39] exam 'forage': score 0.63 (chance 0.33; correct moves left 16/20, ahead 7/20, right 15/20)
+   [13:39 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › mipa pa
+   [13:44 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › wowo
+   [13:54 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › li la ta niso du so gi ma
+   [14:04 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › sa wa wo sa
+      anima › talu
+      anima › mu
+   [14:13 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › kaso sisi
+   [14:23 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › so wa gi di po taga
+      anima › dama
+   [14:33 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › ko tona wa gu
+      anima › mu pu
+      anima › pe ma nu
+   [14:42 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › weso ne ka
+   [14:52 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › momo ki gose naka
+      anima › muga
+      anima › hame
+   [15:02 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › tose we
+      anima › pise
+      anima › wuho
+   [15:11 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › se ka te
+      anima › pehe ke
+   [15:21 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › pe pe li ga ga ga ta
+   [15:31 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › titi
+      anima › wu sama
+   [15:40 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › nino wawa
+      anima › ta to sa sasa
+   [15:50 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › ha ha
+      anima › maga saga na
+   [15:59 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › teda lo
+      anima › mu te pa wa mu su
+      anima › lala
+      anima › wa le ti we ga ba pa
+   ✎ [16:26] exam 'forage': score 0.78 (chance 0.33; correct moves left 15/20, ahead 16/20, right 16/20)
+   [16:26 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › pa ko lula
+   [16:31 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › wu pu la
+      anima › si mu
+   [16:41 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › gina ko
+      anima › ge la
+   [16:50 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › kodu ti di ti ga na ka gu
+   [17:00 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › de nu ne puhu
+   [17:10 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › ha wu ki nu su butu
+      anima › koko
+   [17:20 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › la ga
+      anima › ba ka na tuhu
+   [17:29 forage] scripted: Let it practise; the guide keeps food within reach. → wait
+      anima › geko lu su
+★ [17:39] graduated 'Find food': exam 0.78 (need 0.60; chance 0.33), food 3.0/min (need 1.0)
+   ── lesson 2: Copy me — repeat the word it just heard, starting with its first sound
+   [17:39 echo] scripted: A new word to copy (wo wo). The reflex rewards it when its reply repeats the word. → say 'wo wo'
+      anima › bano to mi bo
+      anima › ko
+   [17:49 echo] scripted: Say 'wo wo' again until it repeats it (0 times so far, said 1 times). → say 'wo wo'
+      anima › tu wuwu
+      anima › wola
+      anima › pa
+      anima › gu
+   [17:59 echo] scripted: Say 'wo wo' again until it repeats it (1 times so far, said 2 times). → say 'wo wo'
+
+Tutor report — creature age 9.0 min, teacher scripted
+  ✓ forage        passed at 8.7 min after 8.7 awake min of practice
+  … echo          in progress: exam not taken yet (need: repeats the first sound of a word >= 30% of the time, and 2.5x as often as chance); practised 0.3/5 awake min
+  skills: food 3.4/min, 'm' share 0.06, echo 0.33 (chance 0.11), energy 0.45
+  last exam 'forage' at 7.7 min: score 0.78 (chance 0.33; correct moves left 15/20, ahead 16/20, right 16/20)
+saved anima_brain.npz and anima_brain.tutor.json — run the same command again to continue the lessons, or meet it:  anima chat --brain anima_brain.npz

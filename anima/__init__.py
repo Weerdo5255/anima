@@ -12,6 +12,7 @@ Quick start::
     agent.on("utterance", lambda e: print("anima:", e["text"]))
     agent.start()                          # lives in real time, in the background
     agent.hear("hello")                    # say something whenever you like
+    agent.pleasure(0.6)                    # ...and reward what it just said (agent.pain(...) too)
 
 Programs it may use (``anima.tools``), the log of its thoughts
 (``anima.mind``) and the local HTTP connection for other programs
@@ -30,7 +31,7 @@ from .core import Network, Population, Projection
 from .runtime import Agent
 from .world import EmptyWorld, ForagingWorld, World
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
 __all__ = [
     "Agent", "Brain", "BrainBuilder", "build_brain", "infant_spec", "minimal_spec",

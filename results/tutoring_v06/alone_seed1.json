@@ -1,0 +1,47 @@
+{
+ "imitate": {
+  "trials": 44,
+  "n": 44,
+  "consonant": 0.318,
+  "syllable": 0.205,
+  "word": 0.023,
+  "vowel": 0.409,
+  "consonant_chance": 0.089,
+  "syllable_chance": 0.03,
+  "word_chance": 0.0065
+ },
+ "forage": 0.8888888888888888,
+ "probes": {
+  "90": {
+   "forward": 1,
+   "left": 29,
+   "right": 0
+  },
+  "0": {
+   "forward": 28,
+   "left": 2,
+   "right": 0
+  },
+  "-90": {
+   "forward": 7,
+   "left": 0,
+   "right": 23
+  }
+ },
+ "babble_share": 0.018518518518518517,
+ "n_free": 108,
+ "ask_hungry": 0.0,
+ "ask_sated": 0.02631578947368421,
+ "n_hungry": 83,
+ "n_sated": 76,
+ "echo_rate": 0.36666666666666664,
+ "echo_chance": 0.09444444444444443,
+ "echo_answered": 30,
+ "echo_trials": 30,
+ "seed": 1,
+ "condition": "untutored",
+ "lived_s": 3184.0,
+ "exam_at_s": 4101.67,
+ "wall_s": 1694.774873971939,
+ "alone_energy": 0.893846516666759
+}

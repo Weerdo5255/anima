@@ -17,41 +17,59 @@ whatever its dynamics produce.
 
 ```
 $ anima chat
+  thoughts: anima_brain.thoughts.jsonl  (anima thoughts --brain anima_brain.npz --follow)
 anima is alive (1667 spiking neurons, 07:11 awake). It does not wait for you: it will
 babble, wander, get hungry, bored, lonely and sleepy on its own.
-Talk to it whenever you like. /help for commands, /quit to leave.
+Talk to it whenever you like; + or - after its answer gives it pleasure or pain (it
+learns from them). /help for commands, /quit to leave.
 
-anima › liwoli su   [07:15]
-anima › tu   [07:18]
-anima › le mutu   [07:23]
+anima › sumomo le   [07:16]
+anima › midu   [07:19]
+anima › lu   [07:22]
+anima › kuhu   [07:27]
 you › hello
-anima › mu no sa lapi   [07:31]
-anima › so   [07:38]
+anima › kima no   [07:31]
+anima › baso   [07:37]
 you › mama
-anima › kahe ti ta   [07:45]
-anima › gi   [07:50]
+anima › dewi   [07:41]
 you › :)
-anima › he   [07:54]
-anima › gi   [07:58]
-anima › tela hi   [08:06]
-you › baba
-anima › hihi   [08:09]
+anima › mi   [07:47]
+anima › we   [07:52]
+anima › ti   [07:56]
+you › ba ba
+anima › didima   [07:59]
+you › -
+      (anima feels pain 0.4 — it recalls "di di", 3.5 s ago)
+you › ba ba
+anima › bibipa   [08:09]
+you › +
+      (anima feels pleasure 0.5 — it recalls "bi pa", 3.1 s ago)
       (anima found food)
-anima › lanu   [08:19]
+you › mo mo
+      (anima found food)
+anima › huwapo   [08:18]
+you › -
+      (anima feels pain 0.4 — it recalls "wa po", 3.1 s ago)
+you › mo mo
+anima › pulu pena   [08:28]
+you › -
+      (anima feels pain 0.4 — it recalls "pe na", 3.1 s ago)
 you › /status
-[08:20 awake] hunger 0.18 fatigue 0.22 boredom 0.36 loneliness 0.32 | DA 0.20 NE 0.35 ACh 0.80 5HT 0.51
-anima › ba   [08:24]
-      (anima found food)
-anima › bu   [08:27]
+[08:34 awake] hunger 0.04 fatigue 0.23 boredom 0.38 loneliness 0.22 | DA 0.31 NE 0.37 ACh 0.82 5HT 0.54
 you › /quit
+
 saved anima_brain.npz — run again to continue its life.
 ```
 
-That is a real session with a newborn creature; the only edits are removing
-the terminal's prompt redraws, wrapping the first line and shortening the
-save path.  The first three utterances happened before anyone said
-anything.  The bracketed times are its own clock — one simulated day lasts
-20 real minutes by default, so it gets sleepy about 13 minutes in.
+That is a real session with a newborn creature.  The typing was done by a
+small script, which answered each reply with `+` if it began with the
+word's first sound and `-` if not; the only edits are wrapping the long
+lines and shortening the paths.  The first four utterances happened before
+anyone said anything.  The bracketed times are its own clock — one
+simulated day lasts 20 real minutes by default, so it gets sleepy about 13
+minutes in.  What it recalls is its answer: the syllables it said after you
+had finished, as many as your word has ("bibipa" began before "ba ba" was
+over, so its answer was "bi pa").
 
 It can also use programs you allow, by learning which of its acts make
 them do something good for it; it keeps a log of its thoughts, read out of
@@ -81,10 +99,13 @@ anima live                                             # live dashboard (macOS/L
 `anima_brain.npz` when you quit and resumed next time — same synapses, same
 memories, same time of day.  `--new` starts a fresh one.
 
-In the chat, type anything at any time.  `:)` or `*smile*` is approval and
-`:(` disapproval (non-verbal, no sound).  `/status`, `/world`, `/stats`,
-`/feed`, `/thoughts`, `/mind` (print its thoughts as they happen), `/tools`,
-`/sleep`, `/wake`, `/save`, `/quit`.
+In the chat, type anything at any time.  To teach it, give it **pleasure**
+or **pain** for what it just said or did: `+` (or `/pleasure`), `-` (or
+`/pain`) — `++`/`+++` and `--`/`---` are stronger ([below](#pain-and-pleasure-teaching-it-in-real-time)).
+`:)` or `*smile*` is approval and `:(` disapproval (non-verbal, no sound,
+and much weaker).  `/status`, `/world`, `/stats`, `/feed`, `/thoughts`,
+`/mind` (print its thoughts as they happen), `/tools`, `/sleep`, `/wake`,
+`/save`, `/quit`.
 
 The live dashboard shows the world, its drives and neuromodulators, the
 activity of each region, a live raster of cortical spikes and the
@@ -146,67 +167,99 @@ anima live                # meet the result
 
 No Ollama?  `anima train --teacher scripted` uses the built-in teacher.
 Other machines: `--host gpu-box:11434` (or `OLLAMA_HOST`).  Reasoning models
-are faster with `--think off`.  Once it has graduated, nobody needs to be
-there: it forages, babbles and sleeps on its own.  In `anima chat` you can
-still talk to it, smile at it, and `/feed` it.
+are faster with `--think off`.  `--reinforcer smile` makes the reflexes
+smile instead of giving pleasure, as in anima 0.5.  Once it has graduated,
+nobody needs to be there: it forages, babbles and sleeps on its own.  In
+`anima chat` you can still talk to it, teach it with `+` and `-`, smile at
+it, and `/feed` it.
 
 A real session with the built-in scripted teacher, in two sittings (paths
-shortened; long stretches cut at the "…"):
+shortened, the line about the thought log left out; long stretches cut at
+the "…"):
 
 ```
-$ anima train --teacher scripted --minutes 8.5 --fast
+$ anima train --teacher scripted --minutes 9 --fast
 teacher: scripted teacher (no LLM)
 lesson 1 of 4: Find food — turn toward the smell of food and walk to it, without help
-training for up to 8.5 creature-minutes as fast as the CPU allows; Ctrl-C stops (progress is saved)
+training for up to 9 creature-minutes as fast as the CPU allows; Ctrl-C stops (progress is saved)
 
    [07:11 forage] scripted: Let it practise; the guide keeps food within reach. → wait
-      anima › susupe sape
-      anima › ke
+      anima › susubo ti ko
    [07:21 forage] scripted: Let it practise; the guide keeps food within reach. → wait
-      anima › do ku
+      anima › we ka
+      anima › to se
+      anima › wuli
    …
-   ✎ [13:34] exam 'forage': score 0.68 (chance 0.33; correct moves left 18/20, ahead 13/20, right 10/20)
+   ✎ [13:39] exam 'forage': score 0.63 (chance 0.33; correct moves left 16/20, ahead 7/20, right 15/20)
    …
-   ✎ [16:15] exam 'forage': score 0.67 (chance 0.33; correct moves left 16/20, ahead 12/20, right 12/20)
+   ✎ [16:26] exam 'forage': score 0.78 (chance 0.33; correct moves left 15/20, ahead 16/20, right 16/20)
    …
-$ anima train --teacher scripted --minutes 2 --fast      # later: it carries on where it stopped
-resumed anima_brain.npz (age 510s of simulated life)
-  schooling: in lesson 1 of 4 (forage)  [anima_brain.tutor.json]
+★ [17:39] graduated 'Find food': exam 0.78 (need 0.60; chance 0.33), food 3.0/min (need 1.0)
+   ── lesson 2: Copy me — repeat the word it just heard, starting with its first sound
+   [17:39 echo] scripted: A new word to copy (wo wo). The reflex rewards it when its reply repeats the word. → say 'wo wo'
+      anima › bano to mi bo
+      anima › ko
    …
-   ✎ [18:59] exam 'forage': score 0.77 (chance 0.33; correct moves left 19/20, ahead 11/20, right 16/20)
-★ [18:59] graduated 'Find food': exam 0.77 (need 0.60; chance 0.33), food 1.8/min (need 1.0)
-   ── lesson 2: Copy me — start its reply with the consonant it just heard
-   [19:08 echo] scripted: Offer a new sound (n) to copy; the reflex praises a copy. → say 'no no'
-      anima › si to wuwo
-   [19:18 echo] scripted: Offer a new sound (t) to copy; the reflex praises a copy. → say 'te te'
-      anima › ke tutu
+$ anima train --teacher scripted --minutes 12 --fast      # later: it carries on where it stopped
+resumed anima_brain.npz (age 541s of simulated life)
+  schooling: in lesson 2 of 4 (echo), mastered: forage  [anima_brain.tutor.json]
+   …
+   [18:29 echo] scripted: Say 'wo wo' again until it repeats it (0 times so far, said 3 times). → say 'wo wo'
+      anima › woba lo
+   [18:39 echo] scripted: Say 'wo wo' again until it repeats it (1 times so far, said 4 times). → say 'wo wo'
+      anima › wawame
+   [18:48 echo] scripted: Say 'wo wo' again until it repeats it (1 times so far, said 5 times). → say 'wo wo'
+      anima › luwowa
+   [18:58 echo] scripted: A new word to copy (pu pu); enough of 'wo wo'. The reflex rewards it when its reply repeats the word. → say 'pu pu'
+      anima › wa
+      anima › punu
+   [19:08 echo] scripted: Say 'pu pu' again until it repeats it (1 times so far, said 1 times). → say 'pu pu'
+   …
+   [23:00] it is asleep — the teacher waits (replay consolidates the day)
+   …
+   ✎ [08:35] exam 'imitate': repeats the first sound 32% (chance 9%), the syllable 13% (chance 2%), the whole word 0% (n=31/33)
 ```
+
+Its answer is what it says after the teacher has finished: "wawame" did
+not count (its "wa wa" began while the teacher was still saying "wo wo"),
+"luwowa" did ("wo wa"), so after two repeats the teacher moved on.  To pass
+"Copy me" it needs a second exam like the last one.
 
 With an LLM teacher the decision lines carry the model's name, its latency
 and its own one-line thought instead of the script's.
 
-**How it teaches.** Every ~8 seconds the model gets a short JSON report —
-drives, energy, what the creature just said and did, its measured skills,
-the lesson's goal, progress and tips — and answers with up to three actions:
-say a syllable or two, smile, frown, give food (ahead/left/right/near),
-switch a reflex rule on or off, go back to review an earlier lesson, or
-leave itself a note.  It never touches a weight; all learning is still the
-creature's own dopamine, spike timing and sleep.
+**How it teaches.** Every ~8 seconds the model gets a short JSON report and
+answers with up to three actions: say a short word, give **pleasure** or
+**pain** for what the creature just said or did, smile, frown, give food
+(ahead/left/right/near), switch a reflex rule on or off, go back to review
+an earlier lesson, or leave itself a note.  The report is pre-digested so
+that even a small model can teach well: what the teacher last said, what
+the creature answered and how much of it matched (*nothing, the vowel, the
+first sound, the first syllable, the whole word*) and what the reflexes
+already gave for it; the word it is practising, how often it was said and
+repeated; a suggestion for the next step; what the creature said last and
+how long ago; drives, energy, its measured skills against chance, the
+lesson's goal, progress and tips.  The model never touches a weight; all
+learning is still the creature's own dopamine, spike timing and sleep.
 
 Rewards only teach if they come within about a second of the behaviour (the
 width of the eligibility traces), and a model takes seconds to think.  So
 teaching runs at two speeds, as a human trainer's does with a clicker: the
 LLM picks the strategy and the moments, and **reflex rules** running on the
-creature's own 10 ms clock deliver the contingent part — a smile half a
+creature's own 10 ms clock deliver the contingent part — pleasure the moment
+its reply repeats the teacher's word (a little for the right first sound,
+more for the right syllable, most for the whole word), pleasure half a
 second after an *m* syllable, food in front of it when it calls while
-hungry, food within reach while it learns to forage, a smile when it copies
-a sound.  The creature never waits for the model: a slow answer just means
-fewer decisions.
+hungry, food within reach while it learns to forage.  The model's own
+pleasure and pain are *for* the creature's last words or movement: it
+recalls them while it feels them, so they still teach although the model
+answers seconds late.  The creature never waits for the model: a slow answer
+just means fewer decisions.
 
 | lesson | goal | reflexes | conditions | passed when (measured) |
 |---|---|---|---|---|
 | 1 forage | find food alone | `guide_food` | kept mildly hungry (energy ≤ 0.5) | two exams in a row: ≥ 60% correct moves with food held left / ahead / right (chance 33%); ≥ 1 meal/min |
-| 2 echo | copy the sound it hears | `reward_echo` | a little hungry (≤ 0.6) | starts its reply with your consonant ≥ 1.8× as often as chance (and ≥ 15%) |
+| 2 echo | repeat the word it hears | `reward_imitation` | a little hungry (≤ 0.6) | two exams in a row: a clone hears 33 words and repeats their first sound ≥ 30% of the time, and ≥ 2.5× chance |
 | 3 babble | make the target sound | `reward_syllable` | a little hungry (≤ 0.6) | ≥ 30% of its syllables start with *m* |
 | 4 independence | live on its own | none | — | keeps its energy up (mean ≥ 0.35, never < 0.08) for 8 awake minutes, no help |
 
@@ -222,7 +275,12 @@ see the honest limits for why it is not in the default set.
 Graduation is decided by these measurements, never by the model, and every
 decision is validated first: unknown tools and rules are dropped, rules
 from other lessons and free food in the "ask" lesson are refused (unless it
-is starving), lessons can't be skipped, speech is reduced to letters.  If
+is starving), lessons can't be skipped, speech is cut to one short word (two
+at most, four syllables, letters only), pleasure is capped at 1 and pain at
+0.6, one of them per turn and not too often, and neither is given "for its
+words" when it has not said anything for 8 seconds.  In "Copy me" the
+teacher says the same word until the creature has repeated it twice (or
+eight times in vain), then moves on to another consonant.  If
 the model is unreachable or answers nonsense, the scripted teacher covers
 that turn (after three failures in a row the model gets a minute's rest).
 Progress — lesson, measurements, exams, rules, the teacher's journal — is
@@ -244,7 +302,70 @@ print(tutor.train(minutes=30))       # creature-minutes, in real time
 `examples/04_llm_tutor.py` is a complete version; `anima/tutor/` has the
 client (standard library only), reflexes, measurements, exams, curriculum
 and teachers.  Lessons are data: pass `Tutor(..., curriculum=Curriculum([Lesson(...), ...]))`
-to teach your own, and add reflexes to `anima.tutor.RULES`.  Results are in [section 5](#5-what-a-teacher-adds).
+to teach your own, and add reflexes to `anima.tutor.RULES`.  Results are in [section 5](#5-what-a-teacher-adds)
+and [section 9](#9-what-makes-it-learn-to-repeat-a-word).
+
+## Pain and pleasure: teaching it in real time
+
+Every animal is born able to feel pleasure and pain, and nothing teaches
+faster.  In anima 0.6 they are part of the creature.  Pleasure (a treat,
+being stroked) and pain (a pinch) reach its dopamine system the way food
+does — a burst above baseline, or a dip below it — so whatever it just did
+becomes more likely, or less likely, the next time it is in that situation.
+Pain also makes it flinch: for a moment it freezes, and it is aroused.  The
+feeling lingers for a second or two and shows up in its state, the
+dashboard and its thought log (*"that feels good — I think of saying "ba
+ba""*, *"ouch — that hurts"*).
+
+```
+you › ba ba
+anima › didima   [07:59]
+you › -
+      (anima feels pain 0.4 — it recalls "di di", 3.5 s ago)
+you › ba ba
+anima › bibipa   [08:09]
+you › +
+      (anima feels pleasure 0.5 — it recalls "bi pa", 3.1 s ago)
+```
+
+**Late is fine.**  A reward only teaches if it comes within a second or two
+of the act — the width of the synapses' eligibility traces — and a person
+who reads the reply and types `+` is later than that.  So pleasure and pain
+make the creature **recall what it just did**: it pauses and replays its
+last words (or its last movement) — the syllables it said, and what its
+ears and senses reported when it decided to say them — while the dopamine
+is there.  Rats do this: at a reward, the hippocampus replays the path that
+led there, in reverse (Foster & Wilson 2006).  The credit lands on its
+reply, and the moment is stored as a memory and replayed again in its sleep.
+
+| in the chat | dashboard (`anima live`) | what it gives |
+|---|---|---|
+| `+` `++` `+++` | the `+` key | pleasure 0.5 / 0.8 / 1.0 (the key: 0.6) |
+| `-` `--` `---` | the `-` key | pain 0.4 / 0.7 / 1.0 (the key: 0.5) |
+| `/pleasure [0-1] [speech \| move \| now]` | same | pleasure for its last words, its last movement, or nothing in particular (default, and for `+` / `-`: its answer to what you last said, if it answered in the last 15 s — even if it has babbled on since; otherwise its last words if it spoke in the last 8 s, else its last movement) |
+| `/pain [0-1] [speech \| move \| now]` | same | pain, likewise |
+
+The intensity sets how strong the dopamine signal is and how long it lasts:
+pleasure 0.3 is about a smile, 0.6 about twice and 1.0 about four times
+(and a smile also relieves loneliness, so a frown at a lonely creature may
+even please it — pain has no such side effect).  The dashboard shows both
+feelings as bars under the drives.  Other programs use `POST /pleasure` and
+`POST /pain` on the bridge, and Python `agent.pleasure(0.6)` /
+`agent.pain(0.4, credit="movement")`.  [`examples/07_pain_and_pleasure.py`](examples/07_pain_and_pleasure.py)
+teaches it to repeat words with late pleasure and pain, the way a person in
+the chat would.
+
+**What it learns from them.**  Pleasure and pain teach through the same
+dopamine-gated synapses as food: which sounds it makes and when, which way
+it turns.  For "repeat what you heard", the synapses that matter are the
+ones from hearing to speaking (the mirror map), and in anima 0.6 dopamine
+gates those too: they learn while it speaks, and much faster while it
+recalls a reply it is rewarded for — the sound it heard and the sound it
+made are bound together — while replaying a moment that hurt binds nothing.
+[Section 9](#9-what-makes-it-learn-to-repeat-a-word) measures what this does.
+A creature raised with an earlier anima is brought up to date when it is
+loaded (`anima chat` says so): its map keeps everything it learned and from
+then on learns this way (`Agent.load(path, upgrade=False)` keeps the old rule).
 
 ## Programs, thoughts, and other programs
 
@@ -367,6 +488,8 @@ curl 127.0.0.1:7777/state                             # drives, modulators, slee
 curl -N '127.0.0.1:7777/stream?kinds=utterance,thought'   # everything it does, as it happens
 curl -d '{"text": "ba ba :)"}' 127.0.0.1:7777/hear     # talk to it (:) is a smile)
 curl -d '{"amount": 0.5}' 127.0.0.1:7777/reward        # a treat (or a buzzer: -0.5)
+curl -d '{"amount": 0.7}' 127.0.0.1:7777/pleasure      # pleasure for what it just said (or did)
+curl -d '{"amount": 0.4, "for": "movement"}' 127.0.0.1:7777/pain   # pain for its last movement
 ```
 
 | endpoint | |
@@ -374,6 +497,7 @@ curl -d '{"amount": 0.5}' 127.0.0.1:7777/reward        # a treat (or a buzzer: -
 | `GET /state`, `GET /thoughts?n=50&kinds=...` | its state; its latest thoughts |
 | `GET /events?since=SEQ&kinds=...&wait=20` | events after sequence number SEQ (long polling); `GET /stream` is the same as server-sent events |
 | `POST /hear {"text"}`, `/reward {"amount", "source"}`, `/feed {"where"}` | talk to it, reward it (clipped to ±1), put food near it |
+| `POST /pleasure`, `POST /pain` `{"amount": 0-1, "for": "auto" \| "speech" \| "movement" \| "now"}` | pleasure or pain for what it just did — it recalls that while it feels it ([pain and pleasure](#pain-and-pleasure-teaching-it-in-real-time)); `pleasure` / `pain` events follow |
 | `GET /pending`, `POST /tool_result {"call_id", "answer"}` | be one of its `remote` programs: answer its calls |
 | `GET /tools` | its programs and how they have gone |
 
@@ -386,6 +510,7 @@ from anima.bridge import BridgeClient
 
 anima = BridgeClient("http://127.0.0.1:7777")
 anima.hear("ba ba")
+anima.pleasure(0.6)                       # (or anima.pain(0.4, "movement"))
 for e in anima.follow(kinds=["utterance", "thought"]):
     print(e["kind"], e["text"])
 
@@ -520,7 +645,8 @@ can't keep up, `--cortex 600` makes a smaller brain.
 | senses | smell (8 bearing channels), whiskers (3), taste, hearing (17 phonemes) | a world it can learn about; your words as sound |
 | interoception | hunger, fatigue, boredom, loneliness as a spiking population | motivation that exists with nobody around |
 | motor | 3 competing channels (forward/left/right), dopamine-gated plasticity | wandering, then learned foraging |
-| voice | a "when to speak" gate + consonant × vowel competitions, breath, self-hearing, echoic memory, turn-taking reflex | spontaneous babbling in bouts that you can shape with approval; answering and echoing |
+| voice | a "when to speak" gate + consonant × vowel competitions, breath, self-hearing, echoic memory, turn-taking reflex; a hearing→speaking mirror that learns while it speaks, faster with dopamine | spontaneous babbling in bouts that you can shape; answering, echoing, repeating your words |
+| pain & pleasure | innate feelings you (or a teacher) give it: a dopamine burst or dip, a recall of what it just did, a flinch | the fastest way to teach it — even a few seconds late |
 | neuromodulators | dopamine, noradrenaline, acetylcholine, serotonin | learning, arousal, sleep oscillations, impulsivity |
 | ventral striatum | TD critic | dopamine = reward prediction error |
 | cerebellum | forward model | surprise, curiosity, telling its own voice from yours |
@@ -602,12 +728,21 @@ the CPU); if it reports a disagreement, please report it.
 ## Results
 
 Every number here was produced by the shipped code: two seeds for each
-learning experiment, one simulated day for the first.  The first four take
-roughly 1.5 hours on the 2-core development VM, the tutoring comparison
-about 2.5 hours, the program and thought-log checks (6–7) about 40 minutes
-with `--workers 2`, the colony (8) about 3.5 hours.  `anima experiment <name>` reruns any of them, and the
-raw numbers are in [`results/`](results/README.md).  Nothing was tuned per
-seed.
+learning experiment (three for the main comparison in 9), one simulated day
+for the first.  The first four take roughly 1.5 hours on the 2-core
+development VM, the tutoring comparison about 2.5 hours, the program and
+thought-log checks (6–7) about 40 minutes with `--workers 2`, the colony (8)
+about 3.5 hours, the teaching comparison (9) about 2 hours with `--workers 2`.
+`anima experiment <name>` reruns any of them, and the raw numbers are in
+[`results/`](results/README.md).  Nothing was tuned per seed.
+
+**Which version.**  Sections 4, 5 and 9 were measured with anima 0.6;
+1–3 and 6–8 with anima 0.5.  What 0.6 changed in the creature itself is its
+voice: the hearing→speaking map learns only while it speaks (faster with
+dopamine), and the echo of what it heard is masked when it starts to speak.
+That leaves foraging (2), the programs used with hands (6) and the colony's
+food (8) as they were, and may shift the babbling numbers of 1, 3 and the
+voice parts of 6–7 a little.
 
 ### 1. Left completely alone, it still lives a day
 
@@ -653,16 +788,16 @@ Contingent smiles raise *m* from 0.07 to **0.53**; random smiles end at 0.06 and
 
 ### 4. It learns to echo you by listening to itself
 
-Five minutes of babbling alone, hearing its own voice, then a partner says random syllable pairs ("dodo", "mimi", ...) every 4–8 s (`anima experiment imitation`).
+Five minutes of babbling alone, hearing its own voice, then a partner says random syllable pairs ("dodo", "mimi", ...) every 4–8 s (`anima experiment imitation`; anima 0.6).
 
 | | hearing→speaking map, consonants (diagonal / off-diagonal) | vowels | answered | echoes heard consonant (chance) | echoes heard vowel (chance) |
 |---|---|---|---|---|---|
-| mirror learning on, seed 1 | 0.98 → 2.97 | 0.98 → 3.49 | 48/48 | 0.17 (0.08) | 0.29 (0.20) |
-| mirror learning on, seed 2 | 1.00 → 3.06 | 0.98 → 3.73 | 48/48 | 0.25 (0.08) | 0.27 (0.20) |
-| mirror learning frozen, seed 1 | 0.98 → 0.98 | 0.98 → 0.98 | 48/48 | 0.06 (0.08) | 0.25 (0.20) |
-| mirror learning frozen, seed 2 | 1.00 → 1.00 | 0.98 → 0.98 | 48/48 | 0.08 (0.09) | 0.29 (0.20) |
+| mirror learning on, seed 1 | 0.98 → 3.94 | 0.98 → 14.48 | 48/48 | 0.25 (0.08) | 0.69 (0.20) |
+| mirror learning on, seed 2 | 1.00 → 4.10 | 0.98 → 13.20 | 48/48 | 0.25 (0.09) | 0.38 (0.20) |
+| mirror learning frozen, seed 1 | 0.98 → 0.98 | 0.98 → 0.98 | 48/48 | 0.15 (0.08) | 0.15 (0.20) |
+| mirror learning frozen, seed 2 | 1.00 → 1.00 | 0.98 → 0.98 | 48/48 | 0.12 (0.08) | 0.19 (0.20) |
 
-Babbling alone is enough to learn which sound each articulation makes (the map becomes strongly diagonal).  With that map it starts its answer with the consonant it just heard **20 times in 96**, against ~8 expected by chance (binomial p ≈ 1e-04); with mirror learning frozen it stays at chance.  Vowel echoes were not distinguishable from chance in either condition.  It answered every utterance, thanks to the turn-taking reflex.
+Babbling alone is enough to learn which sound each articulation makes (the map becomes strongly diagonal).  With that map it starts its answer with the consonant it just heard **24 times in 96**, against ~8 expected by chance (binomial p ≈ 6e-07), and with the vowel it heard **51 times in 96** against ~20 (p ≈ 1e-12); with mirror learning frozen, 13 against ~8 (p = 0.06) and vowels at chance.  It answered every utterance, thanks to the turn-taking reflex.  With anima 0.5, whose map also learned while it only listened, the same experiment gave 20 consonant echoes in 96 and vowel echoes no better than chance: learning only from its own speech made the vowel map four times sharper (diagonal 13–14 against 3.5–3.7) ([`results/v0.1/`](results/README.md) has the 0.5 numbers).
 
 ![imitation](docs/figures/imitation.png)
 
@@ -675,36 +810,44 @@ real model could be run here; see the honest limits).  The other lives
 alone for the same length of time in the same world: natural food, nobody
 to talk to.  It keeps its plasticity and learns whatever its life teaches
 it.  Then both live on alone until 9 am the next morning and sit the same
-exam, with plasticity off (`anima experiment tutoring`, about 2.5 hours on
-the 2-core VM):
+exam, with plasticity off (`anima experiment tutoring --workers 2`, about
+1.5 hours on the 2-core VM; anima 0.6):
 
-| | lived | finds food (chance 0.33) | share of syllables starting with *m* | *m* share hungry / sated | copies the consonant it hears (chance) |
-|---|---|---|---|---|---|
-| tutored, seed 1 | 62 min | 0.81 | **0.49** | 0.62 / 0.47 | **6 of 29** (1.5 expected, p = 0.003) |
-| tutored, seed 2 | 53 min | 0.73 | **0.72** | 0.79 / 0.75 | 2 of 30 (0.75 expected, p = 0.17) |
-| alone, seed 1 | 62 min | 0.91 | 0.05 | 0.00 / 0.01 | 3 of 30 (1.8 expected, p = 0.26) |
-| alone, seed 2 | 53 min | 0.94 | 0.12 | 0.09 / 0.04 | 4 of 30 (2.0 expected, p = 0.13) |
+| | lived | finds food (chance 0.33) | share of syllables starting with *m* | *m* share hungry / sated | copies the consonant it hears (chance) | repeats a word: first sound / syllable (chance 0.09 / 0.02) |
+|---|---|---|---|---|---|---|
+| tutored, seed 1 | 53 min | 0.86 | **0.26** | 0.33 / 0.22 | 9 of 30 (2.8 expected, p = 0.001) | 0.40 / 0.14 |
+| tutored, seed 2 | 54 min | 0.77 | **0.56** | 0.68 / 0.59 | 9 of 30 (1.3 expected, p = 4e-06) | 0.55 / 0.20 |
+| alone, seed 1 | 53 min | 0.89 | 0.02 | 0.00 / 0.03 | 11 of 30 (2.8 expected, p = 5e-05) | 0.32 / 0.20 |
+| alone, seed 2 | 54 min | 0.90 | 0.18 | 0.11 / 0.16 | 19 of 30 (2.1 expected, p = 4e-15) | 0.52 / 0.23 |
 
 Both tutored creatures passed all four lessons at the first attempt:
-foraging after 8 minutes (exams 0.75 then 0.77, and 0.65 then 0.77),
-copying after 21–22 minutes, the target sound after 42–45 minutes, and
-living alone — ten awake minutes with no reflexes and no help, energy 0.88
-and 0.92 on average and never below 0.3 — after 53–62 minutes, two nights
-included.  The teacher put food down 10 and 9 times in all.
+foraging after 8 minutes (exams 0.73 and 0.77), repeating words after 29
+minutes (14 awake minutes of "Copy me", until a clone repeated the first
+sound of at least 30% of the examiner's words in two exams in a row: 36% and
+48% in the last), the target sound
+after 42–43 minutes and living alone — ten awake minutes with no reflexes
+and no help, energy 0.95 and 0.94 on average and never below 0.49 — after
+53–54 minutes, two nights included.  The teacher put food down 14 and 10
+times in all.
 
-What the teacher added is the voice: half to three quarters of the tutored
-creatures' syllables start with *m*, against 5% and 12% for the creatures
-that lived alone (about 1 in 12 by chance).  Copying is the weak result:
-only tutored seed 1 copied the consonant it heard clearly more often than
-chance.  Teaching did **not** make better foragers in the long run: a
-creature living alone learns to forage from food by itself, and both did
-better in the exam (0.91 and 0.94 against 0.81 and 0.73), probably because
-the smiles that shape a tutored creature's voice also reach, through global
-dopamine, the synapses that steer it.  The foraging lesson is scaffolding
-for the first minutes, not a lasting edge.  And the trained *m* is not a
-request yet: the tutored creatures say it about as often when sated as when
-hungry (the optional *ask* lesson tries to change that — see the honest
-limits).
+**Everybody copies now.**  With anima 0.5 the creatures that lived alone
+copied the consonant they heard at chance (3 and 4 times in 30) and the
+tutored ones barely (6 and 2).  Now that the hearing→speaking map learns
+from the creature's own speech, babbling to itself is enough: the lone
+creatures copy 11 and 19 times in 30 and repeat the first sound of a word
+32–52% of the time.  The tutored ones copy too (9 and 9, 40–55%), though
+less than their lone twins in the echo test, whose words never use the
+target sound: after "make the sound", many of their answers start with
+*m*.  What the teacher still adds is the target sound — 26% and 56% of the
+tutored creatures' syllables against 2% and 18% (anima 0.5: 49–72% against
+5–12%; "make the sound" now passes after 6–7 awake minutes of pleasure
+instead of ~20 of smiles, and they keep less of it overnight).  And as
+before, teaching did **not** make better foragers in the long run: a
+creature living alone learns to forage from food by itself (0.89 and 0.90
+against 0.86 and 0.77).  The trained *m* is still not a request: they say
+it about as often when sated as when hungry (the optional *ask* lesson
+tries to change that — see the honest limits).  The 0.5 run is in
+[`results/tutoring/`](results/README.md).
 
 ![tutoring](docs/figures/tutoring.png)
 
@@ -847,6 +990,71 @@ well alone.  Food nobody eats now withers and grows back elsewhere
 
 ![colonies by day, and one day vs the next](docs/figures/colony.png)
 
+### 9. What makes it learn to repeat a word
+
+A teacher says short words to a creature living in its arena — a syllable
+said twice, "ba ba", "ki ki", every consonant but *h* — and keeps saying
+each one until the creature has repeated at least its first sound twice
+(or eight times in vain).  What follows the creature's replies differs.
+Every five minutes a clone sits the imitation exam: the examiner says 44
+words, plasticity off; does its reply repeat the first sound (chance ≈ 0.09),
+the first syllable (≈ 0.02)?  Ten minutes of teaching after a first minute
+alone, in the creature's morning, three seeds (`anima experiment teaching
+--seeds 1,2,3 --workers 2`, about 2 hours; anima 0.6 unless the map is
+"as in 0.5"):
+
+| what follows its replies | its hearing→speaking map | repeats the first sound: before → 5 → 10 min (seeds at 10) | its first syllable at 10 min | pleasure / pain given |
+|---|---|---|---|---|
+| nothing: the teacher only talks | learns while it speaks | 0.09 → 0.17 → **0.42** (0.35, 0.48, 0.43) | 0.18 | — |
+| a smile if the first sound is right (0.5's reflex) | learns while it speaks | 0.09 → 0.27 → **0.36** (0.39, 0.27, 0.41) | 0.16 | smiles |
+| graded pleasure, with recall (0.6's reflex) | learns while it speaks | 0.09 → 0.19 → **0.44** (0.39, 0.50, 0.43) | 0.16 | 23 / 0 |
+| graded pleasure, no recall | learns while it speaks | 0.09 → 0.12 → **0.37** (0.36, 0.37, 0.39) | 0.15 | 22 / 0 |
+| a person, 2.5–4.5 s late: pleasure if it repeated something, pain if not, for its last words | learns while it speaks | 0.09 → 0.23 → **0.43** (0.36, 0.41, 0.51) | 0.19 | 20 / 80 |
+| the same person, for its answer (what `+` / `-` do in the chat) | learns while it speaks | 0.09 → 0.26 → **0.38** (0.39, 0.30, 0.46) | 0.13 | 22 / 78 |
+| the same person, no recall | learns while it speaks | 0.09 → 0.21 → **0.34** (0.33, 0.46, 0.25) | 0.15 | 22 / 78 |
+| graded pleasure, with recall | as in 0.5 | 0.09 → 0.12 → **0.12** (0.16, 0.05, 0.14) | 0.03 | 14 / 0 |
+| nothing: the teacher only talks | as in 0.5 | 0.09 → 0.12 → **0.15** (0.07, 0.26, 0.12) | 0.02 | — |
+
+* **How its hearing→speaking map learns decides it.**  With the 0.6 rule
+  (learning while it speaks, faster with dopamine) ten minutes of a teacher's
+  words took copying of the first sound from 0.09 to 0.34–0.44 and of the
+  first syllable from 0.01 to 0.13–0.19, whatever followed its replies.  With
+  the 0.5 rule (learning all the time) they barely moved: 0.12–0.15 and
+  0.02–0.03.  That was why the creatures were not learning to repeat what
+  they heard.
+* **What follows the replies matters much less, over ten minutes.**  A
+  teacher who only talks did as well (0.42) as graded pleasure with recall
+  (0.44): every word makes the creature answer (the turn-taking reflex), and
+  every answer is practice for a map that learns from its own speech.  The
+  differences between the ways of rewarding are within what three seeds can
+  tell apart (seed-to-seed spread ±0.07); the recall gave a small edge both
+  times it was tested (0.44 against 0.37 for pleasure, 0.43 against 0.34 for
+  the person), not more than that.
+* **Late is fine, with recall.**  The person's pleasure and pain came 2.5–4.5
+  seconds after the reply had ended — too late for the synapses' traces —
+  and taught about as well as the reflex's immediate pleasure (0.43 and
+  0.38 against 0.44).
+* **Where pleasure clearly helps: practising one word.**  "ba ba" said 40
+  times, pleasure for each reply that repeated the *b* (`--parts practice`):
+  the *b* row of the map (diagonal / off-diagonal) went 1.8 → 5.8 and 1.5 →
+  3.3, against 1.8 → 3.1 and 1.5 → 2.1 with no reward, and it repeated the
+  *b* in 5 and 4 of the last ten tries, against 1 and 2.  With the 0.5 rule
+  the same practice *flattened* that row (1.8 → 1.3 and 1.4 → 1.2, with or
+  without pleasure): each "ba ba" it heard became linked to whatever it said
+  next.
+* **The ceiling** (`--parts ceiling`): with its map made perfectly diagonal
+  by hand (same synaptic budget), a creature repeats the first sound of 84–91%
+  of words and the first syllable of 41–64% (from 14–23% and 0–4%); half-way
+  diagonal, 50% and 14–18%.  There is room to grow.
+* **Shaping babbling with late pleasure did not work in ten minutes.**  A
+  person giving pleasure 2.5–4.5 s after every utterance that contained an
+  *m* (20–36 times in ten minutes) left the share of *m* at 0.03–0.11, with
+  recall or without.  A late "good" for an utterance credits every sound in
+  it, and the creature's next words may already have begun; the smiles of
+  section 3 came half a second after the *m* itself.
+
+![what follows its replies](docs/figures/teaching.png)
+
 ## Build your own brain
 
 A brain is data.  Dump the default and edit it:
@@ -911,6 +1119,7 @@ anima/
   core/        spiking simulator: neurons, network, plasticity rules, monitors;
                the device engine (GPU) and its CuPy / PyTorch / NumPy backends
   brain/       drives, neuromodulators, sleep, hippocampus, cerebellum, critic,
+               pain and pleasure (and the recall of what it just did),
                Brain orchestrator, spec builder, presets (incl. optional hands)
   body/        physiology, senses, motor decoding, voice and hearing
   world/       World interface, foraging arena, shared arena, empty world
@@ -919,14 +1128,16 @@ anima/
   mind/        the thought log: readouts, the workspace, JSONL log
   bridge/      `anima serve` (HTTP + server-sent events) and its client
   evolve/      colonies: rounds and worker processes, genes, the genetic algorithm
-  tutor/       teaching: Ollama client, reflex rules, skill meters, curriculum,
-               scripted and LLM teachers, the tutor loop
-  ui/          terminal chat, curses dashboard
+  tutor/       teaching: Ollama client, reflex rules (incl. the reward for repeating
+               a word), skill meters, exams, curriculum, scripted and LLM teachers,
+               the tutor loop
+  ui/          terminal chat, curses dashboard (both with + / - for pleasure and pain)
   experiments/ the experiments below, runnable with `anima experiment ...`
   benchmark.py `anima gpu-check` (the GPU against the CPU engine) and `anima bench`
-tests/         pytest suite (142 tests, about 5 minutes), incl. a mock Ollama server
+tests/         pytest suite (165 tests, about 5 minutes), incl. a mock Ollama server
 examples/      01 alone · 02 talk from code · 03 build your own brain + world · 04 LLM tutor ·
-               05 another program as its "bell" · 06 a colony · tools.toml + tools/ (example programs)
+               05 another program as its "bell" · 06 a colony · 07 teaching with late pleasure and
+               pain · tools.toml + tools/ (example programs)
 configs/       infant.toml — the default brain as an editable spec
 docs/          ARCHITECTURE.md (how it works), NOTES.md (design notes, lessons learned), figures
 results/       the raw numbers behind every table and figure, with a guide
@@ -988,12 +1199,15 @@ as another program talking to it through `anima serve`.
 * **The LLM teacher has not met a real model here.** The development VM
   could not download models, so the Ollama side (client, prompt, structured
   outputs, fallbacks, the never-waiting loop) is tested against an
-  in-process mock of the Ollama API, and the teaching results in section 5
-  use the scripted teacher, which goes through exactly the same tools and
-  validation. How good a real model's strategy is depends on the model; the
-  reflexes, the validation and the measured graduation are what keep a weak
-  or erratic one from doing harm. `anima tutor-check` tells you in a few
-  seconds whether yours produces usable decisions.
+  in-process mock of the Ollama API, and the teaching results in sections 5
+  and 9 use the scripted teacher, which goes through exactly the same tools
+  and validation. How good a real model's strategy is depends on the model:
+  whether a small one follows the report's suggestion, keeps to one word at
+  a time and uses pleasure and pain sparingly is untested. The reflexes, the
+  validation (one short word, capped and spaced pleasure and pain) and the
+  measured graduation are what keep a weak or erratic one from doing harm.
+  `anima tutor-check` tells you in a few seconds whether yours produces
+  usable decisions, including one about teaching a word.
 * **Programs are buttons, not tools.** It can learn *which* of a few
   programs pays off, from their consequences, in minutes; it cannot read
   what a program says, pass it arguments, or know what a program will do
@@ -1018,6 +1232,25 @@ as another program talking to it through `anima serve`.
   want the same food, and share a feast when two happen to arrive together;
   there is no negotiation, and what they say to each other is babble.  Four
   creatures live at about 0.6× real time on two cores.
+* **Pain and pleasure are given, not sensed.**  They come from you, a
+  teacher or a program; nothing in its world hurts or pleases it except
+  through them (food and walls keep their older rewards).  They are a
+  functional model — a dopamine burst or dip, a flinch, arousal, a recall —
+  not a model of what pain feels like.
+* **The credit is simple.**  In the chat, `+` and `-` are for its answer to
+  what you last said (the syllables after you had finished, as many as your
+  word has) if it came in the last 15 s; otherwise for its last words (if
+  it spoke in the last 8 s) or its last movement.  Nothing cleverer: it
+  cannot tell which part of an utterance you meant, and a late "good" for
+  babbling credits every sound in it, which is why late pleasure did not
+  shape what it babbles (results 9).  `/pain move` / `/pleasure speech`
+  say which kind of act you mean.
+* **It repeats sounds, not words.**  It learns to start its reply with the
+  sound it heard (34–44% of words after ten minutes of teaching), and more
+  slowly the whole syllable (13–19%); "ba ba" for "ba ba" mostly comes
+  from repeating a syllable it has just said.  It has no memory for
+  sequences, so "ba di" is out of reach, and it still does not know what
+  anything means.
 * **A narrow curriculum, and asking is not solved.** Four lessons about food
   and sounds. The optional *ask* lesson (`--with-ask`: no food grows, calls
   made when hungry are answered with food, calls made when full with a

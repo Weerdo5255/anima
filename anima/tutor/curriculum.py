@@ -11,9 +11,11 @@ moves on (it can be reviewed later), so training never gets stuck.
 
 1. forage       find food alone (scaffolding keeps food within reach, and
                 it is kept keen — mildly hungry — as animal trainers do)
-2. echo         copy the consonant it just heard (praise for copies; still
-                kept a little hungry, so foraging stays in practice)
-3. babble       make the target sound often (contingent smiles)
+2. echo         repeat the word it just heard (pleasure for repeating the
+                first sound, more for the syllable, most for the whole word;
+                still kept a little hungry, so foraging stays in practice;
+                graduated by an imitation exam taken by a clone)
+3. babble       make the target sound often (contingent pleasure)
 4. independence no teacher, no reflexes, no help: keep itself fed for eight
                 awake minutes
 
@@ -69,6 +71,22 @@ def check_babble(r: SkillReport, ex: Exams) -> tuple[bool, str]:
 
 
 def check_echo(r: SkillReport, ex: Exams) -> tuple[bool, str]:
+    """Copying, as an exam measures it: the examiner says 33 short words (every
+    consonant but "h", three times each) to a clone of it."""
+    e = ex.get("imitate")
+    if not e:
+        return False, ("exam not taken yet (need: repeats the first sound of a word >= 30% of the time, "
+                       "and 2.5x as often as chance)")
+    c, ch = e.get("consonant"), e.get("consonant_chance")
+    need = max(0.30, 2.5 * ch) if _ok(ch) else 0.30
+    ok = e.get("n", 0) >= 0.7 * e.get("trials", 1) and _ok(c) and c >= need
+    return ok, (f"exam: repeats the first sound {_fmt(c)} (need {need:.2f}; chance {_fmt(ch)}), "
+                f"the syllable {_fmt(e.get('syllable'))} (chance {_fmt(e.get('syllable_chance'))}), "
+                f"n={e.get('n', 0)}/{e.get('trials', 0)}")
+
+
+def check_echo_passive(r: SkillReport, ex: Exams) -> tuple[bool, str]:
+    """anima 0.5's test for "Copy me": the copies counted while it is being taught."""
     need = max(0.15, 1.8 * r.echo_chance) if _ok(r.echo_chance) else 0.15
     ok = r.echo_n >= 30 and _ok(r.echo_rate) and r.echo_rate >= need
     return ok, f"echo rate {_fmt(r.echo_rate)} (need {need:.2f}, chance {_fmt(r.echo_chance)}, n={r.echo_n}/30)"
@@ -123,23 +141,25 @@ LESSONS: tuple[Lesson, ...] = (
            "food stays rewarding. You may also put food to its left or right to give it practice "
            "turning. Do not praise every step.", food_allowed=True, energy_cap=0.5, exam="forage"),
     Lesson("echo", "Copy me",
-           "start its reply with the consonant it just heard",
-           ("reward_echo",), ("reward_echo", "echo_back"), 5.0, check_echo,
-           "Say one short repeated syllable each turn ('da da', 'bo bo', 'ki ki') with a different "
-           "consonant each time, and leave out the target sound (that comes in the next lesson); "
-           "reward_echo smiles when it copies. Let it answer before speaking again.",
-           energy_cap=0.6, measures=("echo",)),
+           "repeat the word it just heard, starting with its first sound",
+           ("reward_imitation",), ("reward_imitation", "reward_echo", "echo_back"), 5.0, check_echo,
+           "Say one short word each turn - one syllable said twice ('da da', 'bo bo', 'ki ki') - and keep "
+           "saying the same word until it has repeated it once or twice (or about eight tries), then "
+           "move on to another consonant; leave out the target sound (that comes in the next lesson). "
+           "reward_imitation gives it pleasure when its reply repeats your word. Let it answer before "
+           "speaking again; if an answer was close but not rewarded, a small pleasure for its speech is "
+           "fine.", energy_cap=0.6, exam="imitate", measures=("echo",)),
     Lesson("babble", "Make the sound",
            "say syllables starting with the target sound often",
            ("reward_syllable",), ("reward_syllable", "echo_back"), 4.0, check_babble,
-           "reward_syllable smiles right after each target syllable. You can model the sound by "
-           "saying it (e.g. 'ma ma') now and then. Never smile at other sounds.", energy_cap=0.6,
+           "reward_syllable gives it pleasure right after each target syllable. You can model the sound "
+           "by saying it (e.g. 'ma ma') now and then. Never reward other sounds.", energy_cap=0.6,
            measures=("target",)),
     Lesson("independence", "Live on its own",
            "keep itself fed with no help at all",
            (), (), 10.0, check_independence,
-           "Step back: no reflexes, no food from you (unless it is starving). Watch, and talk to it "
-           "now and then if you like.", measures=("energy",)),
+           "Step back: no reflexes, no food and no pleasure from you (unless it is starving). Watch, "
+           "and talk to it now and then if you like.", measures=("energy",)),
 )
 
 LESSON_NAMES = tuple(lesson.name for lesson in LESSONS)

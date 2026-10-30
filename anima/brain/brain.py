@@ -29,9 +29,19 @@ from ..core.plasticity import STDP, RewardSTDP
 from .cerebellum import Cerebellum, CerebellumConfig
 from .critic import Critic, CriticConfig
 from .drives import DRIVE_NAMES, DriveConfig, Drives
-from .memory import Hippocampus, HippocampusConfig
+from .hedonic import Hedonic, HedonicConfig
+from .memory import Episode, Hippocampus, HippocampusConfig
 from .modulators import ModulatorConfig, Neuromodulators
 from .sleep import SleepConfig, SleepController
+
+
+_GATES = ("vocal.gate",)  # "go" signals: recalling them would make it act, so they are not recalled
+
+
+def _act_kind(group: str, role: str | None) -> str:
+    if role == "vocal" or group.startswith("vocal"):
+        return "speech"
+    return "hand" if group == "hands" else "move"
 
 
 @dataclass
@@ -60,6 +70,8 @@ class EffectConfig:
     downscale_per_s: float = 0.0008  # NREM synaptic downscaling of cortical STDP synapses
     memory_reward_threshold: float = 0.05
     memory_surprise_threshold: float = 0.6
+    # plasticity of the hearing->speaking mirror while it speaks: x (1 + this x phasic dopamine), from 0 up
+    hebbian_dopamine: float = 10.0
 
 
 @dataclass
@@ -96,6 +108,7 @@ class Brain:
         self.sleep = SleepController(SleepConfig(**mods.get("sleep", {})))
         self.mods = Neuromodulators(ModulatorConfig(**mods.get("modulators", {})))
         self.hippocampus = Hippocampus(HippocampusConfig(**mods.get("hippocampus", {})))
+        self.hedonic = Hedonic(HedonicConfig(**mods.get("hedonic", {})))
         self.rng = np.random.default_rng(net.rng.integers(1 << 31))
         self.roles: dict[str, list[str]] = {}
         self.inputs: dict[str, InputPort] = {}
@@ -140,12 +153,21 @@ class Brain:
         self.attention = 0.0
         self.time_s = 0.0
         self.replays = 0
+        # pain and pleasure: what it did lately (to recall when it feels one)
+        self.acts: deque[dict[str, Any]] = deque(maxlen=256)  # about a minute of moves and syllables
+        self._act_id = 0
+        self._recall_queue: deque[Episode] = deque()
+        self._recalling = False
+        self._recall_wait_until = -1.0
+        self._frozen_until = -1.0
+        self.recalls = 0
         self._pop_slices = {p.name: p.slice for p in net.populations.values()}
         self._base_noise = net.noise_sigma.copy()
         self._downscale_projs = [p for p in net.projections.values()
                                  if isinstance(p.rule, STDP)]
         self._reward_projs = [p for p in net.projections.values()
                               if isinstance(p.rule, RewardSTDP)]
+        self._vocal_groups = {g for g in self.outputs if net.populations[g].tags.get("role") == "vocal"}
 
     # ============================================================ I/O API
     def set_input(self, name: str, values: float | np.ndarray) -> None:
@@ -205,15 +227,155 @@ class Brain:
             self.sleep.stimulate(0.5 * strength)
         return relief
 
-    def note_action(self, group: str, channel: int) -> None:
-        """The body committed to an action (efference copy)."""
+    def note_action(self, group: str, channel: int) -> int:
+        """The body committed to an action (efference copy).  Returns the id
+        of the act it is part of (a syllable notes its gate, consonant and
+        vowel in the same tick: one act), which :meth:`feel` accepts as
+        ``credit``."""
         self.current_actions[group] = channel
+        snap = None
         if channel >= 0:
             snap = {n: self.get_input(n).copy() for n in self.inputs}
             self._decisions[group] = (self.time_s, snap, channel)
+        kind = _act_kind(group, self.net.populations[group].tags.get("role") if group in self.net.populations else "")
+        last = self.acts[-1] if self.acts else None
+        if last is not None and last["kind"] == kind and abs(last["t"] - self.time_s) < 1e-9:
+            last["actions"][group] = int(channel)  # another part of the same act
+            return int(last["id"])
+        self._act_id += 1
+        self.acts.append({"id": self._act_id, "t": self.time_s, "kind": kind, "actions": {group: int(channel)},
+                          "inputs": snap if snap is not None else {n: self.get_input(n).copy() for n in self.inputs}})
+        return self._act_id
 
     def end_action(self, group: str) -> None:
         self.current_actions[group] = -1
+
+    # ============================================================ pain and pleasure
+    @property
+    def frozen(self) -> bool:
+        """For a moment it starts no new movement or sound: flinching from
+        pain, or pausing to recall what it just did."""
+        return self.time_s < self._frozen_until or self._recalling or bool(self._recall_queue)
+
+    def feel(self, kind: str, intensity: float = 0.6, source: str = "", credit: Any = "auto") -> dict[str, Any]:
+        """Feel pleasure (``kind="pleasure"``) or pain (``"pain"``) now; see
+        :mod:`anima.brain.hedonic`.
+
+        intensity: 0-1 (strength and duration of the teaching signal).
+        credit: what it is for — the act(s) it recalls while the dopamine is
+            there: ``"auto"`` (its last words if it spoke in the last few
+            seconds, else its last movement), ``"speech"``, ``"movement"``,
+            ``"now"`` (nothing recalled: only what it did in the last second
+            or so is credited, through its eligibility traces), or a list of
+            act ids (from :meth:`note_action`, e.g. the ``act`` of
+            ``syllable`` events).
+        Returns what was credited.  Call on the creature's own thread
+        (:meth:`Agent.pleasure` / :meth:`Agent.pain` do).
+        """
+        h = self.hedonic
+        cfg = h.cfg
+        x = float(np.clip(intensity, 0.0, cfg.max_intensity))
+        if kind not in ("pleasure", "pain"):
+            raise ValueError(f"kind must be 'pleasure' or 'pain', not {kind!r}")
+        acts = self._credit_acts(credit) if (cfg.recall and self.awake) else []
+        duration = h.duration(x)
+        if acts:
+            duration = max(duration, len(acts) * cfg.recall_ms / 1000.0 + 0.25)
+            for act in reversed(acts):  # the most recent first, as in reverse replay
+                moves = {g: ch for g, ch in act["actions"].items() if g in self.outputs and g not in _GATES}
+                self._recall_queue.append(Episode(act["t"], act["inputs"], moves,
+                                                  x if kind == "pleasure" else -x, 0.0))
+            self._recall_wait_until = self.time_s + cfg.recall_wait_s
+            first = acts[0]
+            self.hippocampus.encode(first["t"], first["inputs"], dict(first["actions"]),
+                                    x if kind == "pleasure" else -x * cfg.pain_gain, 0.0)
+            # (this is the memory of the moment; no second one of whatever it is doing now)
+            self._last_memory_t = max(self._last_memory_t, self.time_s + duration)
+        h.add(kind, x, duration, self.time_s, source)
+        if kind == "pain":
+            self._frozen_until = max(self._frozen_until, self.time_s + cfg.flinch_s * min(1.0, 0.4 + x))
+            self.mods.arouse(cfg.arousal * x)
+            self.attention = max(self.attention, x)
+        if not self.awake:
+            self.sleep.stimulate(cfg.wake * x * (1.0 if kind == "pain" else 1.0 / 3.0))
+        what = [self.describe_act(a) for a in acts]
+        label = (credit if isinstance(credit, str) else "acts") if acts else "now"
+        info = {"intensity": round(x, 3), "source": source, "credit": label, "recalled": what,
+                "seconds_ago": round(self.time_s - acts[-1]["t"], 2) if acts else None, "t": self.time_s}
+        self.events.append((kind, info))
+        return {"kind": kind, **info}
+
+    def describe_act(self, act: dict[str, Any]) -> str:
+        """A short name for an act: the syllable said, the movement made."""
+        acts = act["actions"]
+        if act["kind"] == "speech":
+            c, v = acts.get("vocal.C", -1), acts.get("vocal.V", -1)
+            cl = self.outputs["vocal.C"].labels if "vocal.C" in self.outputs else []
+            vl = self.outputs["vocal.V"].labels if "vocal.V" in self.outputs else []
+            return (cl[c] if 0 <= c < len(cl) else "") + (vl[v] if 0 <= v < len(vl) else "")
+        g, ch = next(((g, ch) for g, ch in acts.items() if ch >= 0), (None, -1))
+        if g is None:
+            return act["kind"]
+        labels = self.outputs[g].labels if g in self.outputs else []
+        return labels[ch] if 0 <= ch < len(labels) else f"{g}:{ch}"
+
+    def _credit_acts(self, credit: Any) -> list[dict[str, Any]]:
+        """The acts (oldest first) a feeling is for."""
+        if credit is None or credit == "now":
+            return []
+        if isinstance(credit, str):
+            if credit == "speech":
+                return self._last_words()
+            if credit == "movement":
+                return self._last_move()
+            if credit == "auto":
+                return self._last_words() or self._last_move()
+            raise ValueError(f"credit must be one of auto, speech, movement, now or a list of act ids, not {credit!r}")
+        ids = {int(i) for i in credit}
+        return [a for a in self.acts if a["id"] in ids][-self.hedonic.cfg.recall_max:]
+
+    def _last_words(self) -> list[dict[str, Any]]:
+        cfg = self.hedonic.cfg
+        said = [a for a in self.acts if a["kind"] == "speech"]
+        if not said or self.time_s - said[-1]["t"] > cfg.recall_window_s:
+            return []
+        out = [said[-1]]
+        for a in reversed(said[:-1]):
+            if out[0]["t"] - a["t"] > cfg.recall_gap_s or len(out) >= cfg.recall_max:
+                break
+            out.insert(0, a)
+        return out
+
+    def _last_move(self) -> list[dict[str, Any]]:
+        moved = [a for a in self.acts if a["kind"] in ("move", "hand")]
+        if not moved or self.time_s - moved[-1]["t"] > self.hedonic.cfg.recall_move_s:
+            return []
+        return [moved[-1]]
+
+    def _recall(self) -> None:
+        """Replay the queued acts one after another (awake), each as a short
+        burst: its senses as they were, and its articulators or muscles
+        driven toward what it did, with the body paused."""
+        if self._recalling and self._replay_episode is None:
+            self._recalling = False  # the last recalled act just ended (see _replay)
+        if self._recalling or not self._recall_queue:
+            return
+        if not self.awake:
+            self._recall_queue.clear()
+            return
+        busy = any(ch >= 0 for ch in self.current_actions.values())
+        if busy and self.time_s < self._recall_wait_until:
+            return  # let the movement or syllable in progress finish first
+        ep = self._recall_queue.popleft()
+        self._replay_episode = ep
+        self._replay_until = self.time_s + self.hedonic.cfg.recall_ms / 1000.0
+        for g, ch in ep.actions.items():
+            fb = np.full(self.outputs[g].channels, -2.0)
+            if ch >= 0:
+                fb[ch] = self.effects.replay_feedback
+            self.set_feedback(g, fb)
+        self._recalling = True
+        self.recalls += 1
 
     # ============================================================ dynamics
     @property
@@ -242,6 +404,10 @@ class Brain:
                            novelty, cortex_rate)
         if self.awake:
             self._reward_acc += eff.curiosity_reward * self.drives.boredom * novelty * dt_s
+        felt = self.hedonic.step(dt_s)  # pain and pleasure
+        if felt:
+            self._reward_acc += felt
+            self.reward_log.append((self.time_s, felt, "feel:pleasure" if felt > 0 else "feel:pain"))
         # ---- sleep/wake
         before = self.sleep.stage
         changed = self.sleep.update(dt_s, self.time_s, self.drives.sleep_pressure,
@@ -267,7 +433,9 @@ class Brain:
             self.hippocampus.decay(dt_s)
         # ---- replay and downscaling in slow-wave sleep
         replay_da = self._replay(dt_s)
+        self._recall()
         net.modulators["dopamine"] = float(np.clip(da + replay_da, -1.0, 1.0))
+        net.modulators["mirror"] = self._mirror_gate()
         net.modulators["acetylcholine"] = self.mods.acetylcholine
         if self.stage == "nrem" and eff.downscale_per_s > 0:
             f = np.float32(1.0 - eff.downscale_per_s * dt_s)
@@ -275,6 +443,34 @@ class Brain:
                 net.scale_weights(proj.name, f)
         # ---- write neuromodulatory effects into the network
         self._apply_effects()
+
+    def _mirror_gate(self) -> float:
+        """How fast the hearing->speaking mirror learns now (synapses with
+        ``gate: "mirror"``).
+
+        It learns *while it speaks* — what it hears then is mostly its own
+        voice, the consequence of the articulation it is making — and while
+        it relives speaking (a recalled or dreamt moment), but not while it
+        only listens: otherwise every sound it hears would become linked to
+        whatever it happens to say next, and a teacher's voice would blur the
+        map rather than sharpen it.  Dopamine sets the rate: a burst
+        multiplies it, a dip stops it (dopamine gates cortical LTP; pairing a
+        sound with dopamine expands its cortical map: Bao, Chan & Merzenich
+        2001).  So when it recalls a reply it is rewarded for, the sound it
+        heard and the sound it made are bound much more strongly than in
+        ordinary babbling, and replaying a moment that hurt binds nothing.
+        """
+        ep = self._replay_episode
+        if ep is not None:
+            if ep.reward < 0:
+                return 0.0
+            speaking = any(g in self._vocal_groups for g in ep.actions)
+        else:
+            speaking = any(self.current_actions.get(g, -1) >= 0 for g in self._vocal_groups)
+        if not speaking:
+            return 0.0
+        k = self.effects.hebbian_dopamine
+        return float(np.clip(1.0 + k * self.net.modulators.get("dopamine", 0.0), 0.0, 1.0 + k))
 
     def _mean_rate(self, role: str) -> float:
         names = [n for n in self.roles.get(role, []) if not self.net.populations[n].inhibitory]
@@ -418,6 +614,7 @@ class Brain:
             "replays": self.replays,
             "surprise": self.cerebellum.surprise,
             "value": self.critic.value,
+            "feelings": self.hedonic.levels(),
         }
 
     def pop_events(self) -> list[tuple[str, dict[str, Any]]]:
@@ -449,6 +646,14 @@ class Brain:
             "next_replay": self._next_replay,
             "last_memory_t": self._last_memory_t,
             "net_modulators": dict(self.net.modulators),
+            # pain and pleasure (v0.6)
+            "hedonic": self.hedonic.state_dict(),
+            "acts": [_act_to_json(a) for a in self.acts],
+            "act_id": self._act_id,
+            "recall": {"queue": [_episode_to_json(e) for e in self._recall_queue],
+                       "active": _episode_to_json(self._replay_episode) if self._recalling else None,
+                       "until": self._replay_until, "wait_until": self._recall_wait_until,
+                       "frozen_until": self._frozen_until, "recalls": self.recalls},
         }
 
     def load_state_dict(self, s: dict[str, Any]) -> None:
@@ -478,6 +683,41 @@ class Brain:
             self._next_replay = float(s["next_replay"])
             self._last_memory_t = float(s["last_memory_t"])
             self.net.modulators.update({k: float(v) for k, v in s["net_modulators"].items()})
+        if "hedonic" in s:
+            self.hedonic.load_state_dict(s["hedonic"])
+            self.acts = deque((_act_from_json(a) for a in s.get("acts", [])), maxlen=self.acts.maxlen)
+            self._act_id = int(s.get("act_id", 0))
+            r = s.get("recall", {})
+            self._recall_queue = deque(_episode_from_json(e) for e in r.get("queue", []))
+            if r.get("active") is not None:
+                self._replay_episode = _episode_from_json(r["active"])
+                self._replay_until = float(r["until"])
+                self._recalling = True
+            self._recall_wait_until = float(r.get("wait_until", -1.0))
+            self._frozen_until = float(r.get("frozen_until", -1.0))
+            self.recalls = int(r.get("recalls", 0))
+
+
+def _act_to_json(a: dict[str, Any]) -> dict[str, Any]:
+    return {**a, "inputs": {k: np.asarray(v, dtype=float).tolist() for k, v in a["inputs"].items()}}
+
+
+def _act_from_json(a: dict[str, Any]) -> dict[str, Any]:
+    return {"id": int(a["id"]), "t": float(a["t"]), "kind": str(a["kind"]),
+            "actions": {k: int(v) for k, v in a["actions"].items()},
+            "inputs": {k: np.asarray(v, dtype=float) for k, v in a["inputs"].items()}}
+
+
+def _episode_to_json(e: Episode | None) -> dict[str, Any] | None:
+    if e is None:
+        return None
+    return {"t_s": e.t_s, "inputs": {k: np.asarray(v, dtype=float).tolist() for k, v in e.inputs.items()},
+            "actions": dict(e.actions), "reward": float(e.reward)}
+
+
+def _episode_from_json(e: dict[str, Any]) -> Episode:
+    return Episode(float(e["t_s"]), {k: np.asarray(v, dtype=np.float32) for k, v in e["inputs"].items()},
+                   {k: int(v) for k, v in e["actions"].items()}, float(e.get("reward", 0.0)), 0.0)
 
 
 __all__ = ["Brain", "EffectConfig", "InputPort", "OutputGroup", "DRIVE_NAMES"]

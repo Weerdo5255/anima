@@ -86,6 +86,7 @@ def _two(rule, size=4, device=None, **kw):
 
 
 @pytest.mark.parametrize("make", [lambda: STDP(), lambda: STDP(soft_bounds=False), lambda: Hebbian(rate=0.01),
+                                  lambda: Hebbian(rate=0.01, gate="mirror"),  # (a gate above 1, as with pleasure)
                                   lambda: RewardSTDP(tau_e=200.0, apply_every=20.0, normalize="both"),
                                   lambda: RewardSTDP(tau_e=200.0, apply_every=20.0, w_min=0.002)])
 def test_each_rule_on_controlled_spikes(make):
@@ -97,6 +98,7 @@ def test_each_rule_on_controlled_spikes(make):
     for t in range(80):
         for net in nets:
             net.modulators["dopamine"] = 0.5 if t < 40 else -0.5
+            net.modulators["mirror"] = 2.5 if t < 60 else 0.0
             net.I_ext[:] = 0.0
             for i in pattern.get(t, []):
                 net.I_ext[i] = 400.0  # one strong millisecond: that neuron fires now

@@ -1,0 +1,55 @@
+   ·· [09:36] lesson 1 of 4 'forage': exam not taken yet (need 0.60; chance 0.33), food 2.0/min (need 1.0); practised 2.0/5 awake min | energy 0.44  (seed 1, 2.0 min, wall 56s)
+   ·· [11:59] lesson 1 of 4 'forage': exam not taken yet (need 0.60; chance 0.33), food 3.5/min (need 1.0); practised 4.0/5 awake min | energy 0.43  (seed 1, 4.0 min, wall 116s)
+   ✎ [13:16] exam 'forage': score 0.75 (chance 0.33; correct moves left 12/20, ahead 15/20, right 18/20)
+   ·· [14:23] lesson 1 of 4 'forage': exam 0.75 (need 0.60; chance 0.33), food 4.2/min (need 1.0); must pass the next exam too | energy 0.44  (seed 1, 6.0 min, wall 182s)
+   ✎ [15:50] exam 'forage': score 0.73 (chance 0.33; correct moves left 11/20, ahead 14/20, right 19/20)
+   ·· [16:47] lesson 1 of 4 'forage': exam 0.73 (need 0.60; chance 0.33), food 3.8/min (need 1.0) | energy 0.43  (seed 1, 8.0 min, wall 246s)
+★ [17:07] graduated 'Find food': exam 0.73 (need 0.60; chance 0.33), food 3.6/min (need 1.0)
+   ── lesson 2: Copy me — repeat the word it just heard, starting with its first sound
+   ·· [19:11] lesson 2 of 4 'echo': exam not taken yet (need: repeats the first sound of a word >= 30% of the time, and 2.5x as often as chance); practised 1.7/5 awake min | energy 0.41  (seed 1, 10.0 min, wall 311s)
+   ·· [21:35] lesson 2 of 4 'echo': exam not taken yet (need: repeats the first sound of a word >= 30% of the time, and 2.5x as often as chance); practised 3.7/5 awake min | energy 0.42  (seed 1, 12.0 min, wall 372s)
+   ·· [23:59] lesson 2 of 4 'echo': exam not taken yet (need: repeats the first sound of a word >= 30% of the time, and 2.5x as often as chance); practised 4.9/5 awake min | energy 0.44  (seed 1, 14.0 min, wall 427s)
+   ·· [02:23] lesson 2 of 4 'echo': exam not taken yet (need: repeats the first sound of a word >= 30% of the time, and 2.5x as often as chance); practised 4.9/5 awake min | energy 0.44  (seed 1, 16.0 min, wall 469s)
+   ·· [04:47] lesson 2 of 4 'echo': exam not taken yet (need: repeats the first sound of a word >= 30% of the time, and 2.5x as often as chance); practised 4.9/5 awake min | energy 0.44  (seed 1, 18.0 min, wall 512s)
+   ✎ [07:02] exam 'forage': score 0.77 (chance 0.33; correct moves left 16/20, ahead 11/20, right 19/20)
+   ✎ [07:11] exam 'imitate': repeats the first sound 28% (chance 8%), the syllable 3% (chance 2%), the whole word 0% (n=32/33)
+   ·· [07:11] lesson 2 of 4 'echo': exam: repeats the first sound 0.28 (need 0.30; chance 0.08), the syllable 0.03 (chance 0.02), n=32/33 | energy 0.44  (seed 1, 20.0 min, wall 599s)
+   ✎ [09:35] exam 'imitate': repeats the first sound 33% (chance 9%), the syllable 9% (chance 3%), the whole word 0% (n=33/33)
+   ·· [09:35] lesson 2 of 4 'echo': exam: repeats the first sound 0.33 (need 0.30; chance 0.09), the syllable 0.09 (chance 0.03), n=33/33; must pass the next exam too | energy 0.45  (seed 1, 22.0 min, wall 702s)
+   ✎ [11:59] exam 'imitate': repeats the first sound 22% (chance 9%), the syllable 9% (chance 2%), the whole word 0% (n=32/33)
+   ·· [11:59] lesson 2 of 4 'echo': exam: repeats the first sound 0.22 (need 0.30; chance 0.09), the syllable 0.09 (chance 0.02), n=32/33 | energy 0.48  (seed 1, 24.0 min, wall 804s)
+   ✎ [14:23] exam 'imitate': repeats the first sound 34% (chance 9%), the syllable 19% (chance 2%), the whole word 0% (n=32/33)
+   ·· [14:23] lesson 2 of 4 'echo': exam: repeats the first sound 0.34 (need 0.30; chance 0.09), the syllable 0.19 (chance 0.02), n=32/33; must pass the next exam too | energy 0.52  (seed 1, 26.0 min, wall 912s)
+   ✎ [16:47] exam 'imitate': repeats the first sound 36% (chance 9%), the syllable 18% (chance 2%), the whole word 0% (n=33/33)
+   ·· [16:47] lesson 2 of 4 'echo': exam: repeats the first sound 0.36 (need 0.30; chance 0.09), the syllable 0.18 (chance 0.02), n=33/33 | energy 0.53  (seed 1, 28.0 min, wall 1014s)
+★ [18:04] graduated 'Copy me': exam: repeats the first sound 0.36 (need 0.30; chance 0.09), the syllable 0.18 (chance 0.02), n=33/33
+   ── lesson 3: Make the sound — say syllables starting with the target sound often
+   ·· [19:11] lesson 3 of 4 'babble': target share 0.06 (need 0.30, n=32/80); practised 0.9/4 awake min | energy 0.54  (seed 1, 30.0 min, wall 1082s)
+   ✎ [21:26] exam 'forage': score 0.67 (chance 0.33; correct moves left 15/20, ahead 13/20, right 12/20)
+   ·· [21:35] lesson 3 of 4 'babble': target share 0.08 (need 0.30, n=100/80); practised 2.9/4 awake min | energy 0.54  (seed 1, 32.0 min, wall 1145s)
+   ·· [23:59] lesson 3 of 4 'babble': target share 0.13 (need 0.30, n=100/80) | energy 0.54  (seed 1, 34.0 min, wall 1197s)
+   ·· [02:24] lesson 3 of 4 'babble': target share 0.13 (need 0.30, n=100/80) | energy 0.54  (seed 1, 36.0 min, wall 1242s)
+   ·· [04:48] lesson 3 of 4 'babble': target share 0.13 (need 0.30, n=100/80) | energy 0.54  (seed 1, 38.0 min, wall 1287s)
+   ✎ [07:12] exam 'imitate': repeats the first sound 30% (chance 9%), the syllable 6% (chance 2%), the whole word 0% (n=33/33)
+   ·· [07:12] lesson 3 of 4 'babble': target share 0.15 (need 0.30, n=100/80) | energy 0.54  (seed 1, 40.0 min, wall 1350s)
+★ [09:26] graduated 'Make the sound': target share 0.42 (need 0.30, n=100/80)
+   ── lesson 4: Live on its own — keep itself fed with no help at all
+   ·· [09:36] lesson 4 of 4 'independence': energy mean 0.15 (need 0.35), min 0.13 (need 0.08) over 0.1/8 min; practised 0.1/10 awake min | energy 0.15  (seed 1, 42.0 min, wall 1406s)
+   ✎ [11:50] exam 'forage': score 0.58 (chance 0.33; correct moves left 14/20, ahead 12/20, right 9/20)
+   ·· [12:00] lesson 4 of 4 'independence': energy mean 0.78 (need 0.35), min 0.10 (need 0.08) over 2.1/8 min; practised 2.1/10 awake min | energy 0.78  (seed 1, 44.0 min, wall 1467s)
+   ·· [14:24] lesson 4 of 4 'independence': energy mean 0.87 (need 0.35), min 0.10 (need 0.08) over 4.1/8 min; practised 4.1/10 awake min | energy 0.87  (seed 1, 46.0 min, wall 1518s)
+   ·· [16:48] lesson 4 of 4 'independence': energy mean 0.90 (need 0.35), min 0.10 (need 0.08) over 6.1/8 min; practised 6.1/10 awake min | energy 0.90  (seed 1, 48.0 min, wall 1570s)
+   ·· [19:12] lesson 4 of 4 'independence': energy mean 0.91 (need 0.35), min 0.10 (need 0.08) over 8.1/8 min; practised 8.1/10 awake min | energy 0.91  (seed 1, 50.0 min, wall 1623s)
+   ✎ [21:36] exam 'imitate': repeats the first sound 45% (chance 9%), the syllable 16% (chance 2%), the whole word 0% (n=31/33)
+   ·· [21:36] lesson 4 of 4 'independence': energy mean 0.93 (need 0.35), min 0.10 (need 0.08) over 10.0/8 min | energy 0.93  (seed 1, 52.0 min, wall 1695s)
+★ [22:52] graduated 'Live on its own': energy mean 0.95 (need 0.35), min 0.81 (need 0.08) over 10.0/8 min
+★ curriculum complete — it lives on its own now; the teacher steps away.
+Tutor report — creature age 53.1 min, teacher scripted
+  ✓ forage        passed at 8.3 min after 8.3 awake min of practice
+  ✓ echo          passed at 29.1 min after 14.2 awake min of practice
+  ✓ babble        passed at 41.9 min after 6.2 awake min of practice
+  ✓ independence  passed at 53.1 min after 11.2 awake min of practice
+  skills: food 2.0/min, 'm' share 0.17, echo 0.32 (chance 0.11), energy 0.95
+  last exam 'forage' at 43.9 min: score 0.58 (chance 0.33; correct moves left 14/20, ahead 12/20, right 9/20)
+  last exam 'imitate' at 52.0 min: repeats the first sound 45% (chance 9%), the syllable 16% (chance 2%), the whole word 0% (n=31/33)
+done tutoring seed 1

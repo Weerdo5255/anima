@@ -8,6 +8,14 @@
   simply keeps living; if it fails or answers nonsense, the scripted teacher
   covers that turn.
 
+The report is pre-digested so that even a small model can teach well: it
+says what the teacher last said, what the creature answered and how much of
+it matched ("last_reply"), what the creature said last and how long ago, and
+how its skills are coming on.  The model's own pleasure and pain are *for*
+the creature's last words (or movement): the creature recalls that moment
+while it feels them, so they still teach although the model answers seconds
+late.
+
 Every decision, from either teacher, goes through :func:`validate`, which
 enforces the lesson's rules (e.g. no free food during the "ask" lesson), so
 a small model can be creative about *when* and *what* to say without being
@@ -26,12 +34,19 @@ import numpy as np
 from ..brain.presets import CONSONANTS, VOWELS
 from .curriculum import LESSONS
 from .ollama import OllamaClient, OllamaError
+from ..body.voice import parse_social_signals, syllabify
 from .toolkit import RULES, WHERE, clean_note, clean_prefix, clean_text
 
-TOOLS = ("wait", "say", "praise", "scold", "give_food", "set_rule", "clear_rule", "switch_lesson", "note")
+TOOLS = ("wait", "say", "pleasure", "pain", "praise", "scold", "give_food", "set_rule", "clear_rule",
+         "switch_lesson", "note")
+FOR = ("reply", "speech", "movement")  # what a teacher's pleasure or pain is for
+REPLY_RECENT_S = 30.0  # pleasure or pain "for reply" needs a reply this recent
 MAX_ACTIONS = 3
 STARVING = 0.85  # hunger at which any lesson allows feeding it
 REVIEW_BELOW = 0.5  # the scripted teacher reviews foraging if a spot-check exam falls below this
+MAX_WORDS, MAX_SYLLABLES = 2, 4  # what the teacher may say in one go
+PLEASURE_RANGE, PAIN_RANGE = (0.1, 1.0), (0.1, 0.6)  # what a teacher may give
+RECENT_WORDS_S = 8.0  # pleasure or pain "for speech" needs words this recent (the creature recalls them)
 
 
 @dataclass
@@ -48,6 +63,8 @@ class Decision:
             tool = a["tool"]
             if tool == "say":
                 parts.append(f"say '{a['text']}'")
+            elif tool in ("pleasure", "pain"):
+                parts.append(f"{tool} {a['amount']:.1f} for {a['for']}")
             elif tool == "give_food":
                 parts.append(f"give_food({a['where']})")
             elif tool in ("set_rule", "clear_rule"):
@@ -92,11 +109,38 @@ def validate(raw: Any, obs: dict[str, Any], source: str) -> Decision:
             continue
         if tool in used and tool not in ("set_rule", "clear_rule"):
             continue  # one of each per turn
+        if tool in ("pleasure", "pain") and {"pleasure", "pain"} & used:
+            rejected.append(f"{tool}: pleasure and pain in the same turn")
+            continue
         if tool == "say":
-            text = clean_text(a.get("text", ""), 30)
+            text = short_word(a.get("text", ""))
             if not text:
+                rejected.append("say: nothing it could hear")
                 continue
+            if text != clean_text(a.get("text", ""), 60):
+                rejected.append(f"say: trimmed to '{text}' (one short word, no smileys)")
             out.append({"tool": "say", "text": text})
+        elif tool in ("pleasure", "pain"):
+            lo, hi = PLEASURE_RANGE if tool == "pleasure" else PAIN_RANGE
+            try:
+                amount = float(a.get("amount", 0.6 if tool == "pleasure" else 0.3))
+            except (TypeError, ValueError):
+                amount = 0.6 if tool == "pleasure" else 0.3
+            amount = float(np.clip(amount if np.isfinite(amount) else lo, lo, hi))
+            what = str(a.get("for", "reply")).lower()
+            what = {"move": "movement", "moves": "movement", "words": "speech", "said": "speech",
+                    "answer": "reply", "last_reply": "reply"}.get(what, what)
+            what = what if what in FOR else "reply"
+            words = obs.get("its_last_words") or {}
+            reply = obs.get("last_reply") or {}
+            if what == "reply" and (not reply.get("it_replied")
+                                    or (reply.get("seconds_ago") or 1e9) > REPLY_RECENT_S):
+                rejected.append(f"{tool}: no reply to your words in the last {REPLY_RECENT_S:.0f} s")
+                continue
+            if what == "speech" and (not words or (words.get("seconds_ago") or 1e9) > RECENT_WORDS_S):
+                rejected.append(f"{tool}: it has not said anything in the last {RECENT_WORDS_S:.0f} s")
+                continue
+            out.append({"tool": tool, "amount": round(amount, 2), "for": what})
         elif tool in ("praise", "scold", "wait"):
             out.append({"tool": tool})
         elif tool == "give_food":
@@ -136,6 +180,22 @@ def validate(raw: Any, obs: dict[str, Any], source: str) -> Decision:
     return Decision(thought, out, source, rejected=rejected)
 
 
+def short_word(text: Any) -> str:
+    """What the teacher may say: at most two words and four syllables, no smileys."""
+    plain, _ = parse_social_signals(str(text))
+    words = "".join(ch if ch.isalpha() and ch.isascii() else " " for ch in plain).split()[:MAX_WORDS]
+    out, n = [], 0
+    for w in words:
+        k = len(syllabify(w))
+        if k == 0:
+            continue
+        if n + k > MAX_SYLLABLES:
+            break
+        out.append(w)
+        n += k
+    return " ".join(out)
+
+
 # ----------------------------------------------------------------- teachers
 class Teacher:
     name = "teacher"
@@ -159,6 +219,7 @@ class ScriptedTeacher(Teacher):
         self.rng = np.random.default_rng(seed)
         self._last_cons = ""
         self._last_review = -1e9
+        self._word = ""  # the word it is being taught now ("Copy me")
 
     def decide(self, obs: dict[str, Any]) -> Decision:
         if obs.get("state") != "awake":
@@ -187,12 +248,21 @@ class ScriptedTeacher(Teacher):
             acts.append({"tool": "say", "text": f"{target}a {target}a"})
             thought = "Model the target sound now and then; the reflex rewards it when it says it."
         elif lesson == "echo":
-            options = [c for c in CONSONANTS if c not in (self._last_cons, "h", target)]
-            c = str(self.rng.choice(options))
-            v = str(self.rng.choice(VOWELS))
-            self._last_cons = c
-            acts.append({"tool": "say", "text": f"{c}{v} {c}{v}"})
-            thought = f"Offer a new sound ({c}) to copy; the reflex praises a copy."
+            pr = obs.get("practice") or {}
+            again = str(obs.get("suggestion", "")).startswith("say '") and pr.get("word") == self._word
+            if not self._word or not again:
+                options = [c for c in CONSONANTS if c not in (self._last_cons, "h", target)]
+                c = str(self.rng.choice(options))
+                v = str(self.rng.choice(VOWELS))
+                self._last_cons = c
+                done = self._word
+                self._word = f"{c}{v} {c}{v}"
+                thought = (f"A new word to copy ({self._word})" + (f"; enough of '{done}'" if done else "")
+                           + ". The reflex rewards it when its reply repeats the word.")
+            else:
+                thought = (f"Say '{self._word}' again until it repeats it ({pr.get('repeated_times', 0)} "
+                           f"times so far, said {pr.get('said_times', 0)} times).")
+            acts.append({"tool": "say", "text": self._word})
         elif lesson == "forage":
             thought = "Let it practise; the guide keeps food within reach."
         elif lesson == "ask":
@@ -204,20 +274,27 @@ class ScriptedTeacher(Teacher):
         return validate({"thought": thought, "actions": acts}, obs, self.name)
 
 
-SYSTEM_PROMPT = """You are the teacher of a newborn artificial creature. Its brain is a simulated network of about NEURONS_HERE spiking neurons that learns only from experience, through dopamine released by food and by your attention. It is NOT a language model and understands no words. It can only:
+SYSTEM_PROMPT = """You are the teacher of a newborn artificial creature. Its brain is a simulated network of about NEURONS_HERE spiking neurons that learns only from experience: dopamine, released by food and by pleasure, strengthens whatever it did just before; pain weakens it. It is NOT a language model and understands no words. It can only:
 - move (forward, turn left, turn right) in a small arena where food has a smell,
 - babble syllables made of one consonant and one vowel ("ba", "mi", "to"),
 - hear sounds (your words reach it as a stream of phonemes),
-- feel hunger, fatigue, boredom and loneliness, and sleep at night.
-It lives on its own clock and never waits for you. You get a short report every few seconds. If the report has "its_thoughts", those are lines the framework reads out of its brain activity (feelings, what it notices, what it is inclined to do, rewards better or worse than it expected); they are not words it knows.
+- feel hunger, fatigue, boredom, loneliness, pleasure and pain, and sleep at night.
+It lives on its own clock and never waits for you. You get a short report every few seconds.
 
-How it learns: a reward (food, or your smile) strengthens whatever it did in the last second or so. Talking to it or smiling also relieves its loneliness, which is rewarding in itself, so attention given at random teaches random things. Precise, fast rewards are delivered by reflex rules that you switch on; you decide the strategy. Graduation from a lesson is measured automatically, partly by short exams given to a copy of the creature (results under "exams"; a skill that slips can be reviewed with switch_lesson).
+How to teach it well:
+1. Reward exactly what you want, right after it happens. Reflex rules do this instantly; the lesson switches the right ones on. You decide what it hears and when.
+2. To teach it to repeat words, say ONE short word - a syllable said twice ("ba ba", "mo mo", "ki ki") - then let it answer. The reflex reward_imitation gives it pleasure when its reply repeats your word: a little for the first sound, more for the first syllable, most for the whole word. Say the SAME word again each turn until it has repeated it once or twice (or you have tried about eight times), then move on to a word with a different consonant: it learns each sound by practising it.
+3. Your own pleasure and pain are for its answer to your last word ("for": "reply"), for whatever it said last ("for": "speech") or for its last movement ("for": "movement"). It recalls that moment while it feels them, so they still work although you answer seconds late. Use them when "last_reply" shows an answer you want more (pleasure) or less (pain) of and the reflexes did not already reward it. Pleasure 0.3-1.0. Pain only for something it should stop doing, 0.2-0.5, and rarely.
+4. Never reward at random. Pleasure or praise for nothing in particular teaches it nothing useful, and talking to it relieves its loneliness, which is rewarding in itself.
+5. Doing nothing ("wait") is often best: let it answer, practise and eat.
 
-Tools (use 0 to 3 actions per turn; doing nothing is often best):
+Tools (use 0 to 3 actions per turn):
 {"tool": "wait"}
-{"tool": "say", "text": "ma ma"}  - speak; use one or two short syllables, never sentences
-{"tool": "praise"}  - smile at it, only right after something good
-{"tool": "scold"}  - frown at it, rarely
+{"tool": "say", "text": "ba ba"}  - speak: one short word, never a sentence
+{"tool": "pleasure", "amount": 0.6, "for": "reply"}  - pleasure for its answer to your last word ("speech": what it said last; "movement": what it just did)
+{"tool": "pain", "amount": 0.3, "for": "reply"}  - pain for its answer (or "speech", "movement"); rarely
+{"tool": "praise"}  - a smile (much weaker than pleasure)
+{"tool": "scold"}  - a frown (weak; it may even like the attention)
 {"tool": "give_food", "where": "ahead" | "left" | "right" | "near"}  - only if the lesson allows it, or if it is starving
 {"tool": "set_rule", "rule": RULE, "prefix": "m"}  - switch a reflex rule on (prefix = the target sound)
 {"tool": "clear_rule", "rule": RULE}  - switch a reflex rule off
@@ -230,10 +307,13 @@ RULES_HERE
 Lessons (taken in order; you cannot skip ahead):
 LESSONS_HERE
 
+The report: "last_reply" is your last word and its answer ("match": nothing / the vowel / the first sound / the first syllable / the whole word; "rewarded": what the reflexes already gave); "recent_replies" the ones before; "practice" the word you are teaching, how many times you said it and how many times it repeated it; "suggestion" what a simple, sound policy would do next (follow it unless you have a good reason); "its_last_words" what it said last and how many seconds ago; "skills" its measured progress (with chance levels); "lesson" what to teach now, tips, and how close it is to graduating. If there is "its_thoughts", those are lines read out of its brain activity, not words it knows.
+
 Examples of good turns:
+{"thought": "It has not repeated 'bo bo' yet; say it again.", "actions": [{"tool": "say", "text": "bo bo"}]}
+{"thought": "It repeated 'di di' twice now and the reflex rewarded it; a new word with another consonant.", "actions": [{"tool": "say", "text": "ku ku"}]}
+{"thought": "It answered 'ma ma' with 'na', close but not rewarded; a small pleasure for that answer, then wait.", "actions": [{"tool": "pleasure", "amount": 0.3, "for": "reply"}]}
 {"thought": "It keeps missing food on its left; give it an easy one there.", "actions": [{"tool": "give_food", "where": "left"}]}
-{"thought": "Model the target sound once, then let the reflex reward it.", "actions": [{"tool": "say", "text": "ma ma"}]}
-{"thought": "Offer a new consonant to copy.", "actions": [{"tool": "say", "text": "bo bo"}]}
 {"thought": "It is not hungry yet; the call only works when it is.", "actions": [{"tool": "wait"}]}
 
 Answer with one JSON object only: {"thought": "one short sentence", "actions": [ ... ]}"""
@@ -262,6 +342,8 @@ DECISION_SCHEMA: dict[str, Any] = {
                 "properties": {
                     "tool": {"type": "string", "enum": list(TOOLS)},
                     "text": {"type": "string"},
+                    "amount": {"type": "number"},
+                    "for": {"type": "string", "enum": list(FOR)},
                     "where": {"type": "string", "enum": list(WHERE)},
                     "rule": {"type": "string", "enum": list(RULES)},
                     "prefix": {"type": "string"},
@@ -355,4 +437,4 @@ class OllamaTeacher(Teacher):
 
 
 __all__ = ["Decision", "Teacher", "ScriptedTeacher", "OllamaTeacher", "validate", "DECISION_SCHEMA",
-           "SYSTEM_PROMPT", "TOOLS", "STARVING"]
+           "SYSTEM_PROMPT", "TOOLS", "STARVING", "short_word"]

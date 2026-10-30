@@ -1,0 +1,1592 @@
+{
+ "minutes": 10.0,
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "strategy": "focus",
+ "runs": [
+  {
+   "variant": "none",
+   "seed": 1,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 43,
+     "consonant": 0.07,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.07,
+     "consonant_chance": 0.083,
+     "syllable_chance": 0.018,
+     "word_chance": 0.0007
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.068,
+     "syllable": 0.045,
+     "word": 0.0,
+     "vowel": 0.409,
+     "consonant_chance": 0.087,
+     "syllable_chance": 0.015,
+     "word_chance": 0.0005
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 43,
+     "consonant": 0.349,
+     "syllable": 0.14,
+     "word": 0.0,
+     "vowel": 0.442,
+     "consonant_chance": 0.087,
+     "syllable_chance": 0.018,
+     "word_chance": 0.0007
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 50,
+     "consonant": 0.12,
+     "syllable": 0.02,
+     "word": 0.02
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.2,
+     "syllable": 0.08,
+     "word": 0.02
+    }
+   ],
+   "feelings": {
+    "pleasure": 0,
+    "pain": 0
+   },
+   "recalls": 0,
+   "person": null,
+   "wall_s": 307.6
+  },
+  {
+   "variant": "none",
+   "seed": 2,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.091,
+     "syllable": 0.023,
+     "word": 0.0,
+     "vowel": 0.182,
+     "consonant_chance": 0.079,
+     "syllable_chance": 0.017,
+     "word_chance": 0.0005
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.227,
+     "syllable": 0.068,
+     "word": 0.0,
+     "vowel": 0.341,
+     "consonant_chance": 0.081,
+     "syllable_chance": 0.016,
+     "word_chance": 0.0005
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.477,
+     "syllable": 0.182,
+     "word": 0.0,
+     "vowel": 0.341,
+     "consonant_chance": 0.089,
+     "syllable_chance": 0.02,
+     "word_chance": 0.0008
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 50,
+     "consonant": 0.24,
+     "syllable": 0.12,
+     "word": 0.0
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 51,
+     "consonant": 0.2549019607843137,
+     "syllable": 0.1568627450980392,
+     "word": 0.0392156862745098
+    }
+   ],
+   "feelings": {
+    "pleasure": 0,
+    "pain": 0
+   },
+   "recalls": 0,
+   "person": null,
+   "wall_s": 306.9
+  },
+  {
+   "variant": "none",
+   "seed": 3,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.114,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.182,
+     "consonant_chance": 0.085,
+     "syllable_chance": 0.014,
+     "word_chance": 0.0004
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.205,
+     "syllable": 0.068,
+     "word": 0.0,
+     "vowel": 0.273,
+     "consonant_chance": 0.085,
+     "syllable_chance": 0.017,
+     "word_chance": 0.0005
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.432,
+     "syllable": 0.205,
+     "word": 0.0,
+     "vowel": 0.432,
+     "consonant_chance": 0.087,
+     "syllable_chance": 0.017,
+     "word_chance": 0.0008
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 51,
+     "consonant": 0.11764705882352941,
+     "syllable": 0.0,
+     "word": 0.0
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.34,
+     "syllable": 0.22,
+     "word": 0.14
+    }
+   ],
+   "feelings": {
+    "pleasure": 0,
+    "pain": 0
+   },
+   "recalls": 0,
+   "person": null,
+   "wall_s": 724.0
+  },
+  {
+   "variant": "smile",
+   "seed": 1,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 43,
+     "consonant": 0.07,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.07,
+     "consonant_chance": 0.083,
+     "syllable_chance": 0.018,
+     "word_chance": 0.0007
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.364,
+     "syllable": 0.045,
+     "word": 0.0,
+     "vowel": 0.295,
+     "consonant_chance": 0.087,
+     "syllable_chance": 0.021,
+     "word_chance": 0.0008
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.386,
+     "syllable": 0.182,
+     "word": 0.045,
+     "vowel": 0.5,
+     "consonant_chance": 0.087,
+     "syllable_chance": 0.018,
+     "word_chance": 0.0007
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 50,
+     "consonant": 0.18,
+     "syllable": 0.04,
+     "word": 0.02
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.26,
+     "syllable": 0.14,
+     "word": 0.12
+    }
+   ],
+   "feelings": {
+    "pleasure": 0,
+    "pain": 0
+   },
+   "recalls": 0,
+   "person": null,
+   "wall_s": 733.4
+  },
+  {
+   "variant": "smile",
+   "seed": 2,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.091,
+     "syllable": 0.023,
+     "word": 0.0,
+     "vowel": 0.182,
+     "consonant_chance": 0.079,
+     "syllable_chance": 0.017,
+     "word_chance": 0.0005
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.227,
+     "syllable": 0.182,
+     "word": 0.0,
+     "vowel": 0.409,
+     "consonant_chance": 0.083,
+     "syllable_chance": 0.019,
+     "word_chance": 0.0006
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.273,
+     "syllable": 0.159,
+     "word": 0.0,
+     "vowel": 0.318,
+     "consonant_chance": 0.081,
+     "syllable_chance": 0.015,
+     "word_chance": 0.0005
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 50,
+     "consonant": 0.16,
+     "syllable": 0.08,
+     "word": 0.06
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.28,
+     "syllable": 0.08,
+     "word": 0.04
+    }
+   ],
+   "feelings": {
+    "pleasure": 0,
+    "pain": 0
+   },
+   "recalls": 0,
+   "person": null,
+   "wall_s": 872.8
+  },
+  {
+   "variant": "smile",
+   "seed": 3,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.114,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.182,
+     "consonant_chance": 0.085,
+     "syllable_chance": 0.014,
+     "word_chance": 0.0004
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.205,
+     "syllable": 0.023,
+     "word": 0.0,
+     "vowel": 0.25,
+     "consonant_chance": 0.087,
+     "syllable_chance": 0.02,
+     "word_chance": 0.0007
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.409,
+     "syllable": 0.136,
+     "word": 0.0,
+     "vowel": 0.341,
+     "consonant_chance": 0.089,
+     "syllable_chance": 0.017,
+     "word_chance": 0.0006
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 51,
+     "consonant": 0.09803921568627451,
+     "syllable": 0.0196078431372549,
+     "word": 0.0196078431372549
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.26,
+     "syllable": 0.14,
+     "word": 0.08
+    }
+   ],
+   "feelings": {
+    "pleasure": 0,
+    "pain": 0
+   },
+   "recalls": 0,
+   "person": null,
+   "wall_s": 867.6
+  },
+  {
+   "variant": "pleasure",
+   "seed": 1,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 43,
+     "consonant": 0.07,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.07,
+     "consonant_chance": 0.083,
+     "syllable_chance": 0.018,
+     "word_chance": 0.0007
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.227,
+     "syllable": 0.091,
+     "word": 0.0,
+     "vowel": 0.432,
+     "consonant_chance": 0.089,
+     "syllable_chance": 0.021,
+     "word_chance": 0.0007
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.386,
+     "syllable": 0.159,
+     "word": 0.0,
+     "vowel": 0.386,
+     "consonant_chance": 0.089,
+     "syllable_chance": 0.019,
+     "word_chance": 0.0008
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 50,
+     "consonant": 0.18,
+     "syllable": 0.06,
+     "word": 0.0
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.22,
+     "syllable": 0.16,
+     "word": 0.12
+    }
+   ],
+   "feelings": {
+    "pleasure": 20,
+    "pain": 0
+   },
+   "recalls": 39,
+   "person": null,
+   "wall_s": 739.9
+  },
+  {
+   "variant": "pleasure",
+   "seed": 2,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.091,
+     "syllable": 0.023,
+     "word": 0.0,
+     "vowel": 0.182,
+     "consonant_chance": 0.079,
+     "syllable_chance": 0.017,
+     "word_chance": 0.0005
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.227,
+     "syllable": 0.091,
+     "word": 0.023,
+     "vowel": 0.386,
+     "consonant_chance": 0.087,
+     "syllable_chance": 0.018,
+     "word_chance": 0.0008
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.5,
+     "syllable": 0.273,
+     "word": 0.0,
+     "vowel": 0.409,
+     "consonant_chance": 0.089,
+     "syllable_chance": 0.019,
+     "word_chance": 0.0009
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 50,
+     "consonant": 0.12,
+     "syllable": 0.04,
+     "word": 0.02
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.22,
+     "syllable": 0.14,
+     "word": 0.06
+    }
+   ],
+   "feelings": {
+    "pleasure": 17,
+    "pain": 0
+   },
+   "recalls": 34,
+   "person": null,
+   "wall_s": 736.9
+  },
+  {
+   "variant": "pleasure",
+   "seed": 3,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.114,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.182,
+     "consonant_chance": 0.085,
+     "syllable_chance": 0.014,
+     "word_chance": 0.0004
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.114,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.25,
+     "consonant_chance": 0.079,
+     "syllable_chance": 0.017,
+     "word_chance": 0.0005
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.432,
+     "syllable": 0.045,
+     "word": 0.0,
+     "vowel": 0.227,
+     "consonant_chance": 0.087,
+     "syllable_chance": 0.014,
+     "word_chance": 0.0006
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 51,
+     "consonant": 0.27450980392156865,
+     "syllable": 0.0392156862745098,
+     "word": 0.0196078431372549
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.34,
+     "syllable": 0.14,
+     "word": 0.02
+    }
+   ],
+   "feelings": {
+    "pleasure": 31,
+    "pain": 0
+   },
+   "recalls": 62,
+   "person": null,
+   "wall_s": 810.2
+  },
+  {
+   "variant": "person",
+   "seed": 1,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 43,
+     "consonant": 0.07,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.07,
+     "consonant_chance": 0.083,
+     "syllable_chance": 0.018,
+     "word_chance": 0.0007
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.227,
+     "syllable": 0.159,
+     "word": 0.0,
+     "vowel": 0.523,
+     "consonant_chance": 0.085,
+     "syllable_chance": 0.022,
+     "word_chance": 0.0007
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.364,
+     "syllable": 0.136,
+     "word": 0.0,
+     "vowel": 0.341,
+     "consonant_chance": 0.087,
+     "syllable_chance": 0.019,
+     "word_chance": 0.0007
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 50,
+     "consonant": 0.16,
+     "syllable": 0.12,
+     "word": 0.02
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.22,
+     "syllable": 0.08,
+     "word": 0.02
+    }
+   ],
+   "feelings": {
+    "pleasure": 19,
+    "pain": 81
+   },
+   "recalls": 259,
+   "person": {
+    "pleasure": 19,
+    "pain": 81
+   },
+   "wall_s": 787.3
+  },
+  {
+   "variant": "person",
+   "seed": 2,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.091,
+     "syllable": 0.023,
+     "word": 0.0,
+     "vowel": 0.182,
+     "consonant_chance": 0.079,
+     "syllable_chance": 0.017,
+     "word_chance": 0.0005
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.25,
+     "syllable": 0.023,
+     "word": 0.0,
+     "vowel": 0.364,
+     "consonant_chance": 0.085,
+     "syllable_chance": 0.017,
+     "word_chance": 0.0006
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.409,
+     "syllable": 0.205,
+     "word": 0.0,
+     "vowel": 0.295,
+     "consonant_chance": 0.087,
+     "syllable_chance": 0.02,
+     "word_chance": 0.0009
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 50,
+     "consonant": 0.1,
+     "syllable": 0.06,
+     "word": 0.02
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.28,
+     "syllable": 0.14,
+     "word": 0.06
+    }
+   ],
+   "feelings": {
+    "pleasure": 19,
+    "pain": 81
+   },
+   "recalls": 269,
+   "person": {
+    "pleasure": 19,
+    "pain": 81
+   },
+   "wall_s": 724.5
+  },
+  {
+   "variant": "person",
+   "seed": 3,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.114,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.182,
+     "consonant_chance": 0.085,
+     "syllable_chance": 0.014,
+     "word_chance": 0.0004
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.205,
+     "syllable": 0.045,
+     "word": 0.023,
+     "vowel": 0.409,
+     "consonant_chance": 0.085,
+     "syllable_chance": 0.013,
+     "word_chance": 0.0005
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 43,
+     "consonant": 0.512,
+     "syllable": 0.233,
+     "word": 0.047,
+     "vowel": 0.372,
+     "consonant_chance": 0.082,
+     "syllable_chance": 0.015,
+     "word_chance": 0.0005
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 51,
+     "consonant": 0.23529411764705882,
+     "syllable": 0.0392156862745098,
+     "word": 0.0196078431372549
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.22,
+     "syllable": 0.12,
+     "word": 0.04
+    }
+   ],
+   "feelings": {
+    "pleasure": 23,
+    "pain": 78
+   },
+   "recalls": 259,
+   "person": {
+    "pleasure": 23,
+    "pain": 78
+   },
+   "wall_s": 722.7
+  },
+  {
+   "variant": "person-no-recall",
+   "seed": 1,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 43,
+     "consonant": 0.07,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.07,
+     "consonant_chance": 0.083,
+     "syllable_chance": 0.018,
+     "word_chance": 0.0007
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.227,
+     "syllable": 0.045,
+     "word": 0.0,
+     "vowel": 0.455,
+     "consonant_chance": 0.089,
+     "syllable_chance": 0.018,
+     "word_chance": 0.0006
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 43,
+     "consonant": 0.326,
+     "syllable": 0.163,
+     "word": 0.023,
+     "vowel": 0.395,
+     "consonant_chance": 0.087,
+     "syllable_chance": 0.015,
+     "word_chance": 0.0005
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 50,
+     "consonant": 0.22,
+     "syllable": 0.08,
+     "word": 0.04
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.3,
+     "syllable": 0.18,
+     "word": 0.1
+    }
+   ],
+   "feelings": {
+    "pleasure": 25,
+    "pain": 74
+   },
+   "recalls": 0,
+   "person": {
+    "pleasure": 26,
+    "pain": 74
+   },
+   "wall_s": 257.4
+  },
+  {
+   "variant": "person-no-recall",
+   "seed": 2,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.091,
+     "syllable": 0.023,
+     "word": 0.0,
+     "vowel": 0.182,
+     "consonant_chance": 0.079,
+     "syllable_chance": 0.017,
+     "word_chance": 0.0005
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.25,
+     "syllable": 0.068,
+     "word": 0.023,
+     "vowel": 0.386,
+     "consonant_chance": 0.089,
+     "syllable_chance": 0.019,
+     "word_chance": 0.0007
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.455,
+     "syllable": 0.227,
+     "word": 0.0,
+     "vowel": 0.432,
+     "consonant_chance": 0.089,
+     "syllable_chance": 0.02,
+     "word_chance": 0.001
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 50,
+     "consonant": 0.24,
+     "syllable": 0.04,
+     "word": 0.02
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 51,
+     "consonant": 0.2549019607843137,
+     "syllable": 0.11764705882352941,
+     "word": 0.0784313725490196
+    }
+   ],
+   "feelings": {
+    "pleasure": 25,
+    "pain": 75
+   },
+   "recalls": 0,
+   "person": {
+    "pleasure": 25,
+    "pain": 76
+   },
+   "wall_s": 246.3
+  },
+  {
+   "variant": "person-no-recall",
+   "seed": 3,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.114,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.182,
+     "consonant_chance": 0.085,
+     "syllable_chance": 0.014,
+     "word_chance": 0.0004
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.159,
+     "syllable": 0.045,
+     "word": 0.023,
+     "vowel": 0.409,
+     "consonant_chance": 0.087,
+     "syllable_chance": 0.018,
+     "word_chance": 0.0006
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.25,
+     "syllable": 0.068,
+     "word": 0.0,
+     "vowel": 0.295,
+     "consonant_chance": 0.081,
+     "syllable_chance": 0.015,
+     "word_chance": 0.0007
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 51,
+     "consonant": 0.11764705882352941,
+     "syllable": 0.0392156862745098,
+     "word": 0.0392156862745098
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.18,
+     "syllable": 0.1,
+     "word": 0.04
+    }
+   ],
+   "feelings": {
+    "pleasure": 15,
+    "pain": 86
+   },
+   "recalls": 0,
+   "person": {
+    "pleasure": 15,
+    "pain": 86
+   },
+   "wall_s": 243.6
+  },
+  {
+   "variant": "old-mirror",
+   "seed": 1,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.091,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.227,
+     "consonant_chance": 0.083,
+     "syllable_chance": 0.015,
+     "word_chance": 0.0004
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.159,
+     "syllable": 0.045,
+     "word": 0.0,
+     "vowel": 0.182,
+     "consonant_chance": 0.085,
+     "syllable_chance": 0.018,
+     "word_chance": 0.0006
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.159,
+     "syllable": 0.045,
+     "word": 0.0,
+     "vowel": 0.205,
+     "consonant_chance": 0.087,
+     "syllable_chance": 0.017,
+     "word_chance": 0.0006
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 50,
+     "consonant": 0.14,
+     "syllable": 0.04,
+     "word": 0.02
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.14,
+     "syllable": 0.04,
+     "word": 0.02
+    }
+   ],
+   "feelings": {
+    "pleasure": 14,
+    "pain": 0
+   },
+   "recalls": 27,
+   "person": null,
+   "wall_s": 248.0
+  },
+  {
+   "variant": "old-mirror",
+   "seed": 2,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.114,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.182,
+     "consonant_chance": 0.085,
+     "syllable_chance": 0.013,
+     "word_chance": 0.0004
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.136,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.068,
+     "consonant_chance": 0.085,
+     "syllable_chance": 0.015,
+     "word_chance": 0.0005
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 43,
+     "consonant": 0.047,
+     "syllable": 0.023,
+     "word": 0.0,
+     "vowel": 0.14,
+     "consonant_chance": 0.08,
+     "syllable_chance": 0.014,
+     "word_chance": 0.0005
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 50,
+     "consonant": 0.08,
+     "syllable": 0.02,
+     "word": 0.02
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.1,
+     "syllable": 0.02,
+     "word": 0.02
+    }
+   ],
+   "feelings": {
+    "pleasure": 9,
+    "pain": 0
+   },
+   "recalls": 17,
+   "person": null,
+   "wall_s": 245.5
+  },
+  {
+   "variant": "old-mirror",
+   "seed": 3,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.068,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.136,
+     "consonant_chance": 0.079,
+     "syllable_chance": 0.015,
+     "word_chance": 0.0006
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.068,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.159,
+     "consonant_chance": 0.074,
+     "syllable_chance": 0.017,
+     "word_chance": 0.0006
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 43,
+     "consonant": 0.14,
+     "syllable": 0.023,
+     "word": 0.0,
+     "vowel": 0.209,
+     "consonant_chance": 0.081,
+     "syllable_chance": 0.012,
+     "word_chance": 0.0005
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 51,
+     "consonant": 0.11764705882352941,
+     "syllable": 0.0196078431372549,
+     "word": 0.0196078431372549
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.24,
+     "syllable": 0.12,
+     "word": 0.06
+    }
+   ],
+   "feelings": {
+    "pleasure": 18,
+    "pain": 0
+   },
+   "recalls": 35,
+   "person": null,
+   "wall_s": 245.9
+  },
+  {
+   "variant": "old-mirror-none",
+   "seed": 1,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.091,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.227,
+     "consonant_chance": 0.083,
+     "syllable_chance": 0.015,
+     "word_chance": 0.0004
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.091,
+     "syllable": 0.023,
+     "word": 0.0,
+     "vowel": 0.227,
+     "consonant_chance": 0.087,
+     "syllable_chance": 0.018,
+     "word_chance": 0.0006
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.068,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.182,
+     "consonant_chance": 0.079,
+     "syllable_chance": 0.016,
+     "word_chance": 0.0006
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 50,
+     "consonant": 0.1,
+     "syllable": 0.0,
+     "word": 0.0
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.08,
+     "syllable": 0.08,
+     "word": 0.06
+    }
+   ],
+   "feelings": {
+    "pleasure": 0,
+    "pain": 0
+   },
+   "recalls": 0,
+   "person": null,
+   "wall_s": 242.3
+  },
+  {
+   "variant": "old-mirror-none",
+   "seed": 2,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.114,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.182,
+     "consonant_chance": 0.085,
+     "syllable_chance": 0.013,
+     "word_chance": 0.0004
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.182,
+     "syllable": 0.114,
+     "word": 0.0,
+     "vowel": 0.364,
+     "consonant_chance": 0.085,
+     "syllable_chance": 0.02,
+     "word_chance": 0.0007
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 43,
+     "consonant": 0.256,
+     "syllable": 0.07,
+     "word": 0.0,
+     "vowel": 0.163,
+     "consonant_chance": 0.084,
+     "syllable_chance": 0.016,
+     "word_chance": 0.0005
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 50,
+     "consonant": 0.14,
+     "syllable": 0.04,
+     "word": 0.02
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 51,
+     "consonant": 0.1568627450980392,
+     "syllable": 0.0392156862745098,
+     "word": 0.0392156862745098
+    }
+   ],
+   "feelings": {
+    "pleasure": 0,
+    "pain": 0
+   },
+   "recalls": 0,
+   "person": null,
+   "wall_s": 246.6
+  },
+  {
+   "variant": "old-mirror-none",
+   "seed": 3,
+   "strategy": "focus",
+   "minutes": 10.0,
+   "exams": [
+    {
+     "minute": 0.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.068,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.136,
+     "consonant_chance": 0.079,
+     "syllable_chance": 0.015,
+     "word_chance": 0.0006
+    },
+    {
+     "minute": 5.0,
+     "trials": 44,
+     "n": 44,
+     "consonant": 0.091,
+     "syllable": 0.023,
+     "word": 0.0,
+     "vowel": 0.318,
+     "consonant_chance": 0.076,
+     "syllable_chance": 0.02,
+     "word_chance": 0.0006
+    },
+    {
+     "minute": 10.0,
+     "trials": 44,
+     "n": 43,
+     "consonant": 0.116,
+     "syllable": 0.0,
+     "word": 0.0,
+     "vowel": 0.163,
+     "consonant_chance": 0.08,
+     "syllable_chance": 0.016,
+     "word_chance": 0.0006
+    }
+   ],
+   "during": [
+    {
+     "from_minute": 0.0,
+     "replies": 51,
+     "consonant": 0.11764705882352941,
+     "syllable": 0.0392156862745098,
+     "word": 0.0
+    },
+    {
+     "from_minute": 5.0,
+     "replies": 50,
+     "consonant": 0.1,
+     "syllable": 0.04,
+     "word": 0.02
+    }
+   ],
+   "feelings": {
+    "pleasure": 0,
+    "pain": 0
+   },
+   "recalls": 0,
+   "person": null,
+   "wall_s": 254.9
+  }
+ ],
+ "summary": {
+  "none": {
+   "consonant": {
+    "before": 0.092,
+    "after": 0.419
+   },
+   "consonant_chance": {
+    "before": 0.082,
+    "after": 0.088
+   },
+   "syllable": {
+    "before": 0.008,
+    "after": 0.176
+   },
+   "syllable_chance": {
+    "before": 0.016,
+    "after": 0.018
+   },
+   "word": {
+    "before": 0.0,
+    "after": 0.0
+   }
+  },
+  "smile": {
+   "consonant": {
+    "before": 0.092,
+    "after": 0.356
+   },
+   "consonant_chance": {
+    "before": 0.082,
+    "after": 0.086
+   },
+   "syllable": {
+    "before": 0.008,
+    "after": 0.159
+   },
+   "syllable_chance": {
+    "before": 0.016,
+    "after": 0.017
+   },
+   "word": {
+    "before": 0.0,
+    "after": 0.015
+   }
+  },
+  "pleasure": {
+   "consonant": {
+    "before": 0.092,
+    "after": 0.439
+   },
+   "consonant_chance": {
+    "before": 0.082,
+    "after": 0.088
+   },
+   "syllable": {
+    "before": 0.008,
+    "after": 0.159
+   },
+   "syllable_chance": {
+    "before": 0.016,
+    "after": 0.017
+   },
+   "word": {
+    "before": 0.0,
+    "after": 0.0
+   }
+  },
+  "person": {
+   "consonant": {
+    "before": 0.092,
+    "after": 0.428
+   },
+   "consonant_chance": {
+    "before": 0.082,
+    "after": 0.085
+   },
+   "syllable": {
+    "before": 0.008,
+    "after": 0.191
+   },
+   "syllable_chance": {
+    "before": 0.016,
+    "after": 0.018
+   },
+   "word": {
+    "before": 0.0,
+    "after": 0.016
+   }
+  },
+  "person-no-recall": {
+   "consonant": {
+    "before": 0.092,
+    "after": 0.344
+   },
+   "consonant_chance": {
+    "before": 0.082,
+    "after": 0.086
+   },
+   "syllable": {
+    "before": 0.008,
+    "after": 0.153
+   },
+   "syllable_chance": {
+    "before": 0.016,
+    "after": 0.017
+   },
+   "word": {
+    "before": 0.0,
+    "after": 0.008
+   }
+  },
+  "old-mirror": {
+   "consonant": {
+    "before": 0.091,
+    "after": 0.115
+   },
+   "consonant_chance": {
+    "before": 0.082,
+    "after": 0.083
+   },
+   "syllable": {
+    "before": 0.0,
+    "after": 0.03
+   },
+   "syllable_chance": {
+    "before": 0.014,
+    "after": 0.014
+   },
+   "word": {
+    "before": 0.0,
+    "after": 0.0
+   }
+  },
+  "old-mirror-none": {
+   "consonant": {
+    "before": 0.091,
+    "after": 0.147
+   },
+   "consonant_chance": {
+    "before": 0.082,
+    "after": 0.081
+   },
+   "syllable": {
+    "before": 0.0,
+    "after": 0.023
+   },
+   "syllable_chance": {
+    "before": 0.014,
+    "after": 0.016
+   },
+   "word": {
+    "before": 0.0,
+    "after": 0.0
+   }
+  }
+ }
+}

@@ -134,13 +134,14 @@ def infant_spec(cortex_size: int = 1000, seed: int = 7, day_length_s: float = 12
         {"pre": "vocal.Cinh", "post": "vocal.C", "p": 0.5, "weight": 0.06, "fixed_indegree": True},
         {"pre": "vocal.V", "post": "vocal.Vinh", "p": 0.5, "weight": 0.02, "fixed_indegree": True},
         {"pre": "vocal.Vinh", "post": "vocal.V", "p": 0.5, "weight": 0.06, "fixed_indegree": True},
-        # mirror mapping hearing -> articulation, learned from self-hearing
+        # mirror mapping hearing -> articulation, learned from self-hearing:
+        # while it speaks, and faster with dopamine (see Brain._mirror_gate)
         {"pre": "audio", "post": "vocal.C", "p": 0.6, "weight": 0.008, "w_max": 0.06,
          "fixed_indegree": True, "pre_channel_gain": cons_gain,
-         "rule": {"type": "hebbian", "rate": 0.005}},
+         "rule": {"type": "hebbian", "rate": 0.005, "gate": "mirror"}},
         {"pre": "audio", "post": "vocal.V", "p": 0.6, "weight": 0.008, "w_max": 0.06,
          "fixed_indegree": True, "pre_channel_gain": vow_gain,
-         "rule": {"type": "hebbian", "rate": 0.005}},
+         "rule": {"type": "hebbian", "rate": 0.005, "gate": "mirror"}},
         # which sounds are worth making (shaped by social reward)
         {"pre": "intero", "post": "vocal.C", "p": 0.5, "weight": 0.003, "w_max": 0.03,
          "fixed_indegree": True, "rule": dict(rstdp_vocal)},
@@ -216,6 +217,21 @@ def add_kin(pops: list[dict[str, Any]], projs: list[dict[str, Any]]) -> None:
          "fixed_indegree": True, "rule": {"type": "reward_stdp", "a_plus": 1.0, "a_minus": 0.0,
                                           "tau_e": 300.0, "lr": 0.05, "normalize": "both"}},
     ]
+
+
+def upgrade_spec(spec: dict[str, Any]) -> list[str]:
+    """Bring a creature saved by an older anima up to date, in place; returns
+    what changed.  (anima 0.6: the hearing->speaking mirror learns while it
+    speaks, at a rate set by dopamine — ``gate: "mirror"`` on its Hebbian
+    synapses.  Its learned weights are kept.)"""
+    changed = []
+    for q in spec.get("projection", []):
+        rule = q.get("rule")
+        if (q.get("pre") == "audio" and q.get("post") in ("vocal.C", "vocal.V") and isinstance(rule, dict)
+                and rule.get("type") == "hebbian" and "gate" not in rule):
+            rule["gate"] = "mirror"
+            changed.append(f"{q['pre']}->{q['post']}: learns while it speaks, faster with dopamine (anima 0.6)")
+    return changed
 
 
 def minimal_spec(seed: int = 1) -> dict[str, Any]:

@@ -104,7 +104,11 @@ def exam(agent: Agent, target: str = "m", seed: int = 0, echo_trials: int = 30) 
                 hits += reply[0].startswith(c)
             chance.append(usage[c])
             _hold(agent, float(rng.uniform(1.0, 3.0)), energy=0.6)
+        from ..tutor.exams import imitate_exam
+        imit = imitate_exam(agent, words=44, seed=seed)
+        imit.pop("replies", None)
         return {
+            "imitate": imit,
             "forage": correct_rate(probes), "probes": probes,
             "babble_share": share(free), "n_free": len(free),
             "ask_hungry": share(hungry), "ask_sated": share(sated),
@@ -186,18 +190,37 @@ def run_untutored(seed: int = 1, seconds: float = 3600.0) -> dict[str, Any]:
 
 
 def summarize(results: list[dict[str, Any]]) -> str:
-    lines = ["condition   seed  lived  forage  'm' share  'm' hungry/sated  echo (chance)"]
+    lines = ["condition   seed  lived  forage  'm' share  'm' hungry/sated  echo (chance)  "
+             "repeats a word: first sound (chance) / syllable"]
     for r in results:
+        im = r.get("imitate") or {}
+        rep = (f"{im['consonant']:.2f} ({im['consonant_chance']:.2f}) / {im['syllable']:.2f}"
+               if im.get("n") else "-")
         lines.append(f"{r['condition']:<11} {r['seed']:>4}  {r['lived_s'] / 60:4.0f}m   {r['forage']:.2f}     "
                      f"{r['babble_share']:.2f}       {r['ask_hungry']:.2f} / {r['ask_sated']:.2f}       "
-                     f"{r['echo_rate']:.2f} ({r['echo_chance']:.2f})")
+                     f"{r['echo_rate']:.2f} ({r['echo_chance']:.2f})    {rep}")
     return "\n".join(lines)
 
 
+def _tutored_job(args: tuple[int, float, bool]) -> dict[str, Any]:
+    seed, max_minutes, verbose = args
+    return run_tutored(seed, max_minutes, verbose=verbose)
+
+
+def _untutored_job(args: tuple[int, float]) -> dict[str, Any]:
+    return run_untutored(*args)
+
+
 def main(seeds: tuple[int, ...] = (1, 2), max_minutes: float = 120.0, plot: str | None = None,
-         verbose: bool = True, teacher: Any = None) -> dict[str, Any]:
-    tutored = [run_tutored(s, max_minutes, teacher=teacher, verbose=verbose) for s in seeds]
-    untutored = [run_untutored(s, r["lived_s"]) for s, r in zip(seeds, tutored)]
+         verbose: bool = True, teacher: Any = None, workers: int = 1) -> dict[str, Any]:
+    if workers > 1 and teacher is None:  # (an LLM teacher stays in this process)
+        from concurrent.futures import ProcessPoolExecutor
+        with ProcessPoolExecutor(max_workers=workers) as ex:
+            tutored = list(ex.map(_tutored_job, [(s, max_minutes, verbose) for s in seeds]))
+            untutored = list(ex.map(_untutored_job, [(s, r["lived_s"]) for s, r in zip(seeds, tutored)]))
+    else:
+        tutored = [run_tutored(s, max_minutes, teacher=teacher, verbose=verbose) for s in seeds]
+        untutored = [run_untutored(s, r["lived_s"]) for s, r in zip(seeds, tutored)]
     res = {"tutored": tutored, "untutored": untutored}
     if verbose:
         print(summarize(tutored + untutored))

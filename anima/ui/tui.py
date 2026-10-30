@@ -62,8 +62,10 @@ class Dashboard:
                                              replace=False))
         self.raster = np.zeros((len(self.raster_ids), self.raster_cols), dtype=bool)
         self._last_counts = net.spike_count[self.raster_ids].copy()
-        for kind in ("utterance", "heard", "stage", "ate", "thought"):
+        for kind in ("utterance", "heard", "stage", "ate", "thought", "pleasure", "pain"):
             agent.on(kind, lambda e: self.events.put(e))
+        from .chat import ReplyTracker
+        self.replies = ReplyTracker(agent)
 
     # ------------------------------------------------------------ helpers
     def _drain(self) -> None:
@@ -85,6 +87,9 @@ class Dashboard:
                 self.chat.append(("event", f"{t}  {msg}"))
             elif k == "ate":
                 self.chat.append(("event", f"{t}  (eats)"))
+            elif k in ("pleasure", "pain"):
+                from .chat import describe_feeling
+                self.chat.append((k, f"{t}  {describe_feeling(e)}"))
             elif k == "thought" and self.show_thoughts and e.get("type") not in ("speech", "social", "state"):
                 self.chat.append(("thought", f"{t}  ~ {e.get('type', ''):<10} {e.get('text', '')}"))
 
@@ -144,6 +149,13 @@ class Dashboard:
         self._put(scr, 2, x0, "drives", bold)
         for i, (k, v) in enumerate(s["drives"].items()):
             self._put(scr, 3 + i, x0, f"{k:<11}{_bar(v, bw)} {v:4.2f}")
+        feel = s.get("feelings", {})
+        half = max(4, bw // 2 - 1)
+        pl, pa = float(feel.get("pleasure", 0.0)), float(feel.get("pain", 0.0))
+        self._put(scr, 7, x0, "pleasure", curses.color_pair(2) | (bold if pl > 0.05 else 0))
+        self._put(scr, 7, x0 + 9, _bar(pl, half), curses.color_pair(2))
+        self._put(scr, 7, x0 + 11 + half, "pain", curses.color_pair(5) | (bold if pa > 0.05 else 0))
+        self._put(scr, 7, x0 + 16 + half, _bar(pa, half), curses.color_pair(5))
         self._put(scr, 8, x0, "neuromodulators", bold)
         m = s["modulators"]
         mods = [("dopamine", m["dopamine_tonic"], 0, 1), ("  phasic", m["dopamine"], -1, 1),
@@ -174,7 +186,8 @@ class Dashboard:
         n = max(1, H - cy - 3)
         for i, (who, line) in enumerate(list(self.chat)[-n:]):
             attr = (curses.color_pair(1) | bold if who == "anima" else dim if who == "event"
-                    else curses.color_pair(4) if who == "thought" else 0)
+                    else curses.color_pair(4) if who == "thought" else curses.color_pair(2) if who == "pleasure"
+                    else curses.color_pair(5) if who == "pain" else 0)
             self._put(scr, cy + 1 + i, 1, line, attr)
         partial = s.get("speaking", "")
         if partial:
@@ -182,7 +195,7 @@ class Dashboard:
         if self.status:
             self._put(scr, H - 2, W - len(self.status) - 2, self.status, dim)
         self._put(scr, H - 1, 0, "you › " + self.buffer, bold)
-        keys = "Enter: say  /feed  /mind  /save  /sleep  /wake  Esc: quit"
+        keys = "Enter: say  + pleasure  - pain  /feed  /mind  /save  Esc: quit"
         self._put(scr, H - 1, W - len(keys) - 2, keys, dim)
         scr.move(H - 1, min(W - 2, 6 + len(self.buffer)))
         scr.refresh()
@@ -207,13 +220,23 @@ class Dashboard:
                 from .chat import feed
                 parts = line.split()
                 self.status = feed(a, parts[1] if len(parts) > 1 else "ahead")
+            elif cmd in ("/pleasure", "/good", "/pain", "/bad"):
+                from .chat import feel
+                kind = "pleasure" if cmd in ("/pleasure", "/good") else "pain"
+                self.status = feel(a, kind, line.split()[1:], self.replies) or f"{kind} given"
             elif cmd == "/mind" and self.mind is not None:
                 self.show_thoughts = not self.show_thoughts
                 self.status = f"thoughts {'shown' if self.show_thoughts else 'hidden'}"
             else:
                 self.status = f"unknown {cmd}"
             return True
+        from .chat import SHORTCUTS
+        if line.strip() in SHORTCUTS:
+            kind, amount = SHORTCUTS[line.strip()]
+            a.feel(kind, amount, self.replies.credit(), "you")
+            return True
         a.hear(line)
+        self.replies.heard(line)
         return True
 
     def loop(self, scr: Any, speed: float) -> None:
@@ -231,6 +254,7 @@ class Dashboard:
             curses.init_pair(2, curses.COLOR_GREEN, bg)
             curses.init_pair(3, curses.COLOR_BLUE, bg)
             curses.init_pair(4, curses.COLOR_MAGENTA, bg)
+            curses.init_pair(5, curses.COLOR_RED, bg)
         self.agent.start(speed=speed)
         last_draw = 0.0
         try:
@@ -248,6 +272,11 @@ class Dashboard:
                         self.buffer = self.buffer[:-1]
                     elif ch == "\x1b":
                         break
+                    elif ch in ("+", "-") and not self.buffer:
+                        # one key, no Enter: feedback has to be quick to teach
+                        kind = "pleasure" if ch == "+" else "pain"
+                        self.agent.feel(kind, 0.6 if ch == "+" else 0.5, self.replies.credit(), "you")
+                        self.status = f"{kind} given"
                     elif isinstance(ch, str) and ch.isprintable():
                         self.buffer += ch
                 now = time.time()

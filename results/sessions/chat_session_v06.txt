@@ -1,0 +1,40 @@
+  thoughts: anima_brain.thoughts.jsonl  (anima thoughts --brain anima_brain.npz --follow)
+anima is alive (1667 spiking neurons, 07:11 awake). It does not wait for you: it will babble, wander, get hungry, bored, lonely and sleepy on its own.
+Talk to it whenever you like; + or - after its answer gives it pleasure or pain (it learns from them). /help for commands, /quit to leave.
+
+anima › sumomo le   [07:16]
+anima › midu   [07:19]
+anima › lu   [07:22]
+anima › kuhu   [07:27]
+you › hello
+anima › kima no   [07:31]
+anima › baso   [07:37]
+you › mama
+anima › dewi   [07:41]
+you › :)
+anima › mi   [07:47]
+anima › we   [07:52]
+anima › ti   [07:56]
+you › ba ba
+anima › didima   [07:59]
+you › -
+      (anima feels pain 0.4 — it recalls "di di", 3.5 s ago)
+you › ba ba
+anima › bibipa   [08:09]
+you › +
+      (anima feels pleasure 0.5 — it recalls "bi pa", 3.1 s ago)
+      (anima found food)
+you › mo mo
+      (anima found food)
+anima › huwapo   [08:18]
+you › -
+      (anima feels pain 0.4 — it recalls "wa po", 3.1 s ago)
+you › mo mo
+anima › pulu pena   [08:28]
+you › -
+      (anima feels pain 0.4 — it recalls "pe na", 3.1 s ago)
+you › /status
+[08:34 awake] hunger 0.04 fatigue 0.23 boredom 0.38 loneliness 0.22 | DA 0.31 NE 0.37 ACh 0.82 5HT 0.54
+you › /quit
+
+saved anima_brain.npz — run again to continue its life.

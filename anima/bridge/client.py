@@ -120,6 +120,14 @@ class BridgeClient:
         """A treat (+) or a buzzer (-); clipped to [-1, 1].  Returns what was given."""
         return self.request("POST", "/reward", {"amount": amount, "source": source})["amount"]
 
+    def pleasure(self, amount: float = 0.6, credit: str = "auto", source: str = "client") -> dict[str, Any]:
+        """Give it pleasure (0-1) for what it just did (``credit``: auto, speech, movement, now)."""
+        return self.request("POST", "/pleasure", {"amount": amount, "for": credit, "source": source})
+
+    def pain(self, amount: float = 0.5, credit: str = "auto", source: str = "client") -> dict[str, Any]:
+        """Give it pain (0-1) for what it just did (``credit``: auto, speech, movement, now)."""
+        return self.request("POST", "/pain", {"amount": amount, "for": credit, "source": source})
+
     def feed(self, where: str = "ahead") -> None:
         self.request("POST", "/feed", {"where": where})
 

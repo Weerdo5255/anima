@@ -38,10 +38,14 @@ from .toolkit import TeachingToolkit
 
 
 class Tutor:
+    #: the shortest time between two of the teacher's own pleasures / pains (creature seconds)
+    FEEL_INTERVAL_S = {"pleasure": 2.0, "pain": 8.0}
+
     def __init__(self, agent: Any, teacher: Teacher | None = None, target: str = "m",
                  think_every_s: float = 8.0, printer: Callable[[str], None] | None = print,
                  verbose: bool = True, review_minutes: float = 3.0, spot_check_min: float = 12.0,
-                 hold_s: float = 60.0, curriculum: Curriculum | None = None, mind: Any = None) -> None:
+                 hold_s: float = 60.0, curriculum: Curriculum | None = None, mind: Any = None,
+                 reinforcer: str = "pleasure") -> None:
         from ..brain.presets import CONSONANTS
         if target not in CONSONANTS:
             raise ValueError(f"target must be one of the consonants {CONSONANTS}, not {target!r}")
@@ -61,7 +65,8 @@ class Tutor:
         self.printer = printer
         self.verbose = verbose
         self.meter = SkillMeter(agent, target)
-        self.toolkit = TeachingToolkit(agent, self.meter)
+        self.toolkit = TeachingToolkit(agent, self.meter, reinforcer=reinforcer)
+        self._last_feel = {"pleasure": -1e9, "pain": -1e9}
         self.curriculum = curriculum or Curriculum()
         self.teacher.bind(self.curriculum.lessons, n_neurons=int(agent.brain.net.N))
         self.history: deque[dict[str, Any]] = deque(maxlen=200)
@@ -159,7 +164,8 @@ class Tutor:
         now = self.agent.t_ms / 1000.0
         out = {}
         for k, v in self.exams.items():
-            keep = {x: v[x] for x in ("score", "hungry", "sated") if x in v}
+            keep = {x: v[x] for x in ("score", "hungry", "sated", "consonant", "consonant_chance", "syllable",
+                                      "word") if x in v}
             out[k] = {**{x: (None if isinstance(y, float) and np.isnan(y) else y) for x, y in keep.items()},
                       "minutes_ago": round((now - v["t"]) / 60.0, 1)}
         return out
@@ -184,6 +190,9 @@ class Tutor:
         heard = [d["text"] for t, k, d in list(a.log) if k == "heard" and now - t <= window]
         r = report.compact()
         lesson = self.curriculum.lesson(self.reviewing) if self.reviewing else self.curriculum.current
+        trials = [x for x in list(self.toolkit.trials) if now - x["t"] <= 120.0]
+        last_words = self.meter.last_words()
+        feel = a.brain.hedonic
         status = self.curriculum.status(report, self.lesson_exams(), self.lesson_exams(back=1))
         d = snap.get("drives", {})
         m = snap.get("modulators", {})
@@ -197,10 +206,19 @@ class Tutor:
             "mood": {"dopamine": round(float(m.get("dopamine_tonic", 0)), 2),
                      "serotonin": round(float(m.get("serotonin", 0)), 2)},
             "it_said": self.meter.recent_syllables(window)[-10:],
+            "its_last_words": ({"text": last_words[0], "seconds_ago": round(last_words[1], 1)}
+                               if last_words else None),
+            "last_reply": _reply_view(trials[-1], now) if trials else None,
+            "recent_replies": [_reply_view(x, now) for x in trials[-4:-1]],
+            **self._practice(trials, lesson.name),
             "it_did": did, "it_heard": heard[-4:],
+            "feelings": {"pleasure": round(feel.pleasure, 2), "pain": round(feel.pain, 2),
+                         "pleasure_given": feel.counts.get("pleasure", 0), "pain_given": feel.counts.get("pain", 0)},
             "skills": {"food_per_min": round(r["food_per_min"], 2),
-                       "target_share": r["target_share"], "echo_rate": r["echo_rate"],
-                       "echo_chance": r["echo_chance"], "asks_when_hungry": r["ask_hungry"],
+                       "target_share": r["target_share"], "copies_first_sound": r["echo_rate"],
+                       "copies_first_sound_by_chance": r["echo_chance"],
+                       "copies_syllable": r["copy_syllable"], "copies_syllable_by_chance": r["copy_syllable_chance"],
+                       "copies_whole_word": r["copy_word"], "asks_when_hungry": r["ask_hungry"],
                        "asks_when_full": r["ask_full"], "energy_mean": r["energy_mean"]},
             "exams": self._exams_view(),
             "lesson": {**status, "tips": lesson.tips, "reviewing": self.reviewing,
@@ -213,6 +231,30 @@ class Tutor:
             "your_recent_actions": recent, "your_notes": notes,
             **({"its_thoughts": self._thoughts(now - window)} if self.mind is not None else {}),
         }
+
+    #: practise a word until it has been repeated this often, or said this often ("Copy me")
+    PRACTICE_WINS, PRACTICE_TRIES = 2, 8
+
+    def _practice(self, trials: list[dict[str, Any]], lesson: str) -> dict[str, Any]:
+        """The word it is practising: how often it was said and repeated, and
+        (in "Copy me") whether to say it again or move on."""
+        if not trials:
+            return {"suggestion": "say a short word, e.g. 'ba ba', and let it answer"} if lesson == "echo" else {}
+        word = trials[-1]["you_said"]
+        run = []
+        for x in reversed(trials):
+            if x["you_said"] != word:
+                break
+            run.append(x)
+        wins = sum(x["match"] in ("consonant", "syllable", "word") for x in run)
+        out: dict[str, Any] = {"practice": {"word": word, "said_times": len(run), "repeated_times": wins}}
+        if lesson == "echo":
+            if wins >= self.PRACTICE_WINS or len(run) >= self.PRACTICE_TRIES:
+                why = "it has repeated it" if wins >= self.PRACTICE_WINS else "enough tries"
+                out["suggestion"] = f"{why}: say a new word with another consonant"
+            else:
+                out["suggestion"] = f"say '{word}' again"
+        return out
 
     def _thoughts(self, since: float) -> list[str]:
         """What its thought log said since the last report (speech and sounds
@@ -229,6 +271,13 @@ class Tutor:
             tool = act["tool"]
             if tool == "say":
                 kit.say(act["text"])
+            elif tool in ("pleasure", "pain"):
+                now = self.agent.t_ms / 1000.0
+                if now - self._last_feel[tool] < self.FEEL_INTERVAL_S[tool]:
+                    d.rejected.append(f"{tool}: too soon after the last one")
+                    continue
+                self._last_feel[tool] = now
+                (kit.pleasure if tool == "pleasure" else kit.pain)(act["amount"], act["for"])
             elif tool == "praise":
                 kit.praise()
             elif tool == "scold":
@@ -475,6 +524,17 @@ class Tutor:
         self.meter.detach()
         self.toolkit.detach()
         self.agent.remove_tick_hook(self._on_tick)
+
+
+_MATCH = {"none": "nothing", "vowel": "the vowel", "consonant": "the first sound", "syllable": "the first syllable",
+          "word": "the whole word", "no answer": "no answer"}
+
+
+def _reply_view(x: dict[str, Any], now: float) -> dict[str, Any]:
+    """A word trial as the teacher's report shows it."""
+    return {"n": x.get("n"), "you_said": x["you_said"], "it_replied": x.get("it_replied") or None,
+            "match": _MATCH.get(x["match"], x["match"]), "rewarded": x["rewarded"] or "nothing",
+            "seconds_ago": round(now - x["t"], 1)}
 
 
 def tutor_path(brain_path: str | Path) -> Path:

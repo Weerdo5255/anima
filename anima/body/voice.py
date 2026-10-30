@@ -45,6 +45,29 @@ def parse_social_signals(text: str) -> tuple[str, float]:
     return low, float(np.clip(valence, -1.0, 1.0))
 
 
+def syllabify(text: str, consonants: list[str] | None = None, vowels: list[str] | None = None) -> list[str]:
+    """The syllables of ``text`` the way the creature can say them: each
+    vowel with the consonant just before it ("mama" -> ["ma", "ma"], "ma ma"
+    too; "hello" -> ["he", "lo"]).  Letters are mapped to its phoneme set
+    as when it hears them; consonants with no vowel after them are dropped
+    (it cannot say "dog", only "do")."""
+    if consonants is None or vowels is None:
+        from ..brain.presets import CONSONANTS, VOWELS
+        consonants, vowels = consonants or CONSONANTS, vowels or VOWELS
+    out: list[str] = []
+    pending = ""
+    for ch in text.lower():
+        p = LETTER_MAP.get(ch, ch)
+        if p in vowels:
+            out.append(pending + p)
+            pending = ""
+        elif p in consonants:
+            pending = p
+        else:
+            pending = ""
+    return out
+
+
 def text_to_phonemes(text: str, consonants: list[str], vowels: list[str],
                      cons_ms: float = 60.0, vowel_ms: float = 100.0, gap_ms: float = 15.0,
                      pause_ms: float = 150.0) -> list[tuple[str | None, float]]:
@@ -101,11 +124,15 @@ class Ear:
     Each heard phoneme also leaves a decaying trace (auditory sensory or
     "echoic" memory, ~1 s; Darwin, Turvey & Crowder 1972) that keeps its
     channel weakly active after the sound has stopped.  This is what lets a
-    sound you just made still influence what the creature says next.
+    sound you just made still influence what the creature says next.  A new
+    sound overwrites it: when the creature starts to speak, the echo of what
+    it heard before is mostly masked (``self_masking``; the "suffix effect",
+    Crowder & Morton 1969), so what it hears while it speaks is its own
+    voice — which is what its hearing->speaking map learns from.
     """
 
     def __init__(self, labels: list[str], consonants: list[str], vowels: list[str],
-                 echo_tau_s: float = 1.0, echo_gain: float = 0.5) -> None:
+                 echo_tau_s: float = 1.0, echo_gain: float = 0.5, self_masking: float = 0.3) -> None:
         self.labels = list(labels)
         self.index = {p: i for i, p in enumerate(self.labels)}
         self.consonants = consonants
@@ -116,6 +143,7 @@ class Ear:
         self.current_own = -1
         self.echo_tau_s = echo_tau_s
         self.echo_gain = echo_gain
+        self.self_masking = self_masking  # fraction of the echo left when it starts to speak
         self.echo = np.zeros(len(self.labels))
 
     def hear(self, text: str) -> int:
@@ -128,6 +156,7 @@ class Ear:
     def hear_self(self, phonemes: list[str], durations: list[float], delay_ms: float = 20.0) -> None:
         seq = [(-1, delay_ms)] + [(self.index[p], d) for p, d in zip(phonemes, durations)]
         self.own.push(seq)
+        self.echo *= self.self_masking
 
     def step(self, dt_ms: float) -> np.ndarray:
         self.current_external = self.external.step(dt_ms)
@@ -241,7 +270,7 @@ class Voice:
             text = " ".join(self.utterance)
             self.utterance = []
             events.append(("utterance", {"text": text, "t": t_ms / 1000.0}))
-        if self.articulating_until >= 0 or not b.awake:
+        if self.articulating_until >= 0 or not b.awake or b.frozen:
             return events
         gate = float(b.channel_activity(self.gate)[0])
         if gate < cfg.gate_threshold * b.action_threshold_scale() or self.breath < cfg.breath_cost:
@@ -262,7 +291,7 @@ class Voice:
         b.set_feedback(self.vows, fb_v)
         b.note_action(self.gate, 0)
         b.note_action(self.cons, c)
-        b.note_action(self.vows, v)
+        act = b.note_action(self.vows, v)
         if self.ear is not None:
             ph = ([self.cons_labels[c]] if c >= 0 else []) + [self.vow_labels[v]]
             du = ([cfg.consonant_ms] if c >= 0 else []) + [cfg.vowel_ms]
@@ -275,7 +304,7 @@ class Voice:
         self.last_syllable_t = t_ms + dur
         self.syllables_total += 1
         self.history.append((t_ms / 1000.0, syl))
-        events.append(("syllable", {"text": syl, "t": t_ms / 1000.0}))
+        events.append(("syllable", {"text": syl, "t": t_ms / 1000.0, "act": act}))
         return events
 
     @property

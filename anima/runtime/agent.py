@@ -26,6 +26,7 @@ Typical use::
 from __future__ import annotations
 
 import copy
+import math
 import queue
 import threading
 import time
@@ -68,6 +69,7 @@ class Agent:
         self._snapshot_every = 10  # ticks
         self._ticks = 0
         self._tick_hooks: list[Callable[["Agent"], None]] = []
+        self.upgraded: list[str] = []  # what loading changed in a creature saved by an older anima
         self._snapshot()
 
     # ------------------------------------------------------------ factory
@@ -98,13 +100,42 @@ class Agent:
         else:
             self._inbox.put(("speech", (text, source, float(loudness))))
 
+    def pleasure(self, amount: float = 0.6, credit: Any = "auto", source: str = "you") -> None:
+        """Give it pleasure (``amount`` 0-1) for what it just did.  Thread-safe;
+        returns at once.  ``credit``: ``"auto"`` (its last words if it spoke
+        in the last few seconds, else its last movement), ``"speech"``,
+        ``"movement"``, ``"now"`` (only what has just happened), or a list of
+        act ids; see :meth:`Brain.feel`.  A ``pleasure`` event follows."""
+        self.feel("pleasure", amount, credit, source)
+
+    def pain(self, amount: float = 0.6, credit: Any = "auto", source: str = "you") -> None:
+        """Give it pain (``amount`` 0-1) for what it just did; see :meth:`pleasure`."""
+        self.feel("pain", amount, credit, source)
+
+    def feel(self, kind: str, amount: float = 0.6, credit: Any = "auto", source: str = "you") -> None:
+        """Pain or pleasure (``kind``) — :meth:`pleasure` and :meth:`pain` call this."""
+        from ..brain.hedonic import CREDITS, KINDS
+        if kind not in KINDS:
+            raise ValueError(f"kind must be one of {KINDS}, not {kind!r}")
+        x = float(amount)
+        if not math.isfinite(x):
+            raise ValueError("amount must be a finite number")
+        x = min(1.0, max(0.0, x))
+        if isinstance(credit, str) or credit is None:
+            if credit is not None and credit not in CREDITS:
+                raise ValueError(f"credit must be one of {CREDITS} or a list of act ids, not {credit!r}")
+        else:
+            credit = [int(i) for i in credit]
+        src = str(source)[:60]
+        self.call_soon(lambda ag: ag.brain.feel(kind, x, src, credit))
+
     def call_soon(self, fn: Callable[["Agent"], None]) -> None:
         """Run ``fn(agent)`` on the agent's own thread at the next tick."""
         self._inbox.put(("call", fn))
 
     def on(self, kind: str, fn: Listener) -> None:
         """Subscribe to events: utterance, syllable, action, ate, bump, stage,
-        replay, heard, snapshot — or "*" for everything.  Listeners run on the
+        replay, heard, pleasure, pain, snapshot — or "*" for everything.  Listeners run on the
         agent thread; keep them quick (e.g. push into a queue)."""
         self._listeners[kind].append(fn)
 
@@ -237,8 +268,12 @@ class Agent:
     def describe(self) -> str:
         s = self.latest
         d = s["drives"]
+        f = s.get("feelings", {})
+        feel = ""
+        if f.get("pleasure", 0.0) >= 0.05 or f.get("pain", 0.0) >= 0.05:
+            feel = f"pleasure {f.get('pleasure', 0.0):.2f} pain {f.get('pain', 0.0):.2f} | "
         return (f"[{s['clock']} {s['stage']}] hunger {d['hunger']:.2f} fatigue {d['fatigue']:.2f} "
-                f"boredom {d['boredom']:.2f} loneliness {d['loneliness']:.2f} | "
+                f"boredom {d['boredom']:.2f} loneliness {d['loneliness']:.2f} | {feel}"
                 f"DA {s['modulators']['dopamine_tonic']:.2f} NE {s['modulators']['noradrenaline']:.2f} "
                 f"ACh {s['modulators']['acetylcholine']:.2f} 5HT {s['modulators']['serotonin']:.2f}")
 
@@ -283,7 +318,7 @@ class Agent:
         the same device."""
         net = self.brain.net
         return type(self).from_state(self.snapshot_state(), device=net.device,
-                                     engine_options=net.engine_options)
+                                     engine_options=net.engine_options, upgrade=False)
 
     @property
     def device(self) -> str:
@@ -291,14 +326,23 @@ class Agent:
         return str(self.brain.net.device)
 
     @classmethod
-    def load(cls, path: str | Path, world: World | None = None, device: Any = None) -> "Agent":
-        """Load a creature; a file runs on any device, whichever it was saved from."""
-        return cls.from_state(load_state(path), world, device=device)
+    def load(cls, path: str | Path, world: World | None = None, device: Any = None,
+             upgrade: bool = True) -> "Agent":
+        """Load a creature; a file runs on any device, whichever it was saved
+        from.  A creature saved by an older anima is brought up to date
+        (``upgrade``; see ``agent.upgraded``)."""
+        return cls.from_state(load_state(path), world, device=device, upgrade=upgrade)
 
     @classmethod
     def from_state(cls, s: dict[str, Any], world: World | None = None, device: Any = None,
-                   engine_options: dict[str, Any] | None = None) -> "Agent":
-        brain = build_brain(s["spec"], device=device, engine_options=engine_options)
+                   engine_options: dict[str, Any] | None = None, upgrade: bool = True) -> "Agent":
+        """``upgrade``: bring a creature saved by an older anima up to date
+        (see :func:`anima.brain.presets.upgrade_spec`); what changed is in
+        ``agent.upgraded``."""
+        from ..brain.presets import upgrade_spec
+        spec = copy.deepcopy(s["spec"])
+        upgraded = upgrade_spec(spec) if upgrade else []
+        brain = build_brain(spec, device=device, engine_options=engine_options)
         brain.load_state_dict(s["brain"])
         ws = s.get("world_spec", {"type": "void", "kwargs": {}})
         if world is None:
@@ -317,6 +361,7 @@ class Agent:
         agent = cls(brain, world, body_cfg, name=s.get("name", "anima"), world_spec=ws)
         agent.body.load_state_dict(s["body"])
         agent.t_ms = float(s["t_ms"])
+        agent.upgraded = upgraded
         agent._snapshot()
         return agent
 

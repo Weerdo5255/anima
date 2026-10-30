@@ -89,7 +89,7 @@ def test_validate_enforces_lesson_rules():
     tools = [a["tool"] for a in d.actions]
     assert "give_food" not in tools and "set_rule" not in tools  # not allowed in 'ask'
     assert {"say"} <= set(tools)
-    assert d.actions[[a["tool"] for a in d.actions].index("say")]["text"] == "MA MA script"
+    assert d.actions[[a["tool"] for a in d.actions].index("say")]["text"] == "ma ma"  # one short word
     assert any("unknown tool" in r for r in d.rejected)
     starving = validate(raw, obs_for("ask", hunger=0.9), "test")
     assert starving.actions[0] == {"tool": "give_food", "where": "left"}  # welfare overrides
@@ -132,8 +132,38 @@ def tutored():
     return agent, tutor
 
 
-def test_reward_syllable_smiles_within_half_a_second(tutored):
+@pytest.fixture()
+def smiling():
+    """A tutor whose reflexes smile and frown, as in anima 0.5."""
+    agent = Agent.create(seed=2)
+    tutor = Tutor(agent, ScriptedTeacher(), verbose=False, printer=None, hold_s=0.0, reinforcer="smile")
+    return agent, tutor
+
+
+def test_reward_syllable_gives_pleasure_for_that_syllable(tutored):
     agent, tutor = tutored
+    kit = tutor.toolkit
+    kit.clear_rules()
+    kit.set_rule("reward_syllable", prefix="m")
+    got = []
+    agent.on("pleasure", got.append)
+    agent.run(3.0)
+    said = [a for a in agent.brain.acts if a["kind"] == "speech"]
+    assert said
+    act = said[-1]
+    t0 = agent.t_ms / 1000
+    kit._on_syllable({"t": t0, "text": "ba", "act": act["id"]})  # not the target: nothing
+    kit._on_syllable({"t": t0, "text": "mo", "act": act["id"]})
+    agent.run(1.0)
+    assert kit._rules["reward_syllable"].fired == 1 and len(got) == 1
+    e = got[0]
+    assert 0.4 <= e["t"] - t0 <= 0.62 and e["intensity"] == 0.5 and e["source"] == "tutor:reflex"
+    assert e["recalled"] == [agent.brain.describe_act(act)]  # it recalls exactly that syllable
+    assert not any(k == "heard" and d["text"] == ":)" for t, k, d in agent.log if t >= t0)  # no smile
+
+
+def test_reward_syllable_smiles_within_half_a_second(smiling):
+    agent, tutor = smiling
     kit = tutor.toolkit
     kit.clear_rules()
     kit.set_rule("reward_syllable", prefix="m")
@@ -149,8 +179,8 @@ def test_reward_syllable_smiles_within_half_a_second(tutored):
     assert rule.fired == 1
 
 
-def test_feed_on_call_feeds_only_when_hungry(tutored):
-    agent, tutor = tutored
+def test_feed_on_call_feeds_only_when_hungry(smiling):
+    agent, tutor = smiling
     kit = tutor.toolkit
     kit.clear_rules()
     kit.set_conditions(None, True)  # no food restriction in this test
@@ -210,6 +240,38 @@ def test_curriculum_requires_skill_and_practice():
     assert nxt.name == "echo" and c.graduated_names() == ["forage"] and c.awake_s == 0
 
 
+def test_copy_me_is_graduated_by_an_imitation_exam():
+    c = Curriculum()
+    c.graduate(0.0, SkillReport(), {})  # -> echo
+    assert c.current.name == "echo" and c.current.exam == "imitate"
+    c.practice(6 * 60, awake=True)
+    good = {"imitate": {"consonant": 0.4, "consonant_chance": 0.09, "syllable": 0.1, "syllable_chance": 0.02,
+                        "n": 30, "trials": 33}}
+    assert c.evaluate(SkillReport(), good, good)[0]
+    assert not c.evaluate(SkillReport(), good, None)[0]  # twice in a row
+    low = {"imitate": {**good["imitate"], "consonant": 0.2}}
+    assert not c.evaluate(SkillReport(), low, good)[0]
+    luck = {"imitate": {**good["imitate"], "consonant_chance": 0.2}}  # 0.4 is less than 2.5x chance
+    assert not c.evaluate(SkillReport(), luck, luck)[0]
+    silent = {"imitate": {**good["imitate"], "n": 10}}  # it must answer most words
+    assert not c.evaluate(SkillReport(), silent, silent)[0]
+
+
+def test_copy_me_takes_the_imitation_exam(tutored):
+    agent, tutor = tutored
+    tutor.curriculum.practice(6 * 60, True)
+    tutor.meter.report = lambda: SkillReport(food_per_min=3.0)
+    passed_exam(tutor)
+    tutor._check_graduation()  # -> echo
+    assert tutor.curriculum.current.name == "echo" and tutor.toolkit.rule_names() == ["reward_imitation"]
+    agent.run(1.0)
+    tutor.curriculum.practice(6 * 60, True)
+    tutor._check_graduation()  # its practice is done: the exam is due
+    e = tutor.exams["imitate"]
+    assert e["trials"] == 33 and 0.0 <= e["consonant"] <= 1.0
+    assert "imitate" in tutor.observe()["exams"] and "repeats the first sound" in tutor.progress_line()
+
+
 def passed_exam(tutor, name="forage", times=2, **res):
     for _ in range(times):  # a lesson's exam has to be passed twice in a row
         e = {"score": 0.8, **res, "t": tutor.agent.t_ms / 1000.0,
@@ -241,7 +303,7 @@ def test_tutor_switches_reflexes_when_a_lesson_is_passed(tutored):
     passed_exam(tutor)
     tutor._check_graduation()
     assert tutor.curriculum.current.name == "echo"
-    assert tutor.toolkit.rule_names() == ["reward_echo"]
+    assert tutor.toolkit.rule_names() == ["reward_imitation"]
     assert tutor.milestones[0]["graduated"] == "forage"
 
 
@@ -409,7 +471,7 @@ def test_review_a_passed_lesson_then_return(tutored):
     agent.run(4.0)
     assert tutor.curriculum.awake_s == awake0  # the current lesson's clock pauses
     tutor.think_once()
-    assert tutor.reviewing is None and tutor.toolkit.rule_names() == ["reward_echo"]
+    assert tutor.reviewing is None and tutor.toolkit.rule_names() == ["reward_imitation"]
 
 
 def test_feed_command(tutored):
@@ -449,4 +511,5 @@ def test_cli_explains_missing_ollama_and_model(tmp_path, capsys):
         with pytest.raises(SystemExit, match="--model qwen3:4b"):
             main(["train", "--host", srv.url, "--model", "qwen3", "--brain", str(tmp_path / "b.npz")])
         main(["tutor-check", "--host", srv.url, "--model", "qwen3:4b", "--trials", "1"])
-        assert "decision 1" in capsys.readouterr().out
+        out = capsys.readouterr().out
+        assert "decision 1" in out and "'Copy me', after it answered 'bo bo' with 'bu'" in out

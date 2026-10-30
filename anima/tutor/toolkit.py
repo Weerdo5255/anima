@@ -6,11 +6,20 @@ creature's eligibility traces).  An LLM takes seconds to think, so teaching
 is split in two, the way a human teacher's is:
 
 * **deliberate actions** chosen by the teacher every few seconds: say a word,
-  smile, frown, put food somewhere, and switch reflex rules on or off;
+  give pleasure or pain (for what it just said or did), smile, frown, put
+  food somewhere, and switch reflex rules on or off;
 * **reflex rules** that run on the creature's own clock (every 10 ms tick)
-  and respond within half a second: smile after the target syllable, feed it
+  and respond within half a second: reward the target syllable, feed it
   when it calls while hungry, keep food within reach while it is learning to
-  forage, praise it when it copies a word.
+  forage, reward it when it repeats the teacher's word.
+
+The reflexes reward with **pleasure** (``reinforcer="pleasure"``, the
+default): a primary reinforcer that teaches more strongly than a smile and
+carries credit for exactly the syllables it rewards (the creature recalls
+them while the dopamine is there; see :mod:`anima.brain.hedonic`).  A smile
+also relieves loneliness, so a frown from a lonely creature's teacher can
+even be rewarding; pleasure and pain have no such side effects.
+``reinforcer="smile"`` teaches as anima 0.5 did.
 
 Everything here is thread-safe: actions are posted to the creature's inbox
 and executed on its own thread, so the creature never waits for the teacher.
@@ -27,9 +36,11 @@ from typing import Any, Callable
 import numpy as np
 
 from ..world.foraging import OFFER_PLACES
-from .skills import HUNGRY, SATED, SkillMeter, first_consonant
+from .skills import HUNGRY, SATED, SkillMeter, WordTrial, first_consonant
 
 WHERE = tuple(OFFER_PLACES)  # ahead, left, right, near
+REINFORCERS = ("pleasure", "smile")
+CREDIT_FOR = ("reply", "speech", "movement", "now")  # what a teacher's pleasure or pain can be for
 _ALLOWED_TEXT = re.compile(r"[^a-zA-Z :()*<3!?.,'-]")
 
 
@@ -61,11 +72,14 @@ class Rule:
         self.last = -1e9
         self.fired = 0
 
-    def on_syllable(self, t: float, text: str) -> None:
-        pass
+    def on_syllable(self, t: float, text: str, act: int | None = None) -> None:
+        """Its syllable ``text`` at ``t`` (``act``: the brain's id for it)."""
 
     def on_tick(self, t: float) -> None:
         pass
+
+    def on_reply(self, t: float, trial: WordTrial) -> None:
+        """Its reply to something the teacher said is complete (``trial.result``)."""
 
     def describe(self) -> str:
         ps = ", ".join(f"{k}={v}" for k, v in self.params.items())
@@ -73,19 +87,22 @@ class Rule:
 
 
 class RewardSyllable(Rule):
-    """Smile shortly after every syllable starting with ``prefix``."""
+    """Reward (pleasure, or a smile) shortly after every syllable starting with ``prefix``."""
 
     name = "reward_syllable"
 
-    def __init__(self, kit, prefix: str = "m", delay: float = 0.5, refractory: float = 2.0) -> None:
+    def __init__(self, kit, prefix: str = "m", delay: float = 0.5, refractory: float = 2.0,
+                 strength: float = 0.5) -> None:
         super().__init__(kit, prefix=clean_prefix(prefix))
-        self.delay, self.refractory = delay, refractory
+        self.delay, self.refractory, self.strength = delay, refractory, strength
 
-    def on_syllable(self, t, text):
+    def on_syllable(self, t, text, act=None):
         if text.startswith(self.params["prefix"]) and t - self.last >= self.refractory:
             self.last = t
             self.fired += 1
-            self.kit.schedule(t + self.delay, lambda: self.kit._hear(":)"), "praise (reflex)")
+            acts = None if act is None else [act]
+            self.kit.schedule(t + self.delay, lambda: self.kit._reward(self.strength, acts),
+                              f"{self.kit.reward_word(self.strength)} for '{text}' (reflex)")
 
 
 class FeedOnCall(Rule):
@@ -103,23 +120,26 @@ class FeedOnCall(Rule):
         self.last_frown = -1e9
         self.frowned = 0
 
-    def on_syllable(self, t, text):
+    def on_syllable(self, t, text, act=None):
         a = self.kit.agent
         if not (text.startswith(self.params["prefix"]) and a.brain.awake):
             return
         hunger = a.brain.drives.hunger
+        acts = None if act is None else [act]
         if hunger >= self.params["min_hunger"] and t - self.last >= self.refractory:
             self.last = t
             self.fired += 1
             self.kit.schedule(t + self.delay, lambda: self.kit._place_food("ahead"), "feed (answering its call)")
             if self.params["praise"]:
-                self.kit.schedule(t + self.delay, lambda: self.kit._hear(":)"), "praise (reflex)")
+                self.kit.schedule(t + self.delay, lambda: self.kit._reward(0.4, acts),
+                                  f"{self.kit.reward_word(0.4)} (reflex)")
         elif (self.params["frown_when_full"] and hunger < self.full_below
               and t - self.last_frown >= self.refractory):
             # "you've just eaten": the call is for when it is hungry
             self.last_frown = t
             self.frowned += 1
-            self.kit.schedule(t + self.delay, lambda: self.kit._hear(self.frown_text), "frown (it called while full)")
+            self.kit.schedule(t + self.delay, lambda: self.kit._punish(0.3, acts, self.frown_text),
+                              f"{self.kit.punish_word(0.3)} (it called while full)")
 
 
 class GuideFood(Rule):
@@ -176,31 +196,76 @@ class RewardEcho(Rule):
         super().__init__(kit)
         self.window = window
 
-    def on_syllable(self, t, text):
+    def on_syllable(self, t, text, act=None):
         trial = self.kit._echo_trial
         if trial is None or trial.get("end") is None or t < trial["end"]:
             return
         self.kit._echo_trial = None
         if t - trial["end"] <= self.window and text.startswith(trial["target"]):
             self.fired += 1
-            self.kit.schedule(t + 0.2, lambda: self.kit._hear(":)"), "praise (copied me)")
+            if self.kit._word is not None:
+                self.kit._word.rewarded = f"{self.kit.reward_word(0.5)} by reflex"
+            acts = None if act is None else [act]
+            self.kit.schedule(t + 0.2, lambda: self.kit._reward(0.5, acts),
+                              f"{self.kit.reward_word(0.5)} (copied me)")
+
+
+class RewardImitation(Rule):
+    """After the teacher says a word, reward it for repeating it: a little for the right first sound, more for the right syllable, most for the whole word."""
+
+    name = "reward_imitation"
+
+    def __init__(self, kit, consonant: float = 0.3, syllable: float = 0.5, word: float = 1.0,
+                 wrong: float = 0.0) -> None:
+        super().__init__(kit)
+        self.grades = {"consonant": float(consonant), "syllable": float(syllable), "word": float(word)}
+        self.wrong = float(wrong)  # pain for a reply that repeats nothing (0: none)
+        self.counts = {"word": 0, "syllable": 0, "consonant": 0, "none": 0}
+
+    def on_reply(self, t, trial):
+        res = trial.result or {}
+        if not res.get("answered") or not trial.target:
+            return
+        level = res["level"]
+        self.counts[level if level in self.counts else "none"] += 1
+        x = self.grades.get(level, 0.0)
+        heard = " ".join(trial.target)
+        said = " ".join(trial.reply)
+        if x > 0:
+            self.fired += 1
+            how = {"word": "the whole word", "syllable": "the first syllable",
+                   "consonant": "the first sound"}[level]
+            self.kit._reward(x, trial.acts or None)
+            trial.rewarded = f"{self.kit.reward_word(x)} by reflex"
+            self.kit._log(t, f"{self.kit.reward_word(x)}: it repeated {how} ('{heard}' -> '{said}')")
+        elif self.wrong > 0:
+            self.kit._punish(self.wrong, trial.acts or None)
+            trial.rewarded = f"{self.kit.punish_word(self.wrong)} by reflex"
+            self.kit._log(t, f"{self.kit.punish_word(self.wrong)}: '{heard}' -> '{said}'")
 
 
 RULES: dict[str, type[Rule]] = {r.name: r for r in
-                                (RewardSyllable, FeedOnCall, GuideFood, EchoBack, RewardEcho)}
+                                (RewardSyllable, FeedOnCall, GuideFood, EchoBack, RewardEcho, RewardImitation)}
 
 
 # ======================================================================= toolkit
 class TeachingToolkit:
-    def __init__(self, agent: Any, meter: SkillMeter, rng_seed: int = 0) -> None:
+    def __init__(self, agent: Any, meter: SkillMeter, rng_seed: int = 0, reinforcer: str = "pleasure") -> None:
+        if reinforcer not in REINFORCERS:
+            raise ValueError(f"reinforcer must be one of {REINFORCERS}, not {reinforcer!r}")
         self.agent = agent
         self.meter = meter
+        self.reinforcer = reinforcer
         self.rng = np.random.default_rng(rng_seed)
         self._rules: dict[str, Rule] = {}
         self._lock = threading.Lock()
         self._pending: list[tuple[float, int, Callable[[], None], str]] = []
         self._seq = 0
         self._echo_trial: dict[str, Any] | None = None
+        self._word: WordTrial | None = None
+        self.feelings = {"pleasure": 0, "pain": 0}  # given by the teacher or its reflexes
+        self.trials: deque[dict[str, Any]] = deque(maxlen=20)  # recent "I say a word, you answer" exchanges
+        self.trial_count = 0
         self._was_hearing = False
         self.journal: deque[tuple[float, str]] = deque(maxlen=200)
         self.food_given = 0
@@ -228,6 +293,23 @@ class TeachingToolkit:
 
     def scold(self) -> None:
         self.agent.hear(":(")
+
+    def pleasure(self, amount: float = 0.6, credit: str = "reply") -> None:
+        """Give it pleasure for its answer to the teacher's last word
+        (``credit="reply"``, even if it has said other things since), for
+        what it said last (``"speech"``), did (``"movement"``) or nothing in
+        particular (``"now"``)."""
+        self.agent.call_soon(lambda ag: self._feel("pleasure", amount, self._credit(credit), "teacher"))
+
+    def pain(self, amount: float = 0.4, credit: str = "reply") -> None:
+        """Give it pain for its reply, its last words or its last movement (see :meth:`pleasure`)."""
+        self.agent.call_soon(lambda ag: self._feel("pain", amount, self._credit(credit), "teacher"))
+
+    def _credit(self, credit: str) -> Any:
+        if credit != "reply":
+            return credit
+        last = self.trials[-1] if self.trials else None
+        return list(last["acts"]) if last and last.get("acts") else "now"
 
     def give_food(self, where: str = "ahead", min_interval_s: float = 4.0) -> bool:
         """Place food relative to the creature; rate-limited so food stays meaningful."""
@@ -293,11 +375,37 @@ class TeachingToolkit:
     def _hear(self, text: str) -> None:
         self.agent.hear(text)
 
+    def _feel(self, kind: str, amount: float, credit: Any, source: str = "reflex") -> dict[str, Any]:
+        """Pain or pleasure now (agent thread)."""
+        self.feelings[kind] = self.feelings.get(kind, 0) + 1
+        return self.agent.brain.feel(kind, float(amount), f"tutor:{source}", credit)
+
+    def reward_word(self, strength: float) -> str:
+        return f"pleasure {strength:.1f}" if self.reinforcer == "pleasure" else "praise"
+
+    def punish_word(self, strength: float) -> str:
+        return f"pain {strength:.1f}" if self.reinforcer == "pleasure" else "frown"
+
+    def _reward(self, strength: float, acts: list[int] | None = None) -> None:
+        """The reflexes' reward: pleasure for ``acts`` (its syllables), or a smile."""
+        if self.reinforcer == "pleasure":
+            self._feel("pleasure", strength, acts if acts else "now")
+        else:
+            self._hear(":)")
+
+    def _punish(self, strength: float, acts: list[int] | None = None, frown: str = ":(") -> None:
+        if self.reinforcer == "pleasure":
+            self._feel("pain", strength, acts if acts else "now")
+        else:
+            self._hear(frown)
+
     def _say(self, text: str) -> None:
         self.agent.hear(text)
         self.meter.note_teacher_said(text)
         c = first_consonant(text)
         self._echo_trial = None if c is None else {"target": c, "end": None}
+        w = WordTrial(text, self.agent.t_ms / 1000.0)
+        self._word = w if w.target else None
         self._log(self.agent.t_ms / 1000.0, f"said '{text}'")
 
     def _place_food(self, where: str) -> None:
@@ -317,7 +425,21 @@ class TeachingToolkit:
         with self._lock:
             rules = list(self._rules.values())
         for r in rules:
-            r.on_syllable(e["t"], e["text"])
+            r.on_syllable(e["t"], e["text"], e.get("act"))
+        w = self._word
+        if w is not None and w.syllable(e["t"], e["text"], e.get("act")):
+            self._reply_done(e["t"], w, rules)
+
+    def _reply_done(self, t: float, w: WordTrial, rules: list[Rule]) -> None:
+        self._word = None
+        for r in rules:
+            r.on_reply(t, w)
+        res = w.result or {}
+        self.trial_count += 1
+        self.trials.append({"n": self.trial_count, "t": round(t, 2), "you_said": " ".join(w.target),
+                            "it_replied": " ".join(w.reply), "acts": list(w.acts),
+                            "match": res.get("level", "none") if res.get("answered") else "no answer",
+                            "rewarded": w.rewarded})
 
     def _on_utterance(self, e: dict[str, Any]) -> None:
         with self._lock:
@@ -336,6 +458,14 @@ class TeachingToolkit:
         trial = self._echo_trial
         if trial is not None and trial.get("end") is None and self._was_hearing and not hearing:
             trial["end"] = t
+        w = self._word
+        if w is not None:
+            if self._was_hearing and not hearing:
+                w.heard_end(t)
+            if w.tick(t):
+                with self._lock:
+                    rules_now = list(self._rules.values())
+                self._reply_done(t, w, rules_now)
         self._was_hearing = hearing
         due = []
         with self._lock:
@@ -353,7 +483,8 @@ class TeachingToolkit:
         with self._lock:
             rules = [{"name": r.name, "params": dict(r.params)} for r in self._rules.values()]
         return {"rules": rules, "journal": [list(x) for x in self.journal],
-                "food_given": self.food_given, "conditions": self.conditions()}
+                "food_given": self.food_given, "conditions": self.conditions(),
+                "reinforcer": self.reinforcer, "feelings": dict(self.feelings)}
 
     def load_state_dict(self, s: dict[str, Any]) -> None:
         self.clear_rules()
@@ -362,6 +493,7 @@ class TeachingToolkit:
                 self.set_rule(r["name"], **r.get("params", {}))
         self.journal.extend((float(t), str(x)) for t, x in s.get("journal", []))
         self.food_given = int(s.get("food_given", 0))
+        self.feelings.update({k: int(v) for k, v in s.get("feelings", {}).items()})
         if "conditions" in s:
             self.set_conditions(**s["conditions"])
 
@@ -371,4 +503,4 @@ def describe_rules() -> str:
 
 
 __all__ = ["TeachingToolkit", "RULES", "Rule", "describe_rules", "clean_text", "clean_note", "clean_prefix",
-           "WHERE"]
+           "WHERE", "REINFORCERS", "CREDIT_FOR"]

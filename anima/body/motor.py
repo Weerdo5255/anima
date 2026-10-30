@@ -59,7 +59,7 @@ class MotorDecoder:
                 b.end_action(self.group)
                 return ("end", k)
             return None
-        if not b.awake or t_ms < self.refractory_until:
+        if not b.awake or t_ms < self.refractory_until or b.frozen:
             return None
         act = b.channel_activity(self.group)
         order = np.argsort(act)

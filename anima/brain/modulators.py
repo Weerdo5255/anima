@@ -100,6 +100,10 @@ class Neuromodulators:
         sleep_factor = {"awake": 1.0, "nrem": 0.7, "rem": 0.2}.get(stage, 1.0)
         self.serotonin = float(np.clip(sleep_factor * (0.5 + 2.0 * self._mood), 0.0, 1.0))
 
+    def arouse(self, level: float) -> None:
+        """A phasic burst of noradrenaline (e.g. pain), at least ``level``."""
+        self._ne_phasic = max(self._ne_phasic, float(level))
+
     def levels(self) -> dict[str, float]:
         return {
             "dopamine": self.dopamine,
